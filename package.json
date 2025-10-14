@@ -7,7 +7,7 @@
     "dev": "vite --host",
     "build": "vite build",
     "lint": "eslint .",
-     "start": "serve -s dist -l $PORT",
+    "start": "serve -s dist -l $PORT",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -46,6 +46,8 @@
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.7.1",
     "react-toastify": "^11.0.5",
+    "rehype-raw": "^7.0.0",
+    "rehype-sanitize": "^6.0.0",
     "remark-gfm": "^4.0.1",
     "tiptap-extension-font-size": "^1.0.0"
   },
