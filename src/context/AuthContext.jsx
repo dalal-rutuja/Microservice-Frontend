@@ -112,7 +112,28 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
     }
     setLoading(false);
-  }, [token]); // Depend on token to react to external changes
+
+    const handleStorage = () => {
+      const newToken = localStorage.getItem('token');
+      if (newToken !== token) {
+        setToken(newToken);
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          try {
+            setUser(JSON.parse(storedUser));
+          } catch (e) {
+            console.error('AuthContext: Failed to parse user from localStorage', e);
+          }
+        } else {
+          setUser(null);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+
+    return () => window.removeEventListener('storage', handleStorage);
+  }, [token]);
 
   const login = async (email, password) => {
     try {
@@ -139,6 +160,8 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await api.verifyOtp(email, otp);
       if (response.token) {
+        setToken(response.token);
+        setUser(response.user);
         setToken(response.token);
         setUser(response.user);
         localStorage.setItem('user', JSON.stringify(response.user));

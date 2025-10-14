@@ -99,7 +99,7 @@
 //   const checkProcessingStatus = async (documentId) => {
 //     try {
 //       const response = await fetch(
-//         `https://gateway-service-110685455967.asia-south1.run.app/docs/status/${documentId}`,
+//         `http://localhost:5000/docs/status/${documentId}`,
 //         {
 //           method: "GET",
 //           headers: {
@@ -265,7 +265,7 @@
 //       });
 
 //       const response = await fetch(
-//         `https://gateway-service-110685455967.asia-south1.run.app/docs/${encodeURIComponent(selectedFolder)}/upload`,
+//         `http://localhost:5000/docs/${encodeURIComponent(selectedFolder)}/upload`,
 //         {
 //           method: "POST",
 //           headers: {
@@ -676,7 +676,7 @@
 //   const checkProcessingStatus = async (documentId) => {
 //     try {
 //       const response = await fetch(
-//         `https://gateway-service-110685455967.asia-south1.run.app/docs/status/${documentId}`,
+//         `http://localhost:5000/docs/status/${documentId}`,
 //         {
 //           method: "GET",
 //           headers: {
@@ -850,7 +850,7 @@
 //       });
 
 //       const response = await fetch(
-//         `https://gateway-service-110685455967.asia-south1.run.app/docs/${encodeURIComponent(selectedFolder)}/upload`,
+//         `http://localhost:5000/docs/${encodeURIComponent(selectedFolder)}/upload`,
 //         {
 //           method: "POST",
 //           headers: {

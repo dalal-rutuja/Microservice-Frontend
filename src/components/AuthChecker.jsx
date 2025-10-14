@@ -7,10 +7,14 @@ const AuthChecker = ({ children }) => {
   const { token, loading } = useAuth(); // Get token and loading state from AuthContext
 
   useEffect(() => {
-    // Only check for token and redirect if authentication state has finished loading
-    if (!loading && !token) {
-      navigate('/login');
-    }
+    // Add a small delay to allow AuthContext to fully initialize
+    const timer = setTimeout(() => {
+      if (!loading && !token) {
+        navigate('/login');
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, [token, loading, navigate]); // Add token and loading to dependency array
 
   // Render children only when authentication state is loaded

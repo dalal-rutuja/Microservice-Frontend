@@ -1326,11 +1326,13 @@
 // export default LoginPage;
 
 // src/pages/Auth/LoginPage.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, CheckCircle } from "lucide-react";
-import apiService from "../../services/api"; // ✅ connect to backend
+import apiService from "../../services/api";
 
 const LoginPage = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
@@ -1341,58 +1343,77 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [serverMessage, setServerMessage] = useState("");
 
-  // ---------------- Validation ----------------
+  // Check if user is already logged in
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [navigate]);
+
+  // Validation
   const validateEmail = (email) => {
     if (!email) return "Email is required.";
     if (!/\S+@\S+\.\S+/.test(email)) return "Invalid email format.";
     return "";
   };
+  
   const validatePassword = (password) =>
     !password ? "Password is required." : "";
 
-  // ---------------- Handle Input ----------------
+  // Handle Input
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  // ---------------- Send OTP ----------------
+  // Send OTP
   const handleSendOTP = async (e) => {
-  e.preventDefault();
-  const emailError = validateEmail(formData.email);
-  const passwordError = validatePassword(formData.password);
-  setErrors({ email: emailError, password: passwordError });
-  if (emailError || passwordError) return;
+    e.preventDefault();
+    const emailError = validateEmail(formData.email);
+    const passwordError = validatePassword(formData.password);
+    setErrors({ email: emailError, password: passwordError });
+    if (emailError || passwordError) return;
 
-  try {
-    setIsLoading(true);
-    const res = await apiService.login(formData);
-    setServerMessage(res.message);
-    setIsOTPStage(true);
-  } catch (err) {
-    setServerMessage(err.message || "Failed to send OTP");
-  } finally {
-    setIsLoading(false);
-  }
-};
+    try {
+      setIsLoading(true);
+      setServerMessage("");
+      const res = await apiService.login(formData);
+      setServerMessage(res.message);
+      setIsOTPStage(true);
+    } catch (err) {
+      setServerMessage(err.message || "Failed to send OTP");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  // ---------------- Verify OTP ----------------
+  // Verify OTP
   const handleVerifyOTP = async () => {
     if (otp.length !== 6) {
-      alert("Please enter a 6-digit OTP.");
+      setSuccessMessage("Please enter a 6-digit OTP.");
       return;
     }
 
     try {
       setIsVerifying(true);
+      setSuccessMessage("");
+      
       const res = await apiService.verifyOtp(formData.email, otp);
-      setSuccessMessage(res.message);
+      
+      // Store auth data
       localStorage.setItem("token", res.token);
       localStorage.setItem("user", JSON.stringify(res.user));
-      setTimeout(() => (window.location.href = "/dashboard"), 1500);
+      
+      // Show success message
+      setSuccessMessage(res.message || "Login successful! Redirecting...");
+      
+      // Use navigate for redirect
+      navigate("/dashboard");
+      
     } catch (err) {
-      setSuccessMessage(err.message || "Invalid OTP. Try again.");
+      setSuccessMessage(err.message || "Invalid OTP. Please try again.");
     } finally {
       setIsVerifying(false);
     }
@@ -1402,7 +1423,7 @@ const LoginPage = () => {
     <div className="min-h-screen flex font-sans transition-all duration-700 ease-in-out">
       {/* Left Section (Login + OTP) */}
       <div className="w-full lg:w-1/2 bg-white flex items-center justify-center p-8 lg:p-12">
-        {/* ------------- Login Screen ------------- */}
+        {/* Login Screen */}
         {!isOTPStage && (
           <div className="max-w-md w-full transition-opacity duration-700">
             <div className="flex justify-center mb-8">
@@ -1474,7 +1495,7 @@ const LoginPage = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3 px-5 text-white font-semibold rounded-lg transition duration-300 mt-6"
+                className="w-full py-3 px-5 text-white font-semibold rounded-lg transition duration-300 mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
                   background:
                     "linear-gradient(90deg, #21C1B6 0%, #1AA49B 100%)",
@@ -1492,7 +1513,7 @@ const LoginPage = () => {
           </div>
         )}
 
-        {/* ------------- OTP Screen ------------- */}
+        {/* OTP Screen */}
         {isOTPStage && (
           <div className="max-w-md w-full text-center animate-fadeIn">
             <div className="flex justify-center mb-8">
@@ -1508,7 +1529,7 @@ const LoginPage = () => {
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Enter OTP</h2>
             <p className="text-gray-500 mb-6 text-sm">
-              We’ve sent a 6-digit code to your registered email.
+              We've sent a 6-digit code to your registered email.
             </p>
 
             <input
@@ -1517,13 +1538,14 @@ const LoginPage = () => {
               placeholder="Enter 6-digit OTP"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg text-center tracking-widest text-lg text-black focus:ring-2 focus:ring-[#21C1B6]"
               value={otp}
-              onChange={(e) => setOtp(e.target.value)}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+              autoFocus
             />
 
             <button
               onClick={handleVerifyOTP}
-              disabled={isVerifying}
-              className="w-full mt-6 py-3 px-5 text-white font-semibold rounded-lg transition duration-300"
+              disabled={isVerifying || otp.length !== 6}
+              className="w-full mt-6 py-3 px-5 text-white font-semibold rounded-lg transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 background:
                   "linear-gradient(90deg, #21C1B6 0%, #1AA49B 100%)",
@@ -1533,15 +1555,30 @@ const LoginPage = () => {
             </button>
 
             {successMessage && (
-              <p className="text-green-600 mt-4 text-sm animate-fadeIn">
+              <p className={`mt-4 text-sm animate-fadeIn ${
+                successMessage.includes('Invalid') || successMessage.includes('Please') 
+                  ? 'text-red-600' 
+                  : 'text-green-600'
+              }`}>
                 {successMessage}
               </p>
             )}
+            
+            <button
+              onClick={() => {
+                setIsOTPStage(false);
+                setOtp("");
+                setSuccessMessage("");
+              }}
+              className="mt-4 text-sm text-gray-500 hover:text-gray-700 underline"
+            >
+              ← Back to Login
+            </button>
           </div>
         )}
       </div>
 
-      {/* Right visual column remains same */}
+      {/* Right visual column */}
       <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-gray-800 via-gray-900 to-gray-950 items-center justify-center p-12 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-20 right-20 w-64 h-64 rounded-full blur-3xl" style={{ backgroundColor: '#1AA49B' }}></div>
@@ -1636,6 +1673,3 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
-
-
-
