@@ -301,7 +301,7 @@ const ChatSidebar = ({
   };
 
   return (
-    <div className="w-2/5 border-r border-gray-200 flex flex-col bg-white h-full overflow-hidden">
+    <div className="w-2/5 border-r border-gray-200 flex flex-col bg-white h-full overflow-y-auto">
       {/* Fixed Header */}
       <div className="p-4 border-b border-gray-200 flex-shrink-0 bg-white">
         <div className="flex items-center justify-between mb-3">
@@ -487,7 +487,7 @@ const ChatSidebar = ({
       )}
 
       {/* Fixed Input Panel at Bottom */}
-      <div className="border-t border-gray-200 p-3 bg-white flex-shrink-0">
+      <div className="border-t border-gray-200 p-3 bg-white flex-shrink-0" style={{ position: 'sticky', bottom: 0 }}>
         <ChatInputPanel
           fileInputRef={fileInputRef}
           isUploading={isUploading}

@@ -328,15 +328,15 @@ const FolderDetailPage = () => {
   };
 
   const handleToggleStar = () => {
-    setIsStarred((prev) => !prev);
+   setIsStarred((prev) => !prev);
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFCFB] text-gray-800 p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Top Navigation */}
-        <div className="mb-8 relative">
-          <button
+   <div className="bg-[#FDFCFB] text-gray-800 p-8 h-[calc(100vh - 64px)]">
+     <div className="mx-auto">
+       {/* Top Navigation */}
+       <div className="mb-8 relative">
+         <button
             onClick={() => navigate("/documents")}
             className="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200"
           >
@@ -383,15 +383,15 @@ const FolderDetailPage = () => {
         </div>
 
         {/* Main Content Area */}
-        <div className={`${!hasAiResponse ? 'flex space-x-8' : ''} h-[calc(100vh-120px)]`}>
+        <div className={`${!hasAiResponse ? 'flex space-x-8' : ''} h-[calc(100vh - 120px)]`}>
           {/* Left Section: Chat Interface */}
           <div className={`${hasAiResponse ? 'w-full' : 'flex-1'} flex flex-col space-y-4`}>
             <ChatInterface /> {/* Use the ChatInterface component */}
           </div>
 
-          {/* Right Section: Files + Preview */}
+          
           {!hasAiResponse && (
-            <div className="w-1/3 flex flex-col space-y-4">
+            <div className="w-1/3 flex flex-col space-y-4 overflow-y-auto">
               <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex-1 flex-col">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-semibold">Files</h3>

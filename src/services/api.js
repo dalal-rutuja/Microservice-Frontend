@@ -461,10 +461,20 @@ class ApiService {
     };
 
     try {
-      const response = await fetch(url, config);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 seconds
+
+      const response = await fetch(url, { ...config, signal: controller.signal });
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        let errorData = {};
+        try {
+          errorData = await response.json();
+        } catch (e) {
+          console.error("Failed to parse error response as JSON:", e);
+          errorData = { message: `HTTP error! status: ${response.status}` };
+        }
         throw new Error(
           errorData.message || errorData.error || `HTTP error! status: ${response.status}`
         );

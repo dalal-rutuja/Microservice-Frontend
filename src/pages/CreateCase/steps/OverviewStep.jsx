@@ -25,7 +25,7 @@
 //             placeholder="Enter case title or name"
 //             value={caseData.caseTitle}
 //             onChange={(e) => setCaseData({ ...caseData, caseTitle: e.target.value })}
-//             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-400 focus:border-gray-400 text-sm"
+//             className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 placeholder-gray-400 focus:ring-1 focus:ring-[#9CDFE1] focus:border-[#9CDFE1] outline-none"
 //           />
 //         </div>
 
@@ -38,7 +38,7 @@
 //             <select
 //               value={caseData.caseType}
 //               onChange={(e) => setCaseData({ ...caseData, caseType: e.target.value })}
-//               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-400 focus:border-gray-400 text-sm text-gray-500"
+//               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 placeholder-gray-400 focus:ring-1 focus:ring-[#9CDFE1] focus:border-[#9CDFE1] outline-none"
 //             >
 //               <option value="">Select case type...</option>
 //               <option value="Civil">Civil</option>
@@ -52,7 +52,7 @@
 //             <select
 //               value={caseData.subType}
 //               onChange={(e) => setCaseData({ ...caseData, subType: e.target.value })}
-//               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-400 focus:border-gray-400 text-sm text-gray-500"
+//               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 placeholder-gray-400 focus:ring-1 focus:ring-[#9CDFE1] focus:border-[#9CDFE1] outline-none disabled:bg-gray-100 disabled:text-gray-400"
 //               disabled={!caseData.caseType}
 //             >
 //               <option value="">Select sub-type...</option>
@@ -76,7 +76,7 @@
 //               placeholder="Enter case number (if available)"
 //               value={caseData.caseNumber}
 //               onChange={(e) => setCaseData({ ...caseData, caseNumber: e.target.value })}
-//               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-400 focus:border-gray-400 text-sm"
+//               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 placeholder-gray-400 focus:ring-1 focus:ring-[#9CDFE1] focus:border-[#9CDFE1] outline-none"
 //             />
 //             <p className="text-xs text-gray-500 mt-1">Optional for new filings</p>
 //           </div>
@@ -88,7 +88,7 @@
 //             <select
 //               value={caseData.courtName}
 //               onChange={(e) => setCaseData({ ...caseData, courtName: e.target.value })}
-//               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-400 focus:border-gray-400 text-sm text-gray-500"
+//               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 placeholder-gray-400 focus:ring-1 focus:ring-[#9CDFE1] focus:border-[#9CDFE1] outline-none"
 //             >
 //               <option value="">Select court...</option>
 //               <option value="Delhi High Court">Delhi High Court</option>
@@ -107,15 +107,11 @@
 //             type="date"
 //             value={caseData.filingDate}
 //             onChange={(e) => setCaseData({ ...caseData, filingDate: e.target.value })}
-//             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-400 focus:border-gray-400 text-sm"
+//             className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 focus:ring-1 focus:ring-[#9CDFE1] focus:border-[#9CDFE1] outline-none"
 //           />
 //         </div>
 
-//         {/* Auto-saved indicator */}
-//         <div className="flex items-center text-sm text-green-600 mt-4">
-//           <CheckCircle className="w-4 h-4 mr-1" />
-//           <span>Auto-saved</span>
-//         </div>
+
 //       </div>
 
 //       {/* Footer note */}
@@ -128,11 +124,70 @@
 
 // export default OverviewStep;
 
-
-import React from 'react';
-import { Scale, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Scale } from 'lucide-react';
 
 const OverviewStep = ({ caseData, setCaseData }) => {
+  const [caseTypes, setCaseTypes] = useState([]);
+  const [subTypes, setSubTypes] = useState([]);
+  const [courts, setCourts] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const API_BASE_URL = 'http://localhost:5002/api/content';
+
+  // Fetch case types on component mount
+  useEffect(() => {
+    fetchCaseTypes();
+    fetchCourts();
+  }, []);
+
+  // Fetch sub-types when case type changes
+  useEffect(() => {
+    if (caseData.caseType) {
+      fetchSubTypes(caseData.caseType);
+    } else {
+      setSubTypes([]);
+      setCaseData({ ...caseData, subType: '' });
+    }
+  }, [caseData.caseType]);
+
+  const fetchCaseTypes = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/case-types`);
+      const data = await response.json();
+      setCaseTypes(data);
+    } catch (error) {
+      console.error('Error fetching case types:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchSubTypes = async (caseTypeId) => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/case-types/${caseTypeId}/sub-types`);
+      const data = await response.json();
+      setSubTypes(data);
+    } catch (error) {
+      console.error('Error fetching sub-types:', error);
+      setSubTypes([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchCourts = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/courts`);
+      const data = await response.json();
+      setCourts(data);
+    } catch (error) {
+      console.error('Error fetching courts:', error);
+    }
+  };
+
   return (
     <div>
       {/* Header */}
@@ -168,13 +223,16 @@ const OverviewStep = ({ caseData, setCaseData }) => {
             </label>
             <select
               value={caseData.caseType}
-              onChange={(e) => setCaseData({ ...caseData, caseType: e.target.value })}
+              onChange={(e) => setCaseData({ ...caseData, caseType: e.target.value, subType: '' })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 placeholder-gray-400 focus:ring-1 focus:ring-[#9CDFE1] focus:border-[#9CDFE1] outline-none"
+              disabled={loading}
             >
               <option value="">Select case type...</option>
-              <option value="Civil">Civil</option>
-              <option value="Criminal">Criminal</option>
-              <option value="Commercial">Commercial</option>
+              {caseTypes.map((type) => (
+                <option key={type.id} value={type.id}>
+                  {type.name}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -184,13 +242,14 @@ const OverviewStep = ({ caseData, setCaseData }) => {
               value={caseData.subType}
               onChange={(e) => setCaseData({ ...caseData, subType: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 placeholder-gray-400 focus:ring-1 focus:ring-[#9CDFE1] focus:border-[#9CDFE1] outline-none disabled:bg-gray-100 disabled:text-gray-400"
-              disabled={!caseData.caseType}
+              disabled={!caseData.caseType || loading}
             >
               <option value="">Select sub-type...</option>
-              <option value="Property Dispute">Property Dispute</option>
-              <option value="Contract Breach">Contract Breach</option>
-              <option value="Fraud">Fraud</option>
-              <option value="Theft">Theft</option>
+              {subTypes.map((subType) => (
+                <option key={subType.id} value={subType.id}>
+                  {subType.name}
+                </option>
+              ))}
             </select>
             {!caseData.caseType && (
               <p className="text-xs text-gray-500 mt-1">Available after selecting case type</p>
@@ -218,15 +277,24 @@ const OverviewStep = ({ caseData, setCaseData }) => {
             </label>
             <select
               value={caseData.courtName}
-              onChange={(e) => setCaseData({ ...caseData, courtName: e.target.value })}
+              onChange={(e) => {
+                const selectedCourt = courts.find(c => c.id.toString() === e.target.value);
+                setCaseData({ 
+                  ...caseData, 
+                  courtName: e.target.value,
+                  courtLevel: selectedCourt?.court_level || '',
+                  jurisdiction: selectedCourt?.jurisdiction || '',
+                  state: selectedCourt?.state || ''
+                });
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 placeholder-gray-400 focus:ring-1 focus:ring-[#9CDFE1] focus:border-[#9CDFE1] outline-none"
             >
               <option value="">Select court...</option>
-              <option value="Delhi High Court">Delhi High Court</option>
-              <option value="Supreme Court">Supreme Court</option>
-              <option value="District Court">District Court</option>
-              <option value="Mumbai High Court">Mumbai High Court</option>
-              <option value="Kolkata High Court">Kolkata High Court</option>
+              {courts.map((court) => (
+                <option key={court.id} value={court.id}>
+                  {court.name}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -241,8 +309,6 @@ const OverviewStep = ({ caseData, setCaseData }) => {
             className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 focus:ring-1 focus:ring-[#9CDFE1] focus:border-[#9CDFE1] outline-none"
           />
         </div>
-
-
       </div>
 
       {/* Footer note */}

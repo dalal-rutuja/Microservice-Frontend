@@ -226,6 +226,8 @@
 // };
 
 // export default ChatInputPanel;
+
+
 import React, { useRef, useEffect } from 'react';
 import { Paperclip, Send, Loader2, BookOpen, ChevronDown, Bot, X, Square } from 'lucide-react';
 

@@ -1325,14 +1325,364 @@
 
 // export default LoginPage;
 
+// // src/pages/Auth/LoginPage.jsx
+// import React, { useState, useEffect } from "react";
+// import { useNavigate } from "react-router-dom";
+// import { Eye, EyeOff, CheckCircle } from "lucide-react";
+// import apiService from "../../services/api";
+
+// const LoginPage = () => {
+//   const navigate = useNavigate();
+//   const [formData, setFormData] = useState({ email: "", password: "" });
+//   const [errors, setErrors] = useState({});
+//   const [showPassword, setShowPassword] = useState(false);
+//   const [isOTPStage, setIsOTPStage] = useState(false);
+//   const [otp, setOtp] = useState("");
+//   const [successMessage, setSuccessMessage] = useState("");
+//   const [isVerifying, setIsVerifying] = useState(false);
+//   const [isLoading, setIsLoading] = useState(false);
+//   const [serverMessage, setServerMessage] = useState("");
+
+//   // Check if user is already logged in
+//   useEffect(() => {
+//     const token = localStorage.getItem('token');
+//     if (token) {
+//       navigate('/dashboard', { replace: true });
+//     }
+//   }, [navigate]);
+
+//   // Validation
+//   const validateEmail = (email) => {
+//     if (!email) return "Email is required.";
+//     if (!/\S+@\S+\.\S+/.test(email)) return "Invalid email format.";
+//     return "";
+//   };
+  
+//   const validatePassword = (password) =>
+//     !password ? "Password is required." : "";
+
+//   // Handle Input
+//   const handleChange = (e) => {
+//     const { name, value } = e.target;
+//     setFormData({ ...formData, [name]: value });
+//     setErrors((prev) => ({ ...prev, [name]: "" }));
+//   };
+
+//   // Send OTP
+//   const handleSendOTP = async (e) => {
+//     e.preventDefault();
+//     const emailError = validateEmail(formData.email);
+//     const passwordError = validatePassword(formData.password);
+//     setErrors({ email: emailError, password: passwordError });
+//     if (emailError || passwordError) return;
+
+//     try {
+//       setIsLoading(true);
+//       setServerMessage("");
+//       const res = await apiService.login(formData);
+//       setServerMessage(res.message);
+//       setIsOTPStage(true);
+//     } catch (err) {
+//       setServerMessage(err.message || "Failed to send OTP");
+//     } finally {
+//       setIsLoading(false);
+//     }
+//   };
+
+//   // Verify OTP
+//   const handleVerifyOTP = async () => {
+//     if (otp.length !== 6) {
+//       setSuccessMessage("Please enter a 6-digit OTP.");
+//       return;
+//     }
+
+//     try {
+//       setIsVerifying(true);
+//       setSuccessMessage("");
+      
+//       const res = await apiService.verifyOtp(formData.email, otp);
+      
+//       // Store auth data
+//       localStorage.setItem("token", res.token);
+//       localStorage.setItem("user", JSON.stringify(res.user));
+      
+//       // Show success message
+//       setSuccessMessage(res.message || "Login successful! Redirecting...");
+      
+//       // Use navigate for redirect
+//       navigate("/dashboard");
+      
+//     } catch (err) {
+//       setSuccessMessage(err.message || "Invalid OTP. Please try again.");
+//     } finally {
+//       setIsVerifying(false);
+//     }
+//   };
+
+//   return (
+//     <div className="min-h-screen flex font-sans transition-all duration-700 ease-in-out">
+//       {/* Left Section (Login + OTP) */}
+//       <div className="w-full lg:w-1/2 bg-white flex items-center justify-center p-8 lg:p-12">
+//         {/* Login Screen */}
+//         {!isOTPStage && (
+//           <div className="max-w-md w-full transition-opacity duration-700">
+//             <div className="flex justify-center mb-8">
+//               <div
+//                 className="w-16 h-16 rounded-lg flex items-center justify-center"
+//                 style={{ backgroundColor: "#1AA49B" }}
+//               >
+//                 <svg
+//                   className="w-10 h-10 text-white"
+//                   viewBox="0 0 24 24"
+//                   fill="currentColor"
+//                 >
+//                   <path d="M3 3h8l4 4-4 4H3V3zm10 10h8v8h-8l-4-4 4-4z" />
+//                 </svg>
+//               </div>
+//             </div>
+
+//             <h2 className="text-3xl font-bold text-gray-900 mb-2 text-center">
+//               Welcome to NexIntel AI
+//             </h2>
+//             <p className="text-gray-500 mb-8 text-center text-sm">
+//               Sign in to continue managing your legal workspace.
+//             </p>
+
+//             <form className="space-y-5" onSubmit={handleSendOTP}>
+//               <div>
+//                 <label className="block text-sm font-medium text-gray-700 mb-1">
+//                   Email / User ID
+//                 </label>
+//                 <input
+//                   type="text"
+//                   name="email"
+//                   placeholder="Enter your email"
+//                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#21C1B6] text-black"
+//                   value={formData.email}
+//                   onChange={handleChange}
+//                 />
+//                 {errors.email && (
+//                   <p className="mt-1 text-xs text-red-600">{errors.email}</p>
+//                 )}
+//               </div>
+
+//               <div>
+//                 <label className="block text-sm font-medium text-gray-700 mb-1">
+//                   Password
+//                 </label>
+//                 <div className="relative">
+//                   <input
+//                     type={showPassword ? "text" : "password"}
+//                     name="password"
+//                     placeholder="Enter your password"
+//                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg pr-10 focus:ring-2 focus:ring-[#21C1B6] text-black"
+//                     value={formData.password}
+//                     onChange={handleChange}
+//                   />
+//                   <button
+//                     type="button"
+//                     onClick={() => setShowPassword(!showPassword)}
+//                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+//                   >
+//                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+//                   </button>
+//                 </div>
+//                 {errors.password && (
+//                   <p className="mt-1 text-xs text-red-600">{errors.password}</p>
+//                 )}
+//               </div>
+
+//               <button
+//                 type="submit"
+//                 disabled={isLoading}
+//                 className="w-full py-3 px-5 text-white font-semibold rounded-lg transition duration-300 mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
+//                 style={{
+//                   background:
+//                     "linear-gradient(90deg, #21C1B6 0%, #1AA49B 100%)",
+//                 }}
+//               >
+//                 {isLoading ? "Sending OTP..." : "Send OTP"}
+//               </button>
+//             </form>
+
+//             {serverMessage && (
+//               <p className="text-sm text-center mt-4 text-gray-600">
+//                 {serverMessage}
+//               </p>
+//             )}
+//           </div>
+//         )}
+
+//         {/* OTP Screen */}
+//         {isOTPStage && (
+//           <div className="max-w-md w-full text-center animate-fadeIn">
+//             <div className="flex justify-center mb-8">
+//               <div
+//                 className="w-16 h-16 rounded-lg flex items-center justify-center"
+//                 style={{
+//                   background:
+//                     "linear-gradient(135deg, #21C1B6 0%, #1AA49B 100%)",
+//                 }}
+//               >
+//                 <CheckCircle className="w-10 h-10 text-white" />
+//               </div>
+//             </div>
+//             <h2 className="text-2xl font-bold text-gray-900 mb-2">Enter OTP</h2>
+//             <p className="text-gray-500 mb-6 text-sm">
+//               We've sent a 6-digit code to your registered email.
+//             </p>
+
+//             <input
+//               type="text"
+//               maxLength="6"
+//               placeholder="Enter 6-digit OTP"
+//               className="w-full px-4 py-3 border border-gray-300 rounded-lg text-center tracking-widest text-lg text-black focus:ring-2 focus:ring-[#21C1B6]"
+//               value={otp}
+//               onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+//               autoFocus
+//             />
+
+//             <button
+//               onClick={handleVerifyOTP}
+//               disabled={isVerifying || otp.length !== 6}
+//               className="w-full mt-6 py-3 px-5 text-white font-semibold rounded-lg transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+//               style={{
+//                 background:
+//                   "linear-gradient(90deg, #21C1B6 0%, #1AA49B 100%)",
+//               }}
+//             >
+//               {isVerifying ? "Verifying..." : "Verify OTP"}
+//             </button>
+
+//             {successMessage && (
+//               <p className={`mt-4 text-sm animate-fadeIn ${
+//                 successMessage.includes('Invalid') || successMessage.includes('Please') 
+//                   ? 'text-red-600' 
+//                   : 'text-green-600'
+//               }`}>
+//                 {successMessage}
+//               </p>
+//             )}
+            
+//             <button
+//               onClick={() => {
+//                 setIsOTPStage(false);
+//                 setOtp("");
+//                 setSuccessMessage("");
+//               }}
+//               className="mt-4 text-sm text-gray-500 hover:text-gray-700 underline"
+//             >
+//               ← Back to Login
+//             </button>
+//           </div>
+//         )}
+//       </div>
+
+//       {/* Right visual column */}
+//       <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-gray-800 via-gray-900 to-gray-950 items-center justify-center p-12 relative overflow-hidden">
+//         <div className="absolute inset-0 opacity-10">
+//           <div className="absolute top-20 right-20 w-64 h-64 rounded-full blur-3xl" style={{ backgroundColor: '#1AA49B' }}></div>
+//           <div className="absolute bottom-20 left-20 w-64 h-64 bg-blue-500 rounded-full blur-3xl"></div>
+//         </div>
+
+//         <div className="max-w-lg text-white relative z-10">
+//           <div className="mb-8 relative">
+//             <div className="bg-gradient-to-br from-gray-700 to-gray-800 rounded-2xl p-8 shadow-2xl">
+//               <div className="flex gap-2 mb-6">
+//                 <div className="w-3 h-3 rounded-full bg-gray-600"></div>
+//                 <div className="w-3 h-3 rounded-full bg-gray-600"></div>
+//                 <div className="w-3 h-3 rounded-full bg-gray-600"></div>
+//               </div>
+              
+//               <div className="flex gap-4 items-center justify-center">
+//                 <div className="space-y-3">
+//                   <div className="w-12 h-12 rounded-lg" style={{ backgroundColor: '#1AA49B' }}></div>
+//                   <div className="w-12 h-12 bg-gray-700 rounded-lg"></div>
+//                   <div className="w-12 h-12 bg-gray-700 rounded-lg"></div>
+//                 </div>
+                
+//                 <div className="bg-white rounded-lg p-4 w-48">
+//                   <div className="space-y-2">
+//                     <div className="h-3 rounded w-3/4" style={{ backgroundColor: '#1AA49B' }}></div>
+//                     <div className="h-2 bg-gray-300 rounded"></div>
+//                     <div className="h-2 bg-gray-300 rounded"></div>
+//                     <div className="h-2 bg-gray-300 rounded w-5/6"></div>
+//                   </div>
+//                 </div>
+
+//                 <div className="space-y-4">
+//                   <div className="w-16 h-16 relative">
+//                     <div className="absolute top-0 right-0 w-8 h-12 bg-gray-600 rounded transform rotate-45"></div>
+//                     <div className="absolute bottom-0 left-0 w-12 h-6 rounded" style={{ backgroundColor: '#1AA49B' }}></div>
+//                   </div>
+//                   <div className="w-16 h-16 flex items-end justify-center">
+//                     <div className="w-12 h-12 border-4 border-gray-600 rounded-full relative">
+//                       <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-1 h-8 bg-gray-600"></div>
+//                     </div>
+//                   </div>
+//                 </div>
+//               </div>
+//             </div>
+//           </div>
+
+//           <h2 className="text-4xl font-bold mb-8 leading-tight text-center">
+//             Automate Your Legal Workflow in Minutes
+//           </h2>
+
+//           <div className="space-y-6 bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-2xl p-6">
+//             <div className="flex items-start gap-4">
+//               <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(156, 223, 225, 0.2)' }}>
+//                 <svg className="w-5 h-5" style={{ color: '#1AA49B' }} fill="currentColor" viewBox="0 0 20 20">
+//                   <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z"/>
+//                 </svg>
+//               </div>
+//               <div>
+//                 <h3 className="text-lg font-semibold mb-1">Accelerate case preparation</h3>
+//                 <p className="text-gray-400 text-sm">in minutes with AI-powered tools</p>
+//               </div>
+//             </div>
+
+//             <div className="flex items-start gap-4">
+//               <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(156, 223, 225, 0.2)' }}>
+//                 <svg className="w-5 h-5" style={{ color: '#1AA49B' }} fill="currentColor" viewBox="0 0 20 20">
+//                   <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/>
+//                 </svg>
+//               </div>
+//               <div>
+//                 <h3 className="text-lg font-semibold mb-1">Smart Document Vault</h3>
+//                 <p className="text-gray-400 text-sm">Secure, searchable, and organized</p>
+//               </div>
+//             </div>
+
+//             <div className="flex items-start gap-4">
+//               <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(156, 223, 225, 0.2)' }}>
+//                 <svg className="w-5 h-5" style={{ color: '#1AA49B' }} fill="currentColor" viewBox="0 0 20 20">
+//                   <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd"/>
+//                 </svg>
+//               </div>
+//               <div>
+//                 <h3 className="text-lg font-semibold mb-1">Trusted Legal Insights</h3>
+//                 <p className="text-gray-400 text-sm">AI-driven precedents & analysis</p>
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default LoginPage;
+
+
+
 // src/pages/Auth/LoginPage.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, CheckCircle } from "lucide-react";
-import apiService from "../../services/api";
+import apiService from "../../services/api"; // ✅ connect to backend
 
 const LoginPage = () => {
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
@@ -1342,78 +1692,60 @@ const LoginPage = () => {
   const [isVerifying, setIsVerifying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [serverMessage, setServerMessage] = useState("");
+  const navigate = useNavigate();
 
-  // Check if user is already logged in
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      navigate('/dashboard', { replace: true });
-    }
-  }, [navigate]);
-
-  // Validation
+  // ---------------- Validation ----------------
   const validateEmail = (email) => {
     if (!email) return "Email is required.";
     if (!/\S+@\S+\.\S+/.test(email)) return "Invalid email format.";
     return "";
   };
-  
   const validatePassword = (password) =>
     !password ? "Password is required." : "";
 
-  // Handle Input
+  // ---------------- Handle Input ----------------
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  // Send OTP
+  // ---------------- Send OTP ----------------
   const handleSendOTP = async (e) => {
-    e.preventDefault();
-    const emailError = validateEmail(formData.email);
-    const passwordError = validatePassword(formData.password);
-    setErrors({ email: emailError, password: passwordError });
-    if (emailError || passwordError) return;
+  e.preventDefault();
+  const emailError = validateEmail(formData.email);
+  const passwordError = validatePassword(formData.password);
+  setErrors({ email: emailError, password: passwordError });
+  if (emailError || passwordError) return;
 
-    try {
-      setIsLoading(true);
-      setServerMessage("");
-      const res = await apiService.login(formData);
-      setServerMessage(res.message);
-      setIsOTPStage(true);
-    } catch (err) {
-      setServerMessage(err.message || "Failed to send OTP");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  try {
+    setIsLoading(true);
+    const res = await apiService.login(formData);
+    setServerMessage(res.message);
+    setIsOTPStage(true);
+  } catch (err) {
+    setServerMessage(err.message || "Failed to send OTP");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
-  // Verify OTP
+  // ---------------- Verify OTP ----------------
   const handleVerifyOTP = async () => {
     if (otp.length !== 6) {
-      setSuccessMessage("Please enter a 6-digit OTP.");
+      alert("Please enter a 6-digit OTP.");
       return;
     }
 
     try {
       setIsVerifying(true);
-      setSuccessMessage("");
-      
       const res = await apiService.verifyOtp(formData.email, otp);
-      
-      // Store auth data
+      setSuccessMessage(res.message);
       localStorage.setItem("token", res.token);
       localStorage.setItem("user", JSON.stringify(res.user));
-      
-      // Show success message
-      setSuccessMessage(res.message || "Login successful! Redirecting...");
-      
-      // Use navigate for redirect
-      navigate("/dashboard");
-      
+      setTimeout(() => navigate("/dashboard"), 1500);
     } catch (err) {
-      setSuccessMessage(err.message || "Invalid OTP. Please try again.");
+      setSuccessMessage(err.message || "Invalid OTP. Try again.");
     } finally {
       setIsVerifying(false);
     }
@@ -1423,7 +1755,7 @@ const LoginPage = () => {
     <div className="min-h-screen flex font-sans transition-all duration-700 ease-in-out">
       {/* Left Section (Login + OTP) */}
       <div className="w-full lg:w-1/2 bg-white flex items-center justify-center p-8 lg:p-12">
-        {/* Login Screen */}
+        {/* ------------- Login Screen ------------- */}
         {!isOTPStage && (
           <div className="max-w-md w-full transition-opacity duration-700">
             <div className="flex justify-center mb-8">
@@ -1495,7 +1827,7 @@ const LoginPage = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3 px-5 text-white font-semibold rounded-lg transition duration-300 mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 px-5 text-white font-semibold rounded-lg transition duration-300 mt-6"
                 style={{
                   background:
                     "linear-gradient(90deg, #21C1B6 0%, #1AA49B 100%)",
@@ -1513,7 +1845,7 @@ const LoginPage = () => {
           </div>
         )}
 
-        {/* OTP Screen */}
+        {/* ------------- OTP Screen ------------- */}
         {isOTPStage && (
           <div className="max-w-md w-full text-center animate-fadeIn">
             <div className="flex justify-center mb-8">
@@ -1529,7 +1861,7 @@ const LoginPage = () => {
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Enter OTP</h2>
             <p className="text-gray-500 mb-6 text-sm">
-              We've sent a 6-digit code to your registered email.
+              We’ve sent a 6-digit code to your registered email.
             </p>
 
             <input
@@ -1538,14 +1870,13 @@ const LoginPage = () => {
               placeholder="Enter 6-digit OTP"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg text-center tracking-widest text-lg text-black focus:ring-2 focus:ring-[#21C1B6]"
               value={otp}
-              onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-              autoFocus
+              onChange={(e) => setOtp(e.target.value)}
             />
 
             <button
               onClick={handleVerifyOTP}
-              disabled={isVerifying || otp.length !== 6}
-              className="w-full mt-6 py-3 px-5 text-white font-semibold rounded-lg transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isVerifying}
+              className="w-full mt-6 py-3 px-5 text-white font-semibold rounded-lg transition duration-300"
               style={{
                 background:
                   "linear-gradient(90deg, #21C1B6 0%, #1AA49B 100%)",
@@ -1555,30 +1886,15 @@ const LoginPage = () => {
             </button>
 
             {successMessage && (
-              <p className={`mt-4 text-sm animate-fadeIn ${
-                successMessage.includes('Invalid') || successMessage.includes('Please') 
-                  ? 'text-red-600' 
-                  : 'text-green-600'
-              }`}>
+              <p className="text-green-600 mt-4 text-sm animate-fadeIn">
                 {successMessage}
               </p>
             )}
-            
-            <button
-              onClick={() => {
-                setIsOTPStage(false);
-                setOtp("");
-                setSuccessMessage("");
-              }}
-              className="mt-4 text-sm text-gray-500 hover:text-gray-700 underline"
-            >
-              ← Back to Login
-            </button>
           </div>
         )}
       </div>
 
-      {/* Right visual column */}
+      {/* Right visual column remains same */}
       <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-gray-800 via-gray-900 to-gray-950 items-center justify-center p-12 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-20 right-20 w-64 h-64 rounded-full blur-3xl" style={{ backgroundColor: '#1AA49B' }}></div>
@@ -1673,3 +1989,4 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
+
