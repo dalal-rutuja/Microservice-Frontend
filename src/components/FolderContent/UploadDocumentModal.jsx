@@ -84,13 +84,13 @@ const UploadDocumentModal = ({ isOpen, onClose, onUpload }) => {
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors duration-200"
+              className="px-4 py-2 text-white rounded-md transition-colors duration-200" style={{ backgroundColor: '#1AA49B' }}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors duration-200"
+              className="px-4 py-2 text-white rounded-md transition-colors duration-200" style={{ backgroundColor: '#21C1B6' }}
             >
               Upload
             </button>

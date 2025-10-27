@@ -67,21 +67,90 @@
 // export default DocumentCard;
 
 
+// import React from 'react';
+
+// const DocumentCard = ({ document, individualStatus, onDocumentClick }) => {
+//   const getStatusColor = (status) => {
+//     switch (status) {
+//       case 'completed':
+//       case 'processed':
+//         return 'bg-green-500';
+//       case 'processing':
+//       case 'batch_processing':
+//       case 'pending':
+//         return 'bg-yellow-500';
+//       case 'queued':
+//       case 'batch_queued':
+//         return 'bg-blue-500';
+//       case 'failed':
+//       case 'error':
+//         return 'bg-red-500';
+//       default:
+//         return 'bg-gray-400';
+//     }
+//   };
+
+//   const currentStatus = individualStatus || { status: document.status, progress: 0, message: '' };
+
+//   return (
+//     <div
+//       className="bg-white p-4 rounded-lg shadow hover:shadow-md flex flex-col cursor-pointer transition"
+//       onClick={() => onDocumentClick(document)}
+//     >
+//       <div className="flex justify-between items-center mb-2">
+//         <div>
+//           <p className="font-semibold text-gray-800">{document.name}</p>
+//           <p className="text-sm text-gray-500">
+//             {document.size ? `${(document.size / 1024).toFixed(2)} KB` : 'N/A'} · {new Date(document.created_at).toLocaleDateString()}
+//           </p>
+//         </div>
+//         <span
+//           className={`px-3 py-1 rounded-full text-xs text-white ${getStatusColor(currentStatus.status)}`}
+//         >
+//           {currentStatus.status}
+//         </span>
+//       </div>
+
+//       {(['processing', 'queued', 'pending', 'failed'].includes(currentStatus.status)) && (
+//         <div className="w-full mt-2">
+//           <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
+//             <div
+//               className={`h-2 rounded-full transition-all duration-300 ${getStatusColor(currentStatus.status)}`}
+//               style={{ width: `${currentStatus.progress || 0}%` }}
+//             ></div>
+//           </div>
+//           <p className="text-xs text-gray-600">{currentStatus.message || 'Processing...'}</p>
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default DocumentCard;
+
+
 import React from 'react';
+import { FileText, File } from 'lucide-react';
 
 const DocumentCard = ({ document, individualStatus, onDocumentClick }) => {
   const getStatusColor = (status) => {
-    switch (status) {
+    if (!status) return 'bg-gray-400';
+    
+    const statusLower = status.toLowerCase();
+    switch (statusLower) {
       case 'completed':
       case 'processed':
+      case 'ready':
+      case 'success':
         return 'bg-green-500';
       case 'processing':
       case 'batch_processing':
+        return 'bg-blue-500';
       case 'pending':
         return 'bg-yellow-500';
       case 'queued':
       case 'batch_queued':
-        return 'bg-blue-500';
+        return 'bg-amber-500';
       case 'failed':
       case 'error':
         return 'bg-red-500';
@@ -90,38 +159,117 @@ const DocumentCard = ({ document, individualStatus, onDocumentClick }) => {
     }
   };
 
-  const currentStatus = individualStatus || { status: document.status, progress: 0, message: '' };
+  const getStatusBadgeColor = (status) => {
+    if (!status) return 'bg-gray-100 text-gray-700';
+    
+    const statusLower = status.toLowerCase();
+    switch (statusLower) {
+      case 'completed':
+      case 'processed':
+      case 'ready':
+      case 'success':
+        return 'bg-green-100 text-green-700';
+      case 'processing':
+      case 'batch_processing':
+        return 'bg-blue-100 text-blue-700';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-700';
+      case 'queued':
+      case 'batch_queued':
+        return 'bg-amber-100 text-amber-700';
+      case 'failed':
+      case 'error':
+        return 'bg-red-100 text-red-700';
+      default:
+        return 'bg-gray-100 text-gray-700';
+    }
+  };
+
+  const formatFileSize = (bytes) => {
+    if (!bytes || bytes === 0) return 'N/A';
+    const kb = bytes / 1024;
+    if (kb < 1024) return `${kb.toFixed(2)} KB`;
+    const mb = kb / 1024;
+    return `${mb.toFixed(2)} MB`;
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Unknown date';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { 
+        month: '2-digit', 
+        day: '2-digit', 
+        year: 'numeric' 
+      });
+    } catch (e) {
+      return 'Invalid date';
+    }
+  };
+
+  // Get the display name - fallback to multiple possible fields
+  const displayName = document.name || 
+                      document.originalname || 
+                      document.filename || 
+                      document.original_name || 
+                      "Unnamed Document";
+
+  // Determine current status
+  const currentStatus = individualStatus?.status || document.status || 'unknown';
+  const progress = individualStatus?.progress || 0;
+  const message = individualStatus?.message || '';
+
+  // Check if document is actively processing
+  const isProcessing = ['processing', 'queued', 'pending'].includes(currentStatus.toLowerCase());
+  const isFailed = ['failed', 'error'].includes(currentStatus.toLowerCase());
 
   return (
     <div
-      className="bg-white p-4 rounded-lg shadow hover:shadow-md flex flex-col cursor-pointer transition"
+      className="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow duration-200 cursor-pointer border border-gray-200"
       onClick={() => onDocumentClick(document)}
     >
-      <div className="flex justify-between items-center mb-2">
-        <div>
-          <p className="font-semibold text-gray-800">{document.name}</p>
-          <p className="text-sm text-gray-500">
-            {document.size ? `${(document.size / 1024).toFixed(2)} KB` : 'N/A'} · {new Date(document.created_at).toLocaleDateString()}
-          </p>
+      <div className="flex items-start space-x-3">
+        {/* File Icon */}
+        <div className="flex-shrink-0 mt-1">
+          <FileText className="w-8 h-8 text-gray-400" />
         </div>
-        <span
-          className={`px-3 py-1 rounded-full text-xs text-white ${getStatusColor(currentStatus.status)}`}
-        >
-          {currentStatus.status}
-        </span>
-      </div>
 
-      {(['processing', 'queued', 'pending', 'failed'].includes(currentStatus.status)) && (
-        <div className="w-full mt-2">
-          <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
-            <div
-              className={`h-2 rounded-full transition-all duration-300 ${getStatusColor(currentStatus.status)}`}
-              style={{ width: `${currentStatus.progress || 0}%` }}
-            ></div>
+        {/* File Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between mb-2">
+            <div className="flex-1 min-w-0 pr-2">
+              <p className="font-semibold text-gray-800 truncate text-base">
+                {displayName}
+              </p>
+              <p className="text-sm text-gray-500 mt-1">
+                {formatFileSize(document.size)} · {formatDate(document.created_at)}
+              </p>
+            </div>
+            
+            {/* Status Badge */}
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusBadgeColor(currentStatus)}`}
+            >
+              {currentStatus}
+            </span>
           </div>
-          <p className="text-xs text-gray-600">{currentStatus.message || 'Processing...'}</p>
+
+          {/* Progress Bar for Processing Documents */}
+          {(isProcessing || isFailed) && (
+            <div className="mt-3">
+              <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
+                <div
+                  className={`h-2 rounded-full transition-all duration-300 ${getStatusColor(currentStatus)}`}
+                  style={{ width: `${progress}%` }}
+                ></div>
+              </div>
+              {message && (
+                <p className="text-xs text-gray-600 mt-1">{message}</p>
+              )}
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 };

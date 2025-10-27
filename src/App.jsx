@@ -1,3 +1,5 @@
+
+
 // import React from 'react';
 // import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 // import { ToastContainer } from 'react-toastify';
@@ -5,7 +7,7 @@
 // import MainLayout from './layouts/MainLayout';
 // import DashboardPage from './pages/DashboardPage';
 // import DocumentUploadPage from './pages/DocumentUploadPage';
-// import FolderDetailPage from './pages/FolderDetailPage'; // New import
+// import FolderDetailPage from './pages/FolderDetailPage';
 // import EvidenceMatrixPage from './pages/EvidenceMatrixPage';
 // import TimelinePage from './pages/TimelinePage';
 // import GroundSummaryPage from './pages/GroundSummaryPage';
@@ -21,33 +23,43 @@
 // import PricingPage from './pages/PricingPage';
 // import AboutNexintelPage from './pages/AboutNexintelPage';
 // import SubscriptionPlanPage from './pages/SubscriptionPlanPage';
-// import BillingAndUsagePage from './pages/BillingAndUsagePage'; // New import
-// import SettingsPage from './pages/SettingsPage'; // New import for SettingsPage
-// import GetHelpPage from './pages/GetHelpPage'; // New import for GetHelpPage
+// import BillingAndUsagePage from './pages/BillingAndUsagePage';
+// import SettingsPage from './pages/SettingsPage';
+// import GetHelpPage from './pages/GetHelpPage';
 // import { SidebarProvider } from './context/SidebarContext';
 // import { FileManagerProvider } from './context/FileManagerContext';
-// import AuthChecker from './components/AuthChecker'; // New import
-// import CaseDetailsPage from "./pages/CaseDetailsPage";
-
+// import AuthChecker from './components/AuthChecker';
 
 // function App() {
 //   return (
 //     <Router>
 //       <ToastContainer />
 //       <SidebarProvider>
-//         <FileManagerProvider> {/* Wrap with FileManagerProvider */}
+//         <FileManagerProvider>
 //           <Routes>
+//             {/* Public Routes */}
 //             <Route path="/" element={<PublicLayout hideHeaderAndFooter={true}><LandingPage /></PublicLayout>} />
 //             <Route path="/register" element={<RegisterPage />} />
 //             <Route path="/login" element={<LoginPage />} />
-//             <Route path="/services" element={<PublicLayout><ServicesPage /></PublicLayout>} /> {/* Wrapped with PublicLayout */}
-//             <Route path="/about-us" element={<PublicLayout><AboutUsPage /></PublicLayout>} />   {/* Wrapped with PublicLayout */}
-//             <Route path="/pricing" element={<PublicLayout><PricingPage /></PublicLayout>} />   {/* Wrapped with PublicLayout */}
-//             <Route path="/case-details" element={<PublicLayout><CaseDetailsPage /></PublicLayout>} />
-//             <Route path="/about-nexintel" element={<PublicLayout><AboutNexintelPage /></PublicLayout>} /> {/* New route for About Nexintel */}
-//             <Route path="/dashboard" element={<AuthChecker><MainLayout><DashboardPage /></MainLayout></AuthChecker>} />
+//             <Route path="/services" element={<PublicLayout><ServicesPage /></PublicLayout>} />
+//             <Route path="/about-us" element={<PublicLayout><AboutUsPage /></PublicLayout>} />
+//             <Route path="/pricing" element={<PublicLayout><PricingPage /></PublicLayout>} />
+//             <Route path="/about-nexintel" element={<PublicLayout><AboutNexintelPage /></PublicLayout>} />
+            
+//             {/* Protected Routes */}
+//             <Route 
+//               path="/dashboard" 
+//               element={
+//                 <AuthChecker>
+//                   <MainLayout>
+//                     <DashboardPage />
+//                   </MainLayout>
+//                 </AuthChecker>
+//               } 
+//             />
+            
 //             <Route
-//               path="/documents" // Changed route to /documents
+//               path="/documents"
 //               element={
 //                 <AuthChecker>
 //                   <MainLayout>
@@ -56,8 +68,9 @@
 //                 </AuthChecker>
 //               }
 //             />
+            
 //             <Route
-//               path="/documents/:folderName" // New route for FolderDetailPage
+//               path="/documents/:folderName"
 //               element={
 //                 <AuthChecker>
 //                   <MainLayout>
@@ -66,6 +79,7 @@
 //                 </AuthChecker>
 //               }
 //             />
+            
 //             <Route
 //               path="/evidence-matrix"
 //               element={
@@ -76,6 +90,7 @@
 //                 </AuthChecker>
 //               }
 //             />
+            
 //             <Route
 //               path="/timeline"
 //               element={
@@ -86,6 +101,7 @@
 //                 </AuthChecker>
 //               }
 //             />
+            
 //             <Route
 //               path="/ground-summary"
 //               element={
@@ -96,6 +112,8 @@
 //                 </AuthChecker>
 //               }
 //             />
+            
+//             {/* Analysis Routes - Multiple routes for different navigation patterns */}
 //             <Route
 //               path="/analysis"
 //               element={
@@ -106,6 +124,7 @@
 //                 </AuthChecker>
 //               }
 //             />
+            
 //             <Route
 //               path="/analysis/:fileId/:sessionId"
 //               element={
@@ -116,6 +135,18 @@
 //                 </AuthChecker>
 //               }
 //             />
+            
+//             <Route
+//               path="/analysis/session/:sessionId"
+//               element={
+//                 <AuthChecker>
+//                   <MainLayout>
+//                     <AnalysisPage />
+//                   </MainLayout>
+//                 </AuthChecker>
+//               }
+//             />
+            
 //             <Route
 //               path="/drafting"
 //               element={
@@ -126,6 +157,7 @@
 //                 </AuthChecker>
 //               }
 //             />
+            
 //             <Route
 //               path="/chats"
 //               element={
@@ -136,6 +168,7 @@
 //                 </AuthChecker>
 //               }
 //             />
+            
 //             <Route
 //               path="/subscription-plans"
 //               element={
@@ -146,6 +179,7 @@
 //                 </AuthChecker>
 //               }
 //             />
+            
 //             <Route
 //               path="/billing-usage"
 //               element={
@@ -156,6 +190,7 @@
 //                 </AuthChecker>
 //               }
 //             />
+            
 //             <Route
 //               path="/settings"
 //               element={
@@ -166,6 +201,7 @@
 //                 </AuthChecker>
 //               }
 //             />
+            
 //             <Route
 //               path="/get-help"
 //               element={
@@ -184,6 +220,9 @@
 // }
 
 // export default App;
+
+
+
 
 
 import React from 'react';
@@ -212,6 +251,7 @@ import SubscriptionPlanPage from './pages/SubscriptionPlanPage';
 import BillingAndUsagePage from './pages/BillingAndUsagePage';
 import SettingsPage from './pages/SettingsPage';
 import GetHelpPage from './pages/GetHelpPage';
+import CaseDetailView from './components/DashboardComponents/CaseDetailView';
 import { SidebarProvider } from './context/SidebarContext';
 import { FileManagerProvider } from './context/FileManagerContext';
 import AuthChecker from './components/AuthChecker';
@@ -394,6 +434,17 @@ function App() {
                 <AuthChecker>
                   <MainLayout>
                     <GetHelpPage />
+                  </MainLayout>
+                </AuthChecker>
+              }
+            />
+            {/* New route for Case Detail View */}
+            <Route
+              path="/cases/:id"
+              element={
+                <AuthChecker>
+                  <MainLayout>
+                    <CaseDetailView />
                   </MainLayout>
                 </AuthChecker>
               }
