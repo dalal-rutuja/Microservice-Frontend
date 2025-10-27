@@ -133,7 +133,7 @@ const OverviewStep = ({ caseData, setCaseData }) => {
   const [courts, setCourts] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const API_BASE_URL = 'http://localhost:5002/api/content';
+  const API_BASE_URL = 'https://document-service-110685455967.asia-south1.run.app/api/content';
 
   // Fetch case types on component mount
   useEffect(() => {

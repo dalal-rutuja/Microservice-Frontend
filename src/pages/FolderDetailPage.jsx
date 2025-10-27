@@ -424,6 +424,283 @@
 
 
 
+// import React, { useState, useEffect, useContext } from "react";
+// import { useParams, useNavigate } from "react-router-dom";
+// import { FileManagerContext } from "../context/FileManagerContext";
+// import {
+//   ArrowLeft,
+//   Star,
+//   MoreVertical,
+// } from "lucide-react";
+// import FolderContent from "../components/FolderContent/FolderContent";
+// import DocumentPreviewModal from "../components/DocumentPreviewModal";
+// import ChatInterface from "../components/ChatInterface/ChatInterface"; // Import ChatInterface
+
+// const FolderDetailPage = () => {
+//   const { folderName } = useParams();
+//   const navigate = useNavigate();
+//   const {
+//     setSelectedFolder,
+//     selectedFolder,
+//     loadFoldersAndFiles,
+//     hasAiResponse, // Get hasAiResponse from context
+//   } = useContext(FileManagerContext);
+
+//   const [selectedDocument, setSelectedDocument] = useState(null);
+//   const [isStarred, setIsStarred] = useState(false);
+//   const [showMoreMenu, setShowMoreMenu] = useState(false);
+
+//   useEffect(() => {
+//     if (folderName) {
+//       setSelectedFolder(folderName);
+//     }
+//   }, [folderName, setSelectedFolder]);
+
+//   useEffect(() => {
+//     loadFoldersAndFiles();
+//   }, [loadFoldersAndFiles]);
+
+//   const handleDocumentClick = (doc) => {
+//     setSelectedDocument(doc);
+//   };
+
+//   const handleClosePreview = () => {
+//     setSelectedDocument(null);
+//   };
+
+//   const handleToggleStar = () => {
+//     setIsStarred((prev) => !prev);
+//   };
+
+//   return (
+//     <div className="min-h-screen bg-[#FDFCFB] text-gray-800 p-8" style={{marginLeft: '0px', marginRight: '0px'}}>
+//       <div className="mx-auto">
+//         {/* Top Navigation */}
+//         <div className="mb-8 relative">
+//           <button
+//             onClick={() => navigate("/documents")}
+//             className="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200"
+//           >
+//             <ArrowLeft className="w-5 h-5 mr-2" />
+//             <span>All projects</span>
+//           </button>
+
+//           {/* More menu */}
+//           {showMoreMenu && (
+//             <div className="absolute top-8 right-0 bg-white border border-gray-200 rounded-md shadow-lg p-2 z-50">
+//               <button
+//                 className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
+//                 onClick={() => alert("Rename project")}
+//               >
+//                 Rename Project
+//               </button>
+//               <button
+//                 className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
+//                 onClick={() => alert("Delete project")}
+//               >
+//                 Delete Project
+//               </button>
+//             </div>
+//           )}
+//         </div>
+
+//         {/* Document Upload Header */}
+//         <div className="flex justify-between items-center mb-8">
+//           <h1 className="text-3xl font-bold">
+//             {selectedFolder || "Document Upload"}
+//           </h1>
+//           <div className="flex items-center space-x-4">
+//             <button onClick={() => setShowMoreMenu((prev) => !prev)}>
+//               <MoreVertical className="w-5 h-5 text-gray-600" />
+//             </button>
+//             <button onClick={handleToggleStar}>
+//               <Star
+//                 className={`w-5 h-5 ${
+//                   isStarred ? "text-yellow-400 fill-yellow-400" : "text-gray-400"
+//                 }`}
+//               />
+//             </button>
+//           </div>
+//         </div>
+
+//         {/* Main Content Area */}
+//         <div className={`${!hasAiResponse ? 'flex space-x-8' : ''} h-[calc(100vh-80px)]`}>
+//           {/* Left Section: Chat Interface */}
+//           <div className={`${hasAiResponse ? 'w-full' : 'flex-1'} flex flex-col space-y-4`}>
+//             <ChatInterface /> {/* Use the ChatInterface component */}
+//           </div>
+
+//           {/* Right Section: Files + Preview */}
+//           {!hasAiResponse && (
+//             <div className="w-1/3 flex flex-col space-y-4">
+//               <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex-1 flex-col">
+//                 <div className="flex justify-between items-center mb-4">
+//                   <h3 className="text-lg font-semibold">Files</h3>
+//                   {/* The upload button is now handled within FolderContent */}
+//                 </div>
+
+//                 {/* If a document is selected, show preview */}
+//                 {selectedDocument ? (
+//                   <DocumentPreviewModal
+//                     document={selectedDocument}
+//                     onClose={handleClosePreview}
+//                   />
+//                 ) : (
+//                   <div className="flex-1 overflow-y-auto">
+//                     <FolderContent onDocumentClick={handleDocumentClick} />
+//                   </div>
+//                 )}
+//               </div>
+//             </div>
+//           )}
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default FolderDetailPage;
+
+
+// import React, { useState, useEffect, useContext } from "react";
+// import { useParams, useNavigate } from "react-router-dom";
+// import { FileManagerContext } from "../context/FileManagerContext";
+// import {
+//   ArrowLeft,
+//   Star,
+//   MoreVertical,
+// } from "lucide-react";
+// import FolderContent from "../components/FolderContent/FolderContent";
+// import DocumentPreviewModal from "../components/DocumentPreviewModal";
+// import ChatInterface from "../components/ChatInterface/ChatInterface"; // Import ChatInterface
+
+// const FolderDetailPage = () => {
+//   const { folderName } = useParams();
+//   const navigate = useNavigate();
+//   const {
+//     setSelectedFolder,
+//     selectedFolder,
+//     loadFoldersAndFiles,
+//     hasAiResponse, // Get hasAiResponse from context
+//   } = useContext(FileManagerContext);
+
+//   const [selectedDocument, setSelectedDocument] = useState(null);
+//   const [isStarred, setIsStarred] = useState(false);
+//   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  
+
+//   useEffect(() => {
+//     if (folderName) {
+//       setSelectedFolder(folderName);
+//     }
+//   }, [folderName, setSelectedFolder]);
+
+//   useEffect(() => {
+//     loadFoldersAndFiles();
+//   }, [loadFoldersAndFiles]);
+
+//   const handleDocumentClick = (doc) => {
+//     setSelectedDocument(doc);
+//   };
+
+//   const handleClosePreview = () => {
+//     setSelectedDocument(null);
+//   };
+
+//   const handleToggleStar = () => {
+//     setIsStarred((prev) => !prev);
+//   };
+
+//   return (
+//     <div className="min-h-screen bg-[#FDFCFB] text-gray-800 p-8" style={{marginLeft: '0px', marginRight: '0px'}}>
+//       <div className="mx-auto">
+//         {/* Top Navigation */}
+//         <div className="mb-8 relative">
+//           <button
+//             onClick={() => navigate("/documents")}
+//             className="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200"
+//           >
+//             <ArrowLeft className="w-5 h-5 mr-2" />
+//             <span>All projects</span>
+//           </button>
+
+//           {/* More menu */}
+//           {showMoreMenu && (
+//             <div className="absolute top-8 right-0 bg-white border border-gray-200 rounded-md shadow-lg p-2 z-50">
+//               <button
+//                 className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
+//                 onClick={() => alert("Rename project")}
+//               >
+//                 Rename Project
+//               </button>
+//               <button
+//                 className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
+//                 onClick={() => alert("Delete project")}
+//               >
+//                 Delete Project
+//               </button>
+//             </div>
+//           )}
+//         </div>
+
+//         {/* Document Upload Header */}
+//         <div className="flex justify-between items-center mb-8">
+//           <h1 className="text-3xl font-bold">
+//             {selectedFolder || "Document Upload"}
+//           </h1>
+//           <div className="flex items-center space-x-4">
+//             <button onClick={() => setShowMoreMenu((prev) => !prev)}>
+//               <MoreVertical className="w-5 h-5 text-gray-600" />
+//             </button>
+//             <button onClick={handleToggleStar}>
+//               <Star
+//                 className={`w-5 h-5 ${
+//                   isStarred ? "text-yellow-400 fill-yellow-400" : "text-gray-400"
+//                 }`}
+//               />
+//             </button>
+//           </div>
+//         </div>
+
+//         {/* Main Content Area */}
+//         <div className={`${!hasAiResponse ? 'flex space-x-8' : ''} h-[calc(100vh-120px)]`}>
+//           {/* Left Section: Chat Interface */}
+//           <div className={`${hasAiResponse ? 'w-full' : 'flex-1'} flex flex-col space-y-4`}>
+//             <ChatInterface /> {/* Use the ChatInterface component */}
+//           </div>
+
+//           {/* Right Section: Files + Preview */}
+//           {!hasAiResponse && (
+//             <div className="w-1/3 flex flex-col space-y-4">
+//               <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex-1 flex-col">
+//                 <div className="flex justify-between items-center mb-4">
+//                   <h3 className="text-lg font-semibold">Files</h3>
+//                   {/* The upload button is now handled within FolderContent */}
+//                 </div>
+
+//                 {/* If a document is selected, show preview */}
+//                 {selectedDocument ? (
+//                   <DocumentPreviewModal
+//                     document={selectedDocument}
+//                     onClose={handleClosePreview}
+//                   />
+//                 ) : (
+//                   <div className="flex-1 overflow-y-auto">
+//                     <FolderContent onDocumentClick={handleDocumentClick} />
+//                   </div>
+//                 )}
+//               </div>
+//             </div>
+//           )}
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default FolderDetailPage;
+
+
 import React, { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FileManagerContext } from "../context/FileManagerContext";
@@ -434,7 +711,7 @@ import {
 } from "lucide-react";
 import FolderContent from "../components/FolderContent/FolderContent";
 import DocumentPreviewModal from "../components/DocumentPreviewModal";
-import ChatInterface from "../components/ChatInterface/ChatInterface"; // Import ChatInterface
+import ChatInterface from "../components/ChatInterface/ChatInterface";
 
 const FolderDetailPage = () => {
   const { folderName } = useParams();
@@ -443,9 +720,8 @@ const FolderDetailPage = () => {
     setSelectedFolder,
     selectedFolder,
     loadFoldersAndFiles,
-    hasAiResponse, // Get hasAiResponse from context
+    hasAiResponse,
   } = useContext(FileManagerContext);
-
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [isStarred, setIsStarred] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
@@ -484,8 +760,6 @@ const FolderDetailPage = () => {
             <ArrowLeft className="w-5 h-5 mr-2" />
             <span>All projects</span>
           </button>
-
-          {/* More menu */}
           {showMoreMenu && (
             <div className="absolute top-8 right-0 bg-white border border-gray-200 rounded-md shadow-lg p-2 z-50">
               <button
@@ -503,7 +777,6 @@ const FolderDetailPage = () => {
             </div>
           )}
         </div>
-
         {/* Document Upload Header */}
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">
@@ -522,24 +795,19 @@ const FolderDetailPage = () => {
             </button>
           </div>
         </div>
-
         {/* Main Content Area */}
-        <div className={`${!hasAiResponse ? 'flex space-x-8' : ''} h-[calc(100vh-80px)]`}>
+        <div className={`${!hasAiResponse ? 'flex space-x-8' : ''} h-[calc(100vh-120px)]`}>
           {/* Left Section: Chat Interface */}
           <div className={`${hasAiResponse ? 'w-full' : 'flex-1'} flex flex-col space-y-4`}>
-            <ChatInterface /> {/* Use the ChatInterface component */}
+            <ChatInterface />
           </div>
-
           {/* Right Section: Files + Preview */}
           {!hasAiResponse && (
             <div className="w-1/3 flex flex-col space-y-4">
               <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex-1 flex-col">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-semibold">Files</h3>
-                  {/* The upload button is now handled within FolderContent */}
                 </div>
-
-                {/* If a document is selected, show preview */}
                 {selectedDocument ? (
                   <DocumentPreviewModal
                     document={selectedDocument}
@@ -558,6 +826,4 @@ const FolderDetailPage = () => {
     </div>
   );
 };
-
 export default FolderDetailPage;
-

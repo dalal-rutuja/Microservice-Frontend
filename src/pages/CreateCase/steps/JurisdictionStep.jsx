@@ -206,7 +206,7 @@
 //   const [loading, setLoading] = useState(false);
 //   const [error, setError] = useState(null);
 
-//   const API_BASE_URL = 'http://localhost:5002/api/content';
+//   const API_BASE_URL = 'https://document-service-110685455967.asia-south1.run.app/api/content';
 
 //   // Fetch courts on mount
 //   useEffect(() => {
@@ -503,7 +503,7 @@ const JurisdictionStep = ({ caseData, setCaseData }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const API_BASE_URL = 'http://localhost:5002/api/content';
+  const API_BASE_URL = 'https://document-service-110685455967.asia-south1.run.app/api/content';
 
   // Fetch courts on mount
   useEffect(() => {

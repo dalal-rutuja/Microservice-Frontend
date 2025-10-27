@@ -221,7 +221,7 @@
 // //       };
 
 // //       // Make API call
-// //       const response = await fetch("http://localhost:5000/docs/create", {
+// //       const response = await fetch("https://gateway-service-110685455967.asia-south1.run.app/docs/create", {
 // //         method: "POST",
 // //         headers: {
 // //           "Content-Type": "application/json",
@@ -583,7 +583,7 @@
 //         status: caseData.currentStatus || "Active",
 //       };
 
-//       const response = await fetch("http://localhost:5000/docs/create", {
+//       const response = await fetch("https://gateway-service-110685455967.asia-south1.run.app/docs/create", {
 //         method: "POST",
 //         headers: {
 //           "Content-Type": "application/json",
@@ -947,7 +947,7 @@ const ReviewStep = ({ caseData, onBack, onResetToFirstStep }) => {
         status: caseData.currentStatus || "Active",
       };
 
-      const response = await fetch("http://localhost:5000/docs/create", {
+      const response = await fetch("https://gateway-service-110685455967.asia-south1.run.app/docs/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

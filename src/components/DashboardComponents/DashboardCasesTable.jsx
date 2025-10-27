@@ -291,7 +291,7 @@ const DashboardCasesTable = () => {
       
       // Fetch courts from your PostgreSQL endpoint
       try {
-        const courtsResponse = await axios.get('http://localhost:5000/api/courts', { headers });
+        const courtsResponse = await axios.get('https://gateway-service-110685455967.asia-south1.run.app/api/courts', { headers });
         const courts = Array.isArray(courtsResponse.data) ? courtsResponse.data : [];
         
         // Create a map of court ID to court name
@@ -312,7 +312,7 @@ const DashboardCasesTable = () => {
       
       // Fetch case types from your PostgreSQL endpoint
       try {
-        const caseTypesResponse = await axios.get('http://localhost:5000/api/case-types', { headers });
+        const caseTypesResponse = await axios.get('https://gateway-service-110685455967.asia-south1.run.app/api/case-types', { headers });
         const caseTypes = Array.isArray(caseTypesResponse.data) ? caseTypesResponse.data : [];
         
         // Create a map of case type ID to case type name
