@@ -1,6 +1,5 @@
 
 
-
 // import '../styles/AnalysisPage.css';
 
 // import React, { useState, useEffect, useRef } from 'react';
@@ -10,7 +9,7 @@
 // import ReactMarkdown from 'react-markdown';
 // import remarkGfm from 'remark-gfm';
 // import rehypeRaw from 'rehype-raw';
-// import rehypeSanitize from 'rehype-sanitize';
+// import rehypeSanitize from 'rehype-sanitize'; // Re-added rehypeSanitize
 // import ApiService from '../services/api';
 // import {
 //   Search, Send, FileText, Layers, Trash2, RotateCcw,
@@ -23,7 +22,7 @@
 //   const location = useLocation();
 //   const { fileId: paramFileId, sessionId: paramSessionId } = useParams();
 //   const { setIsSidebarHidden, setIsSidebarCollapsed } = useSidebar();
-  
+ 
 //   // State Management
 //   const [activeDropdown, setActiveDropdown] = useState('Summary');
 //   const [isLoading, setIsLoading] = useState(false);
@@ -33,7 +32,7 @@
 //   const [success, setSuccess] = useState(null);
 //   const [hasResponse, setHasResponse] = useState(false);
 //   const [isSecretPromptSelected, setIsSecretPromptSelected] = useState(false);
-  
+ 
 //   // Document and Analysis Data
 //   const [documentData, setDocumentData] = useState(null);
 //   const [messages, setMessages] = useState([]);
@@ -50,17 +49,17 @@
 //   const [displayLimit, setDisplayLimit] = useState(10);
 //   const [showAllChats, setShowAllChats] = useState(false);
 //   const [showDropdown, setShowDropdown] = useState(false);
-  
+ 
 //   // Secrets state
 //   const [secrets, setSecrets] = useState([]);
 //   const [isLoadingSecrets, setIsLoadingSecrets] = useState(false);
 //   const [selectedSecretId, setSelectedSecretId] = useState(null);
 //   const [selectedLlmName, setSelectedLlmName] = useState(null); // New state for LLM name
-  
+ 
 //   // Batch upload state
 //   const [batchUploads, setBatchUploads] = useState([]);
 //   const [uploadedDocuments, setUploadedDocuments] = useState([]);
-  
+ 
 //   // Refs
 //   const fileInputRef = useRef(null);
 //   const dropdownRef = useRef(null);
@@ -71,13 +70,13 @@
 
 //   // API Configuration
 //   const API_BASE_URL = 'https://gateway-service-110685455967.asia-south1.run.app';
-  
+ 
 //   const getAuthToken = () => {
 //     const tokenKeys = [
 //       'authToken', 'token', 'accessToken', 'jwt', 'bearerToken',
 //       'auth_token', 'access_token', 'api_token', 'userToken'
 //     ];
-    
+   
 //     for (const key of tokenKeys) {
 //       const token = localStorage.getItem(key);
 //       if (token) return token;
@@ -94,7 +93,7 @@
 //         defaultHeaders['Authorization'] = `Bearer ${token}`;
 //       }
 
-//       const headers = options.body instanceof FormData 
+//       const headers = options.body instanceof FormData
 //         ? (token ? { 'Authorization': `Bearer ${token}` } : {})
 //         : { ...defaultHeaders, ...options.headers };
 
@@ -110,7 +109,7 @@
 //         } catch {
 //           errorData = { error: `HTTP error! status: ${response.status}` };
 //         }
-        
+       
 //         switch (response.status) {
 //           case 401: throw new Error('Authentication required. Please log in again.');
 //           case 403: throw new Error(errorData.error || 'Access denied.');
@@ -137,7 +136,7 @@
 //     try {
 //       setIsLoadingSecrets(true);
 //       setError(null);
-      
+     
 //       const token = getAuthToken();
 //       const headers = { 'Content-Type': 'application/json' };
 //       if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -154,7 +153,7 @@
 //       const secretsData = await response.json();
 //       console.log('[fetchSecrets] Raw secrets data:', secretsData);
 //       setSecrets(secretsData || []);
-      
+     
 //       if (secretsData && secretsData.length > 0) {
 //         setActiveDropdown(secretsData[0].name);
 //         setSelectedSecretId(secretsData[0].id);
@@ -169,11 +168,11 @@
 //   };
 
 //   // Batch file upload
-//   const batchUploadDocuments = async (files) => {
-//     console.log('Starting batch upload for', files.length, 'files');
+//   const batchUploadDocuments = async (files, secretId = null, llmName = null) => {
+//     console.log('Starting batch upload for', files.length, 'files', secretId ? `with secretId: ${secretId}` : '', llmName ? `and LLM: ${llmName}` : '');
 //     setIsUploading(true);
 //     setError(null);
-    
+   
 //     const initialBatchUploads = files.map((file, index) => ({
 //       id: `${file.name}-${Date.now()}-${index}`,
 //       file: file,
@@ -184,7 +183,7 @@
 //       fileId: null,
 //       error: null
 //     }));
-    
+   
 //     setBatchUploads(initialBatchUploads);
 //     setShowSplitView(true);
 
@@ -193,6 +192,13 @@
 //       files.forEach(file => {
 //         formData.append('document', file);
 //       });
+//       if (secretId) {
+//         formData.append('secret_id', secretId);
+//         formData.append('trigger_initial_analysis_with_secret', 'true'); // New flag
+//       }
+//       if (llmName) {
+//         formData.append('llm_name', llmName);
+//       }
 
 //       setBatchUploads(prev => prev.map(upload => ({ ...upload, status: 'uploading', progress: 10 })));
 
@@ -217,7 +223,7 @@
 //       if (data.uploaded_files && Array.isArray(data.uploaded_files)) {
 //         data.uploaded_files.forEach((uploadedFile, index) => {
 //           const matchingUpload = initialBatchUploads[index];
-          
+         
 //           if (uploadedFile.error) {
 //             setBatchUploads(prev => prev.map(upload =>
 //               upload.id === matchingUpload.id
@@ -226,7 +232,7 @@
 //             ));
 //           } else {
 //             const fileId = uploadedFile.file_id;
-            
+           
 //             setBatchUploads(prev => prev.map(upload =>
 //               upload.id === matchingUpload.id
 //                 ? { ...upload, status: 'uploaded', fileId, progress: 100 }
@@ -301,34 +307,34 @@
 
 //       const data = await response.json();
 //       console.log('Processing status:', data);
-      
+     
 //       setProcessingStatus(data);
-      
+     
 //       setUploadedDocuments(prev => prev.map(doc =>
 //         doc.id === file_id ? { ...doc, status: data.status } : doc
 //       ));
-      
+     
 //       if (data.status === 'processed') {
 //         setDocumentData(prev => ({
 //           ...prev,
 //           status: 'processed',
 //         }));
-        
+       
 //         if (pollingIntervalRef.current) {
 //           clearInterval(pollingIntervalRef.current);
 //           pollingIntervalRef.current = null;
 //         }
-        
+       
 //         setSuccess('Document processing completed!');
 //       } else if (data.status === 'error') {
 //         setError('Document processing failed.');
-        
+       
 //         if (pollingIntervalRef.current) {
 //           clearInterval(pollingIntervalRef.current);
 //           pollingIntervalRef.current = null;
 //         }
 //       }
-      
+     
 //       return data;
 //     } catch (error) {
 //       console.error('Error getting processing status:', error);
@@ -347,7 +353,7 @@
 //     pollingIntervalRef.current = setInterval(async () => {
 //       pollCount++;
 //       const status = await getProcessingStatus(file_id);
-      
+     
 //       if (status && (status.status === 'processed' || status.status === 'error')) {
 //         clearInterval(pollingIntervalRef.current);
 //         pollingIntervalRef.current = null;
@@ -359,8 +365,11 @@
 //     }, 2000);
 //   };
 
+//   const LARGE_RESPONSE_THRESHOLD = 5000; // Increased threshold for debugging large responses
+
 //   // ✅ FASTER Animation with requestAnimationFrame and chunk-based rendering
 //   const animateResponse = (text) => {
+//     console.log('[animateResponse] Starting animation for text length:', text.length);
 //     // Cancel any existing animation
 //     if (animationFrameRef.current) {
 //       cancelAnimationFrame(animationFrameRef.current);
@@ -369,22 +378,22 @@
 //     setAnimatedResponseContent('');
 //     setIsAnimatingResponse(true);
 //     setShowSplitView(true);
-    
+   
 //     let currentIndex = 0;
-//     const chunkSize = 5; // Render 5 characters at a time for faster display
-//     const delayMs = 10; // Reduced delay for faster rendering
-    
+//     const chunkSize = 50; // Increased chunk size for faster display
+//     const delayMs = 5; // Further reduced delay for faster rendering
+   
 //     const animate = () => {
 //       if (currentIndex < text.length) {
 //         const nextChunk = text.slice(currentIndex, currentIndex + chunkSize);
 //         setAnimatedResponseContent(prev => prev + nextChunk);
 //         currentIndex += chunkSize;
-        
-//         // Auto-scroll to bottom
+       
+//         // Auto-scroll to bottom, but debounce or limit frequency if needed for extreme performance
 //         if (responseRef.current) {
 //           responseRef.current.scrollTop = responseRef.current.scrollHeight;
 //         }
-        
+       
 //         // Schedule next frame
 //         setTimeout(() => {
 //           animationFrameRef.current = requestAnimationFrame(animate);
@@ -394,12 +403,13 @@
 //         animationFrameRef.current = null;
 //       }
 //     };
-    
+   
 //     animationFrameRef.current = requestAnimationFrame(animate);
 //   };
 
 //   // Option to skip animation and show immediately
 //   const showResponseImmediately = (text) => {
+//     console.log('[showResponseImmediately] Displaying text immediately for text length:', text.length);
 //     if (animationFrameRef.current) {
 //       cancelAnimationFrame(animationFrameRef.current);
 //       animationFrameRef.current = null;
@@ -407,7 +417,7 @@
 //     setAnimatedResponseContent(text);
 //     setIsAnimatingResponse(false);
 //     setShowSplitView(true);
-    
+   
 //     if (responseRef.current) {
 //       responseRef.current.scrollTop = responseRef.current.scrollHeight;
 //     }
@@ -443,12 +453,16 @@
 
 //       if (data.history && Array.isArray(data.history)) {
 //         setMessages(data.history);
-        
+       
 //         const latestMessage = data.history[data.history.length - 1];
 //         if (latestMessage) {
 //           setSelectedMessageId(latestMessage.id);
 //           setCurrentResponse(latestMessage.answer);
-//           animateResponse(latestMessage.answer);
+//           if (latestMessage.answer.length > LARGE_RESPONSE_THRESHOLD) {
+//             showResponseImmediately(latestMessage.answer);
+//           } else {
+//             animateResponse(latestMessage.answer);
+//           }
 //         }
 //       } else {
 //         const newChat = {
@@ -468,9 +482,13 @@
 //         setMessages(prev => [...prev, newChat]);
 //         setSelectedMessageId(newChat.id);
 //         setCurrentResponse(response);
-//         animateResponse(response);
+//         if (response.length > LARGE_RESPONSE_THRESHOLD) {
+//           showResponseImmediately(response);
+//         } else {
+//           animateResponse(response);
+//         }
 //       }
-      
+     
 //       setSessionId(newSessionId);
 //       setChatInput('');
 //       setHasResponse(true);
@@ -489,7 +507,7 @@
 //   const handleFileUpload = async (event) => {
 //     const files = Array.from(event.target.files);
 //     console.log('Files selected:', files.length);
-    
+   
 //     if (files.length === 0) return;
 
 //     const allowedTypes = [
@@ -502,7 +520,7 @@
 //       'image/tiff'
 //     ];
 
-//     const maxSize = 100 * 1024 * 1024;
+//     const maxSize = 300 * 1024 * 1024;
 
 //     const validFiles = files.filter(file => {
 //       if (!allowedTypes.includes(file.type)) {
@@ -520,9 +538,9 @@
 //       event.target.value = '';
 //       return;
 //     }
-
-//     try {
-//       await batchUploadDocuments(validFiles);
+ 
+//      try {
+//       await batchUploadDocuments(validFiles, selectedSecretId, selectedLlmName);
 //     } catch (error) {
 //       console.error('Upload error:', error);
 //     }
@@ -552,7 +570,7 @@
 //       setError('Please upload a document first.');
 //       return;
 //     }
-    
+   
 //     const currentStatus = processingStatus?.status;
 //     if (currentStatus === 'processing' || currentStatus === 'batch_processing' || currentStatus === 'batch_queued') {
 //       setError('Please wait for document processing to complete.');
@@ -577,7 +595,7 @@
 //       try {
 //         setIsGeneratingInsights(true);
 //         setError(null);
-        
+       
 //         console.log('[handleSend] Triggering secret analysis with:', {
 //           secretId: selectedSecretId,
 //           fileId,
@@ -585,7 +603,7 @@
 //           promptLabel: promptLabel,
 //           llmName: selectedLlmName
 //         });
-        
+       
 //         const data = await apiRequest('/files/chat', {
 //           method: 'POST',
 //           body: JSON.stringify({
@@ -600,7 +618,7 @@
 //         });
 
 //         console.log('[handleSend] Received response:', data);
-        
+       
 //         const response = data.answer || data.response || 'No response received';
 //         const newSessionId = data.session_id || sessionId;
 
@@ -622,12 +640,16 @@
 //         setMessages(prev => [...prev, newChat]);
 //         setSelectedMessageId(newChat.id);
 //         setCurrentResponse(response);
-//         animateResponse(response);
+//         if (response.length > LARGE_RESPONSE_THRESHOLD) {
+//           showResponseImmediately(response);
+//         } else {
+//           animateResponse(response);
+//         }
 //         setSessionId(newSessionId);
 //         setChatInput('');
 //         setHasResponse(true);
 //         setSuccess('Analysis completed successfully!');
-        
+       
 //         // Reset secret selection after successful execution
 //         setIsSecretPromptSelected(false);
 //         setActiveDropdown('Custom Query');
@@ -638,7 +660,7 @@
 //       } finally {
 //         setIsGeneratingInsights(false);
 //       }
-//     } 
+//     }
 //     // ✅ CASE 2: User typed custom query (use default Gemini)
 //     else {
 //       if (!chatInput.trim()) {
@@ -687,11 +709,11 @@
 //     setIsSecretPromptSelected(false);
 //     setSelectedMessageId(null);
 //     setActiveDropdown('Custom Query');
-    
+   
 //     // Generate a new session ID for a new chat, but don't clear localStorage here
 //     const newSessionId = `session-${Date.now()}`;
 //     setSessionId(newSessionId);
-    
+   
 //     setSuccess('New chat session started!');
 //   };
 
@@ -824,7 +846,7 @@
 //     const fetchChatHistory = async (currentFileId, currentSessionId, selectedChatId = null) => {
 //       try {
 //         console.log('[AnalysisPage] Fetching chat history for fileId:', currentFileId);
-        
+       
 //         const response = await apiRequest(`/files/chat-history/${currentFileId}`, {
 //           method: 'GET',
 //         });
@@ -845,7 +867,7 @@
 //         });
 
 //         allMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-        
+       
 //         setMessages(allMessages);
 
 //         if (allMessages.length > 0) {
@@ -945,7 +967,7 @@
 //     } else if (location.state?.chat) {
 //       const chatData = location.state.chat;
 //       console.log('[AnalysisPage] Loading chat from location state:', chatData);
-      
+     
 //       if (chatData.file_id && chatData.session_id) {
 //         setFileId(chatData.file_id);
 //         setSessionId(chatData.session_id);
@@ -953,11 +975,11 @@
 //       } else {
 //         setError('Unable to load chat: Missing required information');
 //       }
-      
+     
 //       window.history.replaceState({}, document.title);
 //     }
 //   }, [location.state, paramFileId, paramSessionId]);
-  
+ 
 //   useEffect(() => {
 //     if (showSplitView) {
 //       setIsSidebarHidden(false);
@@ -1010,12 +1032,12 @@
 //     h6: ({node, ...props}) => (
 //       <h6 className="text-sm font-semibold mb-2 mt-3 text-gray-700 analysis-page-ai-response" {...props} />
 //     ),
-    
+   
 //     // Paragraphs
 //     p: ({node, ...props}) => (
 //       <p className="mb-4 leading-relaxed text-gray-800 text-[15px] analysis-page-ai-response" {...props} />
 //     ),
-    
+   
 //     // Text formatting
 //     strong: ({node, ...props}) => (
 //       <strong className="font-bold text-gray-900" {...props} />
@@ -1023,7 +1045,7 @@
 //     em: ({node, ...props}) => (
 //       <em className="italic text-gray-800" {...props} />
 //     ),
-    
+   
 //     // Lists
 //     ul: ({node, ...props}) => (
 //       <ul className="list-disc pl-6 mb-4 space-y-2 text-gray-800" {...props} />
@@ -1034,38 +1056,38 @@
 //     li: ({node, ...props}) => (
 //       <li className="leading-relaxed text-gray-800 analysis-page-ai-response" {...props} />
 //     ),
-    
+   
 //     // Links
 //     a: ({node, ...props}) => (
-//       <a 
-//         className="text-blue-600 hover:text-blue-800 underline font-medium transition-colors" 
-//         target="_blank" 
-//         rel="noopener noreferrer" 
-//         {...props} 
+//       <a
+//         className="text-blue-600 hover:text-blue-800 underline font-medium transition-colors"
+//         target="_blank"
+//         rel="noopener noreferrer"
+//         {...props}
 //       />
 //     ),
-    
+   
 //     // Blockquotes
 //     blockquote: ({node, ...props}) => (
 //       <blockquote className="border-l-4 border-blue-500 pl-4 py-2 my-4 bg-blue-50 text-gray-700 italic rounded-r analysis-page-ai-response" {...props} />
 //     ),
-    
+   
 //     // Code
 //     code: ({node, inline, className, children, ...props}) => {
 //       const match = /language-(\w+)/.exec(className || '');
 //       const language = match ? match[1] : '';
-      
+     
 //       if (inline) {
 //         return (
-//           <code 
-//             className="bg-gray-100 text-red-600 px-1.5 py-0.5 rounded text-sm font-mono border border-gray-200" 
+//           <code
+//             className="bg-gray-100 text-red-600 px-1.5 py-0.5 rounded text-sm font-mono border border-gray-200"
 //             {...props}
 //           >
 //             {children}
 //           </code>
 //         );
 //       }
-      
+     
 //       return (
 //         <div className="relative my-4">
 //           {language && (
@@ -1081,12 +1103,12 @@
 //         </div>
 //       );
 //     },
-    
+   
 //     // Pre (for code blocks without language)
 //     pre: ({node, ...props}) => (
 //       <pre className="bg-gray-900 text-gray-100 p-4 rounded my-4 overflow-x-auto" {...props} />
 //     ),
-    
+   
 //     // Tables
 //     table: ({node, ...props}) => (
 //       <div className="overflow-x-auto my-6 rounded-lg border border-gray-300">
@@ -1108,12 +1130,12 @@
 //     td: ({node, ...props}) => (
 //       <td className="px-4 py-3 text-sm text-gray-800 border-b border-gray-200" {...props} />
 //     ),
-    
+   
 //     // Horizontal rule
 //     hr: ({node, ...props}) => (
 //       <hr className="my-6 border-t-2 border-gray-300" {...props} />
 //     ),
-    
+   
 //     // Images
 //     img: ({node, ...props}) => (
 //       <img className="max-w-full h-auto rounded-lg shadow-md my-4" alt="" {...props} />
@@ -1169,7 +1191,7 @@
 //               </button>
 //             )}
 //           </div>
-          
+         
 //           <div className="overflow-y-auto flex-1 p-4">
 //             <div className="space-y-3">
 //               {batchUploads.map((upload) => (
@@ -1191,7 +1213,7 @@
 //                       )}
 //                     </div>
 //                   </div>
-                  
+                 
 //                   <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
 //                     <div
 //                       className={`h-2 rounded-full transition-all duration-300 ${
@@ -1201,7 +1223,7 @@
 //                       style={{ width: `${upload.progress}%` }}
 //                     ></div>
 //                   </div>
-                  
+                 
 //                   <div className="flex items-center justify-between">
 //                     <p className="text-xs text-gray-600">
 //                       {upload.status === 'uploaded' && '✓ Uploaded successfully'}
@@ -1248,7 +1270,7 @@
 //                     <Paperclip className="h-5 w-5" />
 //                   )}
 //                 </button>
-                
+               
 //                 <input
 //                   ref={fileInputRef}
 //                   type="file"
@@ -1263,7 +1285,7 @@
 //                   <button
 //                     type="button"
 //                     onClick={() => setShowDropdown(!showDropdown)}
-//                     disabled={!fileId || processingStatus?.status !== 'processed' || isLoading || isGeneratingInsights || isLoadingSecrets}
+//                     disabled={isLoading || isGeneratingInsights || isLoadingSecrets}
 //                     className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
 //                   >
 //                     <BookOpen className="h-4 w-4" />
@@ -1298,10 +1320,10 @@
 //                   value={chatInput}
 //                   onChange={handleChatInputChange}
 //                   placeholder={
-//                     isSecretPromptSelected 
+//                     isSecretPromptSelected
 //                       ? `Add optional details for ${activeDropdown}...`
-//                       : fileId 
-//                         ? "Message Legal Assistant..." 
+//                       : fileId
+//                         ? "Message Legal Assistant..."
 //                         : "Upload a document to get started"
 //                   }
 //                   className="flex-1 bg-transparent border-none outline-none text-gray-900 placeholder-gray-500 text-[15px] font-medium py-2 min-w-0 analysis-page-user-input"
@@ -1311,10 +1333,10 @@
 //                 <button
 //                   type="submit"
 //                   disabled={
-//                     isLoading || 
-//                     isGeneratingInsights || 
-//                     (!chatInput.trim() && !isSecretPromptSelected) || 
-//                     !fileId || 
+//                     isLoading ||
+//                     isGeneratingInsights ||
+//                     (!chatInput.trim() && !isSecretPromptSelected) ||
+//                     !fileId ||
 //                     processingStatus?.status !== 'processed'
 //                   }
 //                   className="p-2 bg-black hover:bg-gray-800 disabled:bg-gray-300 text-white rounded-lg transition-colors flex-shrink-0"
@@ -1327,7 +1349,7 @@
 //                   )}
 //                 </button>
 //               </div>
-              
+             
 //               {documentData && (processingStatus?.status === 'processing' || processingStatus?.status === 'batch_processing') && (
 //                 <div className="mt-3 text-center">
 //                   <div className="inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-sm">
@@ -1413,7 +1435,7 @@
 //                 />
 //               </div>
 //             </div>
-            
+           
 //             {/* Uploaded Documents Section */}
 //             {uploadedDocuments.length > 0 && (
 //               <div className="px-4 py-3 border-b border-gray-200 bg-blue-50">
@@ -1518,7 +1540,7 @@
 //                     </button>
 //                   </div>
 //                 )}
-                
+               
 //                 {isLoading && (
 //                   <div className="p-3 rounded-lg border bg-blue-50 border-blue-200">
 //                     <div className="flex items-center space-x-2">
@@ -1527,7 +1549,7 @@
 //                     </div>
 //                   </div>
 //                 )}
-                
+               
 //                 {messages.length === 0 && !isLoading && (
 //                   <div className="text-center py-8">
 //                     <MessageSquare className="h-12 w-12 mx-auto mb-3 text-gray-300" />
@@ -1554,7 +1576,7 @@
 //                       <Paperclip className="h-4 w-4" />
 //                     )}
 //                   </button>
-                  
+                 
 //                   <input
 //                     ref={fileInputRef}
 //                     type="file"
@@ -1569,7 +1591,7 @@
 //                     <button
 //                       type="button"
 //                       onClick={() => setShowDropdown(!showDropdown)}
-//                       disabled={!fileId || processingStatus?.status !== 'processed' || isLoading || isGeneratingInsights || isLoadingSecrets}
+//                       disabled={isLoading || isGeneratingInsights || isLoadingSecrets}
 //                       className="flex items-center space-x-2 px-2.5py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
 //                     >
 //                       <BookOpen className="h-3.5 w-3.5" />
@@ -1604,10 +1626,10 @@
 //                     value={chatInput}
 //                     onChange={handleChatInputChange}
 //                     placeholder={
-//                       isSecretPromptSelected 
+//                       isSecretPromptSelected
 //                         ? `Add details for ${activeDropdown}...`
-//                         : fileId 
-//                           ? "Ask a question..." 
+//                         : fileId
+//                           ? "Ask a question..."
 //                           : "Upload a document first"
 //                     }
 //                     className="flex-1 bg-transparent border-none outline-none text-gray-900 placeholder-gray-500 text-sm font-medium py-1 min-w-0 analysis-page-user-input"
@@ -1617,10 +1639,10 @@
 //                   <button
 //                     type="submit"
 //                     disabled={
-//                       isLoading || 
-//                       isGeneratingInsights || 
-//                       (!chatInput.trim() && !isSecretPromptSelected) || 
-//                       !fileId || 
+//                       isLoading ||
+//                       isGeneratingInsights ||
+//                       (!chatInput.trim() && !isSecretPromptSelected) ||
+//                       !fileId ||
 //                       processingStatus?.status !== 'processed'
 //                     }
 //                     className="p-1.5 bg-black hover:bg-gray-800 disabled:bg-gray-300 text-white rounded-lg transition-colors flex-shrink-0"
@@ -1633,7 +1655,7 @@
 //                     )}
 //                   </button>
 //                 </div>
-                
+               
 //                 {documentData && (processingStatus?.status === 'processing' || processingStatus?.status === 'batch_processing') && (
 //                   <div className="mt-2 text-center">
 //                     <div className="inline-flex items-center px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-xs">
@@ -1730,7 +1752,7 @@
 //                           )}
 //                         </div>
 //                       </div>
-                      
+                     
 //                       {/* Question Display */}
 //                       <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-l-4 border-blue-500">
 //                         <p className="text-sm font-medium text-blue-900 mb-1 flex items-center">
@@ -1761,3795 +1783,7 @@
 //                       <div className="prose prose-gray prose-lg max-w-none" ref={markdownOutputRef}>
 //                         <ReactMarkdown
 //                           remarkPlugins={[remarkGfm]}
-//                           rehypePlugins={[rehypeRaw, rehypeSanitize]}
-//                           components={markdownComponents}
-//                         >
-//                           {animatedResponseContent || currentResponse || ''}
-//                         </ReactMarkdown>
-                        
-//                         {/* Typing Indicator */}
-//                         {isAnimatingResponse && (
-//                           <span className="inline-flex items-center ml-1">
-//                             <span className="inline-block w-2 h-5 bg-blue-600 animate-pulse"></span>
-//                           </span>
-//                         )}
-//                       </div>
-//                     </div>
-//                   </div>
-//                 </div>
-//               ) : (
-//                 <div className="flex items-center justify-center h-full">
-//                   <div className="text-center max-w-md px-6">
-//                     <div className="bg-white rounded-full p-6 inline-block mb-6 shadow-lg">
-//                       <MessageSquare className="h-16 w-16 text-blue-500" />
-//                     </div>
-//                     <h3 className="text-2xl font-semibold mb-4 text-gray-900">Select a Question</h3>
-//                     <p className="text-gray-600 text-lg leading-relaxed">
-//                       Click on any question from the left panel to view the AI response here.
-//                     </p>
-//                   </div>
-//                 </div>
-//               )}
-//             </div>
-//           </div>
-//         </>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default AnalysisPage;
-
-
-
-// import '../styles/AnalysisPage.css';
-
-// import React, { useState, useEffect, useRef } from 'react';
-// import { useLocation, useParams } from 'react-router-dom';
-// import { useSidebar } from '../context/SidebarContext';
-// import DownloadPdf from '../components/DownloadPdf/DownloadPdf';
-// import ReactMarkdown from 'react-markdown';
-// import remarkGfm from 'remark-gfm';
-// import rehypeRaw from 'rehype-raw';
-// import rehypeSanitize from 'rehype-sanitize';
-// import ApiService from '../services/api';
-// import {
-//   Search, Send, FileText, Layers, Trash2, RotateCcw,
-//   ArrowRight, ChevronRight, AlertTriangle, Clock, Loader2,
-//   Upload, Download, AlertCircle, CheckCircle, X, Eye, Quote, BookOpen, Copy,
-//   ChevronDown, Paperclip, MessageSquare, FileCheck, Bot
-// } from 'lucide-react';
-
-// const AnalysisPage = () => {
-//   const location = useLocation();
-//   const { fileId: paramFileId, sessionId: paramSessionId } = useParams();
-//   const { setIsSidebarHidden, setIsSidebarCollapsed } = useSidebar();
-  
-//   // State Management
-//   const [activeDropdown, setActiveDropdown] = useState('Summary');
-//   const [isLoading, setIsLoading] = useState(false);
-//   const [isGeneratingInsights, setIsGeneratingInsights] = useState(false);
-//   const [isUploading, setIsUploading] = useState(false);
-//   const [error, setError] = useState(null);
-//   const [success, setSuccess] = useState(null);
-//   const [hasResponse, setHasResponse] = useState(false);
-//   const [isSecretPromptSelected, setIsSecretPromptSelected] = useState(false);
-  
-//   // Document and Analysis Data
-//   const [documentData, setDocumentData] = useState(null);
-//   const [messages, setMessages] = useState([]);
-//   const [fileId, setFileId] = useState(paramFileId || null);
-//   const [sessionId, setSessionId] = useState(paramSessionId || null);
-//   const [processingStatus, setProcessingStatus] = useState(null);
-//   const [currentResponse, setCurrentResponse] = useState('');
-//   const [animatedResponseContent, setAnimatedResponseContent] = useState('');
-//   const [isAnimatingResponse, setIsAnimatingResponse] = useState(false);
-//   const [chatInput, setChatInput] = useState('');
-//   const [showSplitView, setShowSplitView] = useState(false);
-//   const [searchQuery, setSearchQuery] = useState('');
-//   const [selectedMessageId, setSelectedMessageId] = useState(null);
-//   const [displayLimit, setDisplayLimit] = useState(10);
-//   const [showAllChats, setShowAllChats] = useState(false);
-//   const [showDropdown, setShowDropdown] = useState(false);
-  
-//   // Secrets state
-//   const [secrets, setSecrets] = useState([]);
-//   const [isLoadingSecrets, setIsLoadingSecrets] = useState(false);
-//   const [selectedSecretId, setSelectedSecretId] = useState(null);
-//   const [selectedLlmName, setSelectedLlmName] = useState(null); // New state for LLM name
-  
-//   // Batch upload state
-//   const [batchUploads, setBatchUploads] = useState([]);
-//   const [uploadedDocuments, setUploadedDocuments] = useState([]);
-//   const isStopActive = isLoading || isGeneratingInsights || isAnimatingResponse;
-
-//   // Refs
-//   const fileInputRef = useRef(null);
-//   const dropdownRef = useRef(null);
-//   const responseRef = useRef(null);
-//   const markdownOutputRef = useRef(null); // New ref for markdown output
-//   const pollingIntervalRef = useRef(null);
-//   const animationFrameRef = useRef(null);
-//   const abortControllerRef = useRef(null);
-
-//   // API Configuration
-//   const API_BASE_URL = 'https://gateway-service-110685455967.asia-south1.run.app';
-  
-//   const getAuthToken = () => {
-//     const tokenKeys = [
-//       'authToken', 'token', 'accessToken', 'jwt', 'bearerToken',
-//       'auth_token', 'access_token', 'api_token', 'userToken'
-//     ];
-    
-//     for (const key of tokenKeys) {
-//       const token = localStorage.getItem(key);
-//       if (token) return token;
-//     }
-//     return null;
-//   };
-
-//   const apiRequest = async (url, options = {}) => {
-//     try {
-//       const token = getAuthToken();
-//       const defaultHeaders = { 'Content-Type': 'application/json' };
-
-//       if (token) {
-//         defaultHeaders['Authorization'] = `Bearer ${token}`;
-//       }
-
-//       const headers = options.body instanceof FormData 
-//         ? (token ? { 'Authorization': `Bearer ${token}` } : {})
-//         : { ...defaultHeaders, ...options.headers };
-
-//       const response = await fetch(`${API_BASE_URL}${url}`, {
-//         ...options,
-//         headers,
-//       });
-
-//       if (!response.ok) {
-//         let errorData;
-//         try {
-//           errorData = await response.json();
-//         } catch {
-//           errorData = { error: `HTTP error! status: ${response.status}` };
-//         }
-        
-//         switch (response.status) {
-//           case 401: throw new Error('Authentication required. Please log in again.');
-//           case 403: throw new Error(errorData.error || 'Access denied.');
-//           case 404: throw new Error('Resource not found.');
-//           case 413: throw new Error('File too large.');
-//           case 415: throw new Error('Unsupported file type.');
-//           case 429: throw new Error('Too many requests.');
-//           default: throw new Error(errorData.error || errorData.message || `Request failed with status ${response.status}`);
-//         }
-//       }
-
-//       const contentType = response.headers.get('content-type');
-//       if (contentType && contentType.includes('application/json')) {
-//         return await response.json();
-//       }
-//       return response;
-//     } catch (error) {
-//       if (error.name === 'AbortError') {
-//         console.log('Request aborted');
-//         return null;
-//       }
-//       throw error;
-//     }
-//   };
-
-//   // Fetch secrets
-//   const fetchSecrets = async () => {
-//     try {
-//       setIsLoadingSecrets(true);
-//       setError(null);
-      
-//       const token = getAuthToken();
-//       const headers = { 'Content-Type': 'application/json' };
-//       if (token) headers['Authorization'] = `Bearer ${token}`;
-
-//       const response = await fetch(`${API_BASE_URL}/files/secrets?fetch=false`, {  // Changed to fetch=false
-//         method: 'GET',
-//         headers,
-//       });
-
-//       if (!response.ok) {
-//         throw new Error(`Failed to fetch secrets: ${response.status}`);
-//       }
-
-//       const secretsData = await response.json();
-//       console.log('[fetchSecrets] Raw secrets data:', secretsData);
-//       setSecrets(secretsData || []);
-      
-//       if (secretsData && secretsData.length > 0) {
-//         setActiveDropdown(secretsData[0].name);
-//         setSelectedSecretId(secretsData[0].id);
-//         setSelectedLlmName(secretsData[0].llm_name); // Set initial LLM name
-//       }
-//     } catch (error) {
-//       console.error('Error fetching secrets:', error);
-//       setError(`Failed to load analysis prompts: ${error.message}`);
-//     } finally {
-//       setIsLoadingSecrets(false);
-//     }
-//   };
-
-//   // Batch file upload
-//   const batchUploadDocuments = async (files) => {
-//     console.log('Starting batch upload for', files.length, 'files');
-//     setIsUploading(true);
-//     setError(null);
-    
-//     const initialBatchUploads = files.map((file, index) => ({
-//       id: `${file.name}-${Date.now()}-${index}`,
-//       file: file,
-//       fileName: file.name,
-//       fileSize: file.size,
-//       progress: 0,
-//       status: 'pending',
-//       fileId: null,
-//       error: null
-//     }));
-    
-//     setBatchUploads(initialBatchUploads);
-//     setShowSplitView(true);
-
-//     try {
-//       const formData = new FormData();
-//       files.forEach(file => {
-//         formData.append('document', file);
-//       });
-
-//       setBatchUploads(prev => prev.map(upload => ({ ...upload, status: 'uploading', progress: 10 })));
-
-//       const token = getAuthToken();
-//       const headers = {};
-//       if (token) headers['Authorization'] = `Bearer ${token}`;
-
-//       const response = await fetch(`${API_BASE_URL}/files/batch-upload`, {
-//         method: 'POST',
-//         headers,
-//         body: formData,
-//       });
-
-//       if (!response.ok) {
-//         const errorData = await response.json();
-//         throw new Error(errorData.error || `Upload failed with status ${response.status}`);
-//       }
-
-//       const data = await response.json();
-//       console.log('Batch upload response:', data);
-
-//       if (data.uploaded_files && Array.isArray(data.uploaded_files)) {
-//         data.uploaded_files.forEach((uploadedFile, index) => {
-//           const matchingUpload = initialBatchUploads[index];
-          
-//           if (uploadedFile.error) {
-//             setBatchUploads(prev => prev.map(upload =>
-//               upload.id === matchingUpload.id
-//                 ? { ...upload, status: 'failed', error: uploadedFile.error, progress: 0 }
-//                 : upload
-//             ));
-//           } else {
-//             const fileId = uploadedFile.file_id;
-            
-//             setBatchUploads(prev => prev.map(upload =>
-//               upload.id === matchingUpload.id
-//                 ? { ...upload, status: 'uploaded', fileId, progress: 100 }
-//                 : upload
-//             ));
-
-//             setUploadedDocuments(prev => [...prev, {
-//               id: fileId,
-//               fileName: uploadedFile.filename || matchingUpload.fileName,
-//               fileSize: matchingUpload.fileSize,
-//               uploadedAt: new Date().toISOString(),
-//               status: 'batch_processing',
-//               operationName: uploadedFile.operation_name
-//             }]);
-
-//             if (index === 0) {
-//               setFileId(fileId);
-//               setDocumentData({
-//                 id: fileId,
-//                 title: matchingUpload.fileName,
-//                 originalName: matchingUpload.fileName,
-//                 size: matchingUpload.fileSize,
-//                 type: matchingUpload.file.type,
-//                 uploadedAt: new Date().toISOString(),
-//                 status: 'batch_processing'
-//               });
-//               startProcessingStatusPolling(fileId);
-//             }
-//           }
-//         });
-
-//         const successCount = data.uploaded_files.filter(f => !f.error).length;
-//         const failCount = data.uploaded_files.filter(f => f.error).length;
-
-//         if (successCount > 0) {
-//           setSuccess(`${successCount} document(s) uploaded successfully!`);
-//         }
-//         if (failCount > 0) {
-//           setError(`${failCount} document(s) failed to upload.`);
-//         }
-//       }
-
-//     } catch (error) {
-//       console.error('Batch upload error:', error);
-//       setError(`Batch upload failed: ${error.message}`);
-//       setBatchUploads(prev => prev.map(upload => ({
-//         ...upload,
-//         status: 'failed',
-//         error: error.message
-//       })));
-//     } finally {
-//       setIsUploading(false);
-//     }
-//   };
-
-//   // Processing status polling
-//   const getProcessingStatus = async (file_id) => {
-//     try {
-//       const token = getAuthToken();
-//       const headers = { 'Content-Type': 'application/json' };
-//       if (token) headers['Authorization'] = `Bearer ${token}`;
-
-//       const response = await fetch(`${API_BASE_URL}/files/status/${file_id}`, {
-//         method: 'GET',
-//         headers,
-//       });
-
-//       if (!response.ok) {
-//         console.error(`Status check failed with status: ${response.status}`);
-//         return null;
-//       }
-
-//       const data = await response.json();
-//       console.log('Processing status:', data);
-      
-//       setProcessingStatus(data);
-      
-//       setUploadedDocuments(prev => prev.map(doc =>
-//         doc.id === file_id ? { ...doc, status: data.status } : doc
-//       ));
-      
-//       if (data.status === 'processed') {
-//         setDocumentData(prev => ({
-//           ...prev,
-//           status: 'processed',
-//         }));
-        
-//         if (pollingIntervalRef.current) {
-//           clearInterval(pollingIntervalRef.current);
-//           pollingIntervalRef.current = null;
-//         }
-        
-//         setSuccess('Document processing completed!');
-//       } else if (data.status === 'error') {
-//         setError('Document processing failed.');
-        
-//         if (pollingIntervalRef.current) {
-//           clearInterval(pollingIntervalRef.current);
-//           pollingIntervalRef.current = null;
-//         }
-//       }
-      
-//       return data;
-//     } catch (error) {
-//       console.error('Error getting processing status:', error);
-//       return null;
-//     }
-//   };
-
-//   const startProcessingStatusPolling = (file_id) => {
-//     if (pollingIntervalRef.current) {
-//       clearInterval(pollingIntervalRef.current);
-//     }
-
-//     let pollCount = 0;
-//     const maxPolls = 150;
-
-//     pollingIntervalRef.current = setInterval(async () => {
-//       pollCount++;
-//       const status = await getProcessingStatus(file_id);
-      
-//       if (status && (status.status === 'processed' || status.status === 'error')) {
-//         clearInterval(pollingIntervalRef.current);
-//         pollingIntervalRef.current = null;
-//       } else if (pollCount >= maxPolls) {
-//         clearInterval(pollingIntervalRef.current);
-//         pollingIntervalRef.current = null;
-//         setError('Document processing timeout.');
-//       }
-//     }, 2000);
-//   };
-
-//   // ✅ FASTER Animation with requestAnimationFrame and chunk-based rendering
-//   const animateResponse = (text) => {
-//     // Cancel any existing animation
-//     if (animationFrameRef.current) {
-//       cancelAnimationFrame(animationFrameRef.current);
-//     }
-
-//     setAnimatedResponseContent('');
-//     setIsAnimatingResponse(true);
-//     setShowSplitView(true);
-    
-//     let currentIndex = 0;
-//     const chunkSize = 5; // Render 5 characters at a time for faster display
-//     const delayMs = 10; // Reduced delay for faster rendering
-    
-//     const animate = () => {
-//       if (currentIndex < text.length) {
-//         const nextChunk = text.slice(currentIndex, currentIndex + chunkSize);
-//         setAnimatedResponseContent(prev => prev + nextChunk);
-//         currentIndex += chunkSize;
-        
-//         // Auto-scroll to bottom
-//         if (responseRef.current) {
-//           responseRef.current.scrollTop = responseRef.current.scrollHeight;
-//         }
-        
-//         // Schedule next frame
-//         setTimeout(() => {
-//           animationFrameRef.current = requestAnimationFrame(animate);
-//         }, delayMs);
-//       } else {
-//         setIsAnimatingResponse(false);
-//         animationFrameRef.current = null;
-//       }
-//     };
-    
-//     animationFrameRef.current = requestAnimationFrame(animate);
-//   };
-
-//   // Option to skip animation and show immediately
-//   const showResponseImmediately = (text) => {
-//     if (animationFrameRef.current) {
-//       cancelAnimationFrame(animationFrameRef.current);
-//       animationFrameRef.current = null;
-//     }
-//     setAnimatedResponseContent(text);
-//     setIsAnimatingResponse(false);
-//     setShowSplitView(true);
-    
-//     if (responseRef.current) {
-//       responseRef.current.scrollTop = responseRef.current.scrollHeight;
-//     }
-//   };
-
-//   // Chat with document (custom queries)
-//   const chatWithDocument = async (file_id, question, currentSessionId, llm_name = null) => {
-//     try {
-//       setIsLoading(true);
-//       setError(null);
-
-//       console.log('[chatWithDocument] Sending custom query. LLM:', llm_name || 'default (backend)');
-
-//       abortControllerRef.current = new AbortController();
-
-//       const body = {
-//         file_id: file_id,
-//         question: question.trim(),
-//         used_secret_prompt: false,
-//         prompt_label: null,
-//         session_id: currentSessionId,
-//       };
-
-//       if (llm_name) {
-//         body.llm_name = llm_name;
-//       }
-
-//       const data = await apiRequest('/files/chat', {
-//         method: 'POST',
-//         body: JSON.stringify(body),
-//         signal: abortControllerRef.current.signal,
-//       });
-
-//       if (!data) return; // Aborted
-
-//       const response = data.answer || data.response || 'No response received';
-//       const newSessionId = data.session_id || currentSessionId;
-
-//       if (data.history && Array.isArray(data.history)) {
-//         setMessages(data.history);
-        
-//         const latestMessage = data.history[data.history.length - 1];
-//         if (latestMessage) {
-//           setSelectedMessageId(latestMessage.id);
-//           setCurrentResponse(latestMessage.answer);
-//           animateResponse(latestMessage.answer);
-//         }
-//       } else {
-//         const newChat = {
-//           id: Date.now(),
-//           file_id: file_id,
-//           session_id: newSessionId,
-//           question: question.trim(),
-//           answer: response,
-//           display_text_left_panel: question.trim(),
-//           timestamp: new Date().toISOString(),
-//           used_chunk_ids: data.used_chunk_ids || [],
-//           confidence: data.confidence || 0.8,
-//           type: 'chat',
-//           used_secret_prompt: false
-//         };
-
-//         setMessages(prev => [...prev, newChat]);
-//         setSelectedMessageId(newChat.id);
-//         setCurrentResponse(response);
-//         animateResponse(response);
-//       }
-      
-//       setSessionId(newSessionId);
-//       setChatInput('');
-//       setHasResponse(true);
-//       setSuccess('Question answered!');
-
-//       return data;
-//     } catch (error) {
-//       if (error.name !== 'AbortError') {
-//         console.error('[chatWithDocument] Error:', error);
-//         setError(`Chat failed: ${error.message}`);
-//       }
-//       throw error;
-//     } finally {
-//       setIsLoading(false);
-//       abortControllerRef.current = null;
-//     }
-//   };
-
-//   const handleFileUpload = async (event) => {
-//     const files = Array.from(event.target.files);
-//     console.log('Files selected:', files.length);
-    
-//     if (files.length === 0) return;
-
-//     const allowedTypes = [
-//       'application/pdf',
-//       'application/msword',
-//       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-//       'text/plain',
-//       'image/png',
-//       'image/jpeg',
-//       'image/tiff'
-//     ];
-
-//     const maxSize = 100 * 1024 * 1024;
-
-//     const validFiles = files.filter(file => {
-//       if (!allowedTypes.includes(file.type)) {
-//         setError(`File "${file.name}" has an unsupported type.`);
-//         return false;
-//       }
-//       if (file.size > maxSize) {
-//         setError(`File "${file.name}" is too large (max 100MB).`);
-//         return false;
-//       }
-//       return true;
-//     });
-
-//     if (validFiles.length === 0) {
-//       event.target.value = '';
-//       return;
-//     }
-
-//     try {
-//       await batchUploadDocuments(validFiles);
-//     } catch (error) {
-//       console.error('Upload error:', error);
-//     }
-
-//     event.target.value = '';
-//   };
-
-//   const handleDropdownSelect = (secretName, secretId, llmName) => {
-//     console.log('[handleDropdownSelect] Selected:', secretName, secretId, 'LLM:', llmName);
-//     setActiveDropdown(secretName);
-//     setSelectedSecretId(secretId);
-//     setSelectedLlmName(llmName); // Set the LLM name
-//     setIsSecretPromptSelected(true);
-//     setChatInput('');
-//     setShowDropdown(false);
-//   };
-
-//   const handleChatInputChange = (e) => {
-//     setChatInput(e.target.value);
-//   };
-
-//   // Handle stop generation
-//   // const handleStop = () => {
-//   //   if (abortControllerRef.current) {
-//   //     abortControllerRef.current.abort();
-//   //     setIsGeneratingInsights(false);
-//   //     setIsLoading(false);
-//   //     setSuccess('Generation stopped');
-//   //     abortControllerRef.current = null;
-//   //   }
-//   // };
-// // Handle stop generation
-// const handleStop = () => {
-//   if (abortControllerRef.current) {
-//     abortControllerRef.current.abort();
-//     abortControllerRef.current = null;
-//   }
-
-//   if (animationFrameRef.current) {
-//     cancelAnimationFrame(animationFrameRef.current);
-//     animationFrameRef.current = null;
-//   }
-
-//   setIsAnimatingResponse(false);
-//   setIsGeneratingInsights(false);
-//   setIsLoading(false);
-//   setSuccess('Generation stopped manually.');
-// };
-
-
-//   // ✅ UPDATED handleSend function
-//   const handleSend = async (e) => {
-//     e.preventDefault();
-
-//     if (!fileId) {
-//       setError('Please upload a document first.');
-//       return;
-//     }
-    
-//     const currentStatus = processingStatus?.status;
-//     if (currentStatus === 'processing' || currentStatus === 'batch_processing' || currentStatus === 'batch_queued') {
-//       setError('Please wait for document processing to complete.');
-//       return;
-//     }
-
-//     // ✅ CASE 1: User selected a secret dropdown (use secret's LLM model)
-//     if (isSecretPromptSelected) {
-//       if (!selectedSecretId) {
-//         setError('Please select an analysis type.');
-//         return;
-//       }
-
-//       const selectedSecret = secrets.find(s => s.id === selectedSecretId);
-//       const promptLabel = selectedSecret?.name || 'Secret Prompt';
-
-//       if (!fileId) {
-//         setError('Document ID is missing for secret prompt. Please upload a document.');
-//         return;
-//       }
-
-//       try {
-//         setIsGeneratingInsights(true);
-//         setError(null);
-        
-//         console.log('[handleSend] Triggering secret analysis with:', {
-//           secretId: selectedSecretId,
-//           fileId,
-//           additionalInput: chatInput.trim(),
-//           promptLabel: promptLabel,
-//           llmName: selectedLlmName
-//         });
-        
-//         abortControllerRef.current = new AbortController();
-
-//         const data = await apiRequest('/files/chat', {
-//           method: 'POST',
-//           body: JSON.stringify({
-//             file_id: fileId,
-//             secret_id: selectedSecretId,  // Send ID, not content
-//             used_secret_prompt: true,
-//             prompt_label: promptLabel,
-//             session_id: sessionId,
-//             llm_name: selectedLlmName,  // Send LLM name to switch provider
-//             additional_input: chatInput.trim() || ''  // Optional additional details
-//           }),
-//           signal: abortControllerRef.current.signal,
-//         });
-
-//         if (!data) return; // Aborted
-
-//         console.log('[handleSend] Received response:', data);
-        
-//         const response = data.answer || data.response || 'No response received';
-//         const newSessionId = data.session_id || sessionId;
-
-//         const newChat = {
-//           id: Date.now(),
-//           file_id: fileId,
-//           session_id: newSessionId,
-//           question: promptLabel, // Display the label in the chat history
-//           answer: response,
-//           display_text_left_panel: `Analysis: ${promptLabel}`,
-//           timestamp: new Date().toISOString(),
-//           used_chunk_ids: data.used_chunk_ids || [],
-//           confidence: data.confidence || 0.8,
-//           type: 'chat', // Changed type to 'chat' as per instructions
-//           used_secret_prompt: true,
-//           prompt_label: promptLabel
-//         };
-
-//         setMessages(prev => [...prev, newChat]);
-//         setSelectedMessageId(newChat.id);
-//         setCurrentResponse(response);
-//         animateResponse(response);
-//         setSessionId(newSessionId);
-//         setChatInput('');
-//         setHasResponse(true);
-//         setSuccess('Analysis completed successfully!');
-        
-//         // Reset secret selection after successful execution
-//         setIsSecretPromptSelected(false);
-//         setActiveDropdown('Custom Query');
-
-//       } catch (error) {
-//         if (error.name !== 'AbortError') {
-//           console.error('[handleSend] Analysis error:', error);
-//           setError(`Analysis failed: ${error.message}`);
-//         }
-//       } finally {
-//         setIsGeneratingInsights(false);
-//         abortControllerRef.current = null;
-//       }
-//     } 
-//     // ✅ CASE 2: User typed custom query (use default Gemini)
-//     else {
-//       if (!chatInput.trim()) {
-//         setError('Please enter a question.');
-//         return;
-//       }
-//       try {
-//         console.log('[handleSend] Using custom query. LLM:', selectedLlmName || 'default (backend)');
-//         await chatWithDocument(fileId, chatInput, sessionId, selectedLlmName);
-//       } catch (error) {
-//         if (error.name !== 'AbortError') {
-//           console.error('[handleSend] Chat error:', error);
-//         }
-//       }
-//     }
-//   };
-
-//   const handleMessageClick = (message) => {
-//     setSelectedMessageId(message.id);
-//     setCurrentResponse(message.answer);
-//     showResponseImmediately(message.answer); // Show immediately without animation for historical messages
-//   };
-
-//   const clearAllChatData = () => {
-//     if (pollingIntervalRef.current) {
-//       clearInterval(pollingIntervalRef.current);
-//       pollingIntervalRef.current = null;
-//     }
-
-//     if (animationFrameRef.current) {
-//       cancelAnimationFrame(animationFrameRef.current);
-//       animationFrameRef.current = null;
-//     }
-
-//     setMessages([]);
-//     setDocumentData(null);
-//     setFileId(null);
-//     setCurrentResponse('');
-//     setHasResponse(false);
-//     setChatInput('');
-//     setProcessingStatus(null);
-//     setError(null);
-//     setAnimatedResponseContent('');
-//     setIsAnimatingResponse(false);
-//     setShowSplitView(false);
-//     setBatchUploads([]);
-//     setUploadedDocuments([]);
-//     setIsSecretPromptSelected(false);
-//     setSelectedMessageId(null);
-//     setActiveDropdown('Custom Query');
-    
-//     // Generate a new session ID for a new chat, but don't clear localStorage here
-//     const newSessionId = `session-${Date.now()}`;
-//     setSessionId(newSessionId);
-    
-//     setSuccess('New chat session started!');
-//   };
-
-//   const startNewChat = () => {
-//     clearAllChatData();
-//   };
-
-//   const formatFileSize = (bytes) => {
-//     if (bytes === 0) return '0 Bytes';
-//     const k = 1024;
-//     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-//     const i = Math.floor(Math.log(bytes) / Math.log(k));
-//     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-//   };
-
-//   const formatDate = (dateString) => {
-//     try {
-//       return new Date(dateString).toLocaleString();
-//     } catch (e) {
-//       return 'Invalid date';
-//     }
-//   };
-
-//   const handleCopyResponse = async () => {
-//     try {
-//       const textToCopy = animatedResponseContent || currentResponse;
-//       if (textToCopy) {
-//         // Create a temporary div to extract plain text from HTML
-//         const tempDiv = document.createElement('div');
-//         tempDiv.innerHTML = textToCopy;
-//         await navigator.clipboard.writeText(tempDiv.innerText);
-//         setSuccess('AI response copied to clipboard!');
-//       } else {
-//         setError('No response to copy.');
-//       }
-//     } catch (err) {
-//       console.error('Failed to copy AI response:', err);
-//       setError('Failed to copy response.');
-//     }
-//   };
-
-
-//   const highlightText = (text, query) => {
-//     if (!query || !text) return text;
-//     const parts = text.split(new RegExp(`(${query})`, 'gi'));
-//     return parts.map((part, i) =>
-//       part.toLowerCase() === query.toLowerCase() ? (
-//         <span key={i} className="bg-yellow-200 font-semibold text-black">
-//           {part}
-//         </span>
-//       ) : (
-//         part
-//       )
-//     );
-//   };
-
-//   // Cleanup on unmount
-//   useEffect(() => {
-//     return () => {
-//       if (pollingIntervalRef.current) {
-//         clearInterval(pollingIntervalRef.current);
-//       }
-//       if (animationFrameRef.current) {
-//         cancelAnimationFrame(animationFrameRef.current);
-//       }
-//     };
-//   }, []);
-
-//   // Close dropdown when clicking outside
-//   useEffect(() => {
-//     const handleClickOutside = (event) => {
-//       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-//         setShowDropdown(false);
-//       }
-//     };
-
-//     document.addEventListener('mousedown', handleClickOutside);
-//     return () => {
-//       document.removeEventListener('mousedown', handleClickOutside);
-//     };
-//   }, []);
-
-//   useEffect(() => {
-//     fetchSecrets();
-//   }, []);
-
-//   // Persist sessionId to localStorage
-//   useEffect(() => {
-//     if (sessionId) {
-//       localStorage.setItem('sessionId', sessionId);
-//     }
-//   }, [sessionId]);
-
-//   // Persist other states to localStorage
-//   useEffect(() => {
-//     localStorage.setItem('messages', JSON.stringify(messages));
-//   }, [messages]);
-
-//   useEffect(() => {
-//     if (currentResponse) {
-//       localStorage.setItem('currentResponse', currentResponse);
-//       localStorage.setItem('animatedResponseContent', animatedResponseContent);
-//     }
-//   }, [currentResponse, animatedResponseContent]);
-
-//   useEffect(() => {
-//     localStorage.setItem('hasResponse', JSON.stringify(hasResponse));
-//   }, [hasResponse]);
-
-//   useEffect(() => {
-//     if (documentData) {
-//       localStorage.setItem('documentData', JSON.stringify(documentData));
-//     }
-//   }, [documentData]);
-
-//   useEffect(() => {
-//     if (fileId) {
-//       localStorage.setItem('fileId', fileId);
-//     }
-//   }, [fileId]);
-
-//   useEffect(() => {
-//     if (processingStatus) {
-//       localStorage.setItem('processingStatus', JSON.stringify(processingStatus));
-//     }
-//   }, [processingStatus]);
-
-//   // Main loading effect
-//   useEffect(() => {
-//     const fetchChatHistory = async (currentFileId, currentSessionId, selectedChatId = null) => {
-//       try {
-//         console.log('[AnalysisPage] Fetching chat history for fileId:', currentFileId);
-        
-//         const response = await apiRequest(`/files/chat-history/${currentFileId}`, {
-//           method: 'GET',
-//         });
-
-//         const sessions = response || [];
-//         let allMessages = [];
-//         sessions.forEach(session => {
-//           session.messages.forEach(message => {
-//             allMessages.push({
-//               ...message,
-//               session_id: session.session_id,
-//               timestamp: message.created_at || message.timestamp,
-//               display_text_left_panel: message.used_secret_prompt
-//                 ? `Secret Prompt: ${message.prompt_label || 'Unnamed Secret Prompt'}`
-//                 : message.question
-//             });
-//           });
-//         });
-
-//         allMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-        
-//         setMessages(allMessages);
-
-//         if (allMessages.length > 0) {
-//           setDocumentData({
-//             id: currentFileId,
-//             title: `Document for Session ${currentSessionId}`,
-//             originalName: `Document for Session ${currentSessionId}`,
-//             size: 0,
-//             type: 'unknown',
-//             uploadedAt: new Date().toISOString(),
-//             status: 'processed',
-//           });
-//           setFileId(currentFileId);
-//           setSessionId(currentSessionId);
-//           setProcessingStatus({ status: 'processed' });
-//           setHasResponse(true);
-//           setShowSplitView(true);
-
-//           const chatToDisplay = selectedChatId
-//             ? allMessages.find(chat => chat.id === selectedChatId)
-//             : allMessages[allMessages.length - 1];
-
-//           if (chatToDisplay) {
-//             setCurrentResponse(chatToDisplay.answer);
-//             showResponseImmediately(chatToDisplay.answer);
-//             setSelectedMessageId(chatToDisplay.id);
-//           }
-//         }
-//         setSuccess('Chat history loaded successfully!');
-//       } catch (err) {
-//         console.error('[AnalysisPage] Error in fetchChatHistory:', err);
-//         setError(`Failed to load chat history: ${err.message}`);
-//       }
-//     };
-
-//     // 1. Load from localStorage first
-//     try {
-//       const savedMessages = localStorage.getItem('messages');
-//       if (savedMessages) setMessages(JSON.parse(savedMessages));
-
-//       const savedSessionId = localStorage.getItem('sessionId');
-//       if (savedSessionId) {
-//         setSessionId(savedSessionId);
-//       } else {
-//         const newSessionId = `session-${Date.now()}`;
-//         setSessionId(newSessionId);
-//       }
-
-//       const savedCurrentResponse = localStorage.getItem('currentResponse');
-//       const savedAnimatedResponseContent = localStorage.getItem('animatedResponseContent');
-//       if (savedCurrentResponse) {
-//         setCurrentResponse(savedCurrentResponse);
-//         if (savedAnimatedResponseContent) {
-//           setAnimatedResponseContent(savedAnimatedResponseContent);
-//           setShowSplitView(true);
-//         } else {
-//           setAnimatedResponseContent(savedCurrentResponse);
-//         }
-//         setIsAnimatingResponse(false);
-//       }
-
-//       const savedHasResponse = localStorage.getItem('hasResponse');
-//       if (savedHasResponse) {
-//         const parsedHasResponse = JSON.parse(savedHasResponse);
-//         setHasResponse(parsedHasResponse);
-//         if (parsedHasResponse) {
-//           setShowSplitView(true);
-//         }
-//       }
-
-//       const savedDocumentData = localStorage.getItem('documentData');
-//       if (savedDocumentData) setDocumentData(JSON.parse(savedDocumentData));
-
-//       const savedFileId = localStorage.getItem('fileId');
-//       if (savedFileId) setFileId(savedFileId);
-
-//       const savedProcessingStatus = localStorage.getItem('processingStatus');
-//       if (savedProcessingStatus) setProcessingStatus(JSON.parse(savedProcessingStatus));
-
-//     } catch (error) {
-//       console.error('[AnalysisPage] Error restoring from localStorage:', error);
-//       if (!sessionId) { // Ensure a session ID is always set
-//         const newSessionId = `session-${Date.now()}`;
-//         setSessionId(newSessionId);
-//       }
-//     }
-
-//     // 2. Apply navigation overrides
-//     if (location.state?.newChat) {
-//       clearAllChatData();
-//       window.history.replaceState({}, document.title);
-//     } else if (paramFileId && paramSessionId) {
-//       console.log('[AnalysisPage] Loading chat from URL params:', { paramFileId, paramSessionId });
-//       setFileId(paramFileId);
-//       setSessionId(paramSessionId);
-//       fetchChatHistory(paramFileId, paramSessionId);
-//     } else if (location.state?.chat) {
-//       const chatData = location.state.chat;
-//       console.log('[AnalysisPage] Loading chat from location state:', chatData);
-      
-//       if (chatData.file_id && chatData.session_id) {
-//         setFileId(chatData.file_id);
-//         setSessionId(chatData.session_id);
-//         fetchChatHistory(chatData.file_id, chatData.session_id, chatData.id);
-//       } else {
-//         setError('Unable to load chat: Missing required information');
-//       }
-      
-//       window.history.replaceState({}, document.title);
-//     }
-//   }, [location.state, paramFileId, paramSessionId]);
-  
-//   useEffect(() => {
-//     if (showSplitView) {
-//       setIsSidebarHidden(false);
-//       setIsSidebarCollapsed(true);
-//     } else if (hasResponse) {
-//       setIsSidebarHidden(false);
-//       setIsSidebarCollapsed(false);
-//     } else {
-//       setIsSidebarHidden(false);
-//       setIsSidebarCollapsed(false);
-//     }
-//   }, [hasResponse, showSplitView, setIsSidebarHidden, setIsSidebarCollapsed]);
-
-//   useEffect(() => {
-//     localStorage.setItem('messages', JSON.stringify(messages));
-//   }, [messages]);
-
-//   useEffect(() => {
-//     if (success) {
-//       const timer = setTimeout(() => setSuccess(null), 5000);
-//       return () => clearTimeout(timer);
-//     }
-//   }, [success]);
-
-//   useEffect(() => {
-//     if (error) {
-//       const timer = setTimeout(() => setError(null), 8000);
-//       return () => clearTimeout(timer);
-//     }
-//   }, [error]);
-
-//   // ✅ Enhanced Markdown Components for all LLM formats (OpenAI, Anthropic, Gemini)
-//   const markdownComponents = {
-//     // Headings
-//     h1: ({node, ...props}) => (
-//       <h1 className="text-3xl font-bold mb-6 mt-8 text-gray-900 border-b-2 border-gray-300 pb-3 analysis-page-ai-response" {...props} />
-//     ),
-//     h2: ({node, ...props}) => (
-//       <h2 className="text-2xl font-bold mb-5 mt-7 text-gray-900 border-b border-gray-200 pb-2 analysis-page-ai-response" {...props} />
-//     ),
-//     h3: ({node, ...props}) => (
-//       <h3 className="text-xl font-semibold mb-4 mt-6 text-gray-800 analysis-page-ai-response" {...props} />
-//     ),
-//     h4: ({node, ...props}) => (
-//       <h4 className="text-lg font-semibold mb-3 mt-5 text-gray-800 analysis-page-ai-response" {...props} />
-//     ),
-//     h5: ({node, ...props}) => (
-//       <h5 className="text-base font-semibold mb-2 mt-4 text-gray-700 analysis-page-ai-response" {...props} />
-//     ),
-//     h6: ({node, ...props}) => (
-//       <h6 className="text-sm font-semibold mb-2 mt-3 text-gray-700 analysis-page-ai-response" {...props} />
-//     ),
-    
-//     // Paragraphs
-//     p: ({node, ...props}) => (
-//       <p className="mb-4 leading-relaxed text-gray-800 text-[15px] analysis-page-ai-response" {...props} />
-//     ),
-    
-//     // Text formatting
-//     strong: ({node, ...props}) => (
-//       <strong className="font-bold text-gray-900" {...props} />
-//     ),
-//     em: ({node, ...props}) => (
-//       <em className="italic text-gray-800" {...props} />
-//     ),
-    
-//     // Lists
-//     ul: ({node, ...props}) => (
-//       <ul className="list-disc pl-6 mb-4 space-y-2 text-gray-800" {...props} />
-//     ),
-//     ol: ({node, ...props}) => (
-//       <ol className="list-decimal pl-6 mb-4 space-y-2 text-gray-800" {...props} />
-//     ),
-//     li: ({node, ...props}) => (
-//       <li className="leading-relaxed text-gray-800 analysis-page-ai-response" {...props} />
-//     ),
-    
-//     // Links
-//     a: ({node, ...props}) => (
-//       <a 
-//         className="text-blue-600 hover:text-blue-800 underline font-medium transition-colors" 
-//         target="_blank" 
-//         rel="noopener noreferrer" 
-//         {...props} 
-//       />
-//     ),
-    
-//     // Blockquotes
-//     blockquote: ({node, ...props}) => (
-//       <blockquote className="border-l-4 border-blue-500 pl-4 py-2 my-4 bg-blue-50 text-gray-700 italic rounded-r analysis-page-ai-response" {...props} />
-//     ),
-    
-//     // Code
-//     code: ({node, inline, className, children, ...props}) => {
-//       const match = /language-(\w+)/.exec(className || '');
-//       const language = match ? match[1] : '';
-      
-//       if (inline) {
-//         return (
-//           <code 
-//             className="bg-gray-100 text-red-600 px-1.5 py-0.5 rounded text-sm font-mono border border-gray-200" 
-//             {...props}
-//           >
-//             {children}
-//           </code>
-//         );
-//       }
-      
-//       return (
-//         <div className="relative my-4">
-//           {language && (
-//             <div className="bg-gray-800 text-gray-300 text-xs px-3 py-1 rounded-t font-mono">
-//               {language}
-//             </div>
-//           )}
-//           <pre className={`bg-gray-900 text-gray-100 p-4 ${language ? 'rounded-b' : 'rounded'} overflow-x-auto`}>
-//             <code className="font-mono text-sm" {...props}>
-//               {children}
-//             </code>
-//           </pre>
-//         </div>
-//       );
-//     },
-    
-//     // Pre (for code blocks without language)
-//     pre: ({node, ...props}) => (
-//       <pre className="bg-gray-900 text-gray-100 p-4 rounded my-4 overflow-x-auto" {...props} />
-//     ),
-    
-//     // Tables
-//     table: ({node, ...props}) => (
-//       <div className="overflow-x-auto my-6 rounded-lg border border-gray-300">
-//         <table className="min-w-full divide-y divide-gray-300" {...props} />
-//       </div>
-//     ),
-//     thead: ({node, ...props}) => (
-//       <thead className="bg-gray-100" {...props} />
-//     ),
-//     th: ({node, ...props}) => (
-//       <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-300" {...props} />
-//     ),
-//     tbody: ({node, ...props}) => (
-//       <tbody className="bg-white divide-y divide-gray-200" {...props} />
-//     ),
-//     tr: ({node, ...props}) => (
-//       <tr className="hover:bg-gray-50 transition-colors" {...props} />
-//     ),
-//     td: ({node, ...props}) => (
-//       <td className="px-4 py-3 text-sm text-gray-800 border-b border-gray-200" {...props} />
-//     ),
-    
-//     // Horizontal rule
-//     hr: ({node, ...props}) => (
-//       <hr className="my-6 border-t-2 border-gray-300" {...props} />
-//     ),
-    
-//     // Images
-//     img: ({node, ...props}) => (
-//       <img className="max-w-full h-auto rounded-lg shadow-md my-4" alt="" {...props} />
-//     ),
-//   };
-
-//   return (
-//     <div className="flex h-screen bg-white">
-//       {/* Error Messages */}
-//       {error && (
-//         <div className="fixed top-4 right-4 z-50 max-w-sm">
-//           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg shadow-lg flex items-start space-x-2">
-//             <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
-//             <div className="flex-1">
-//               <p className="text-sm">{error}</p>
-//             </div>
-//             <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700">
-//               <X className="h-4 w-4" />
-//             </button>
-//           </div>
-//         </div>
-//       )}
-
-//       {/* Success Messages */}
-//       {success && (
-//         <div className="fixed top-4 right-4 z-50 max-w-sm">
-//           <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2">
-//             <CheckCircle className="h-5 w-5 flex-shrink-0" />
-//             <span className="text-sm">{success}</span>
-//             <button onClick={() => setSuccess(null)} className="ml-auto text-green-500 hover:text-green-700">
-//               <X className="h-4 w-4" />
-//             </button>
-//           </div>
-//         </div>
-//       )}
-
-//       {/* Batch Upload Progress Panel */}
-//       {(isUploading || batchUploads.length > 0) && (
-//         <div className="fixed top-20 right-4 z-40 max-w-md w-full bg-white rounded-lg shadow-xl border border-gray-200 max-h-96 overflow-hidden flex flex-col">
-//           <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-gray-50">
-//             <div className="flex items-center space-x-2">
-//               <Upload className="h-5 w-5 text-blue-600" />
-//               <h3 className="font-semibold text-gray-900">
-//                 Uploading {batchUploads.length} file{batchUploads.length > 1 ? 's' : ''}
-//               </h3>
-//             </div>
-//             {!isUploading && (
-//               <button
-//                 onClick={() => setBatchUploads([])}
-//                 className="text-gray-400 hover:text-gray-600"
-//               >
-//                 <X className="h-4 w-4" />
-//               </button>
-//             )}
-//           </div>
-          
-//           <div className="overflow-y-auto flex-1 p-4">
-//             <div className="space-y-3">
-//               {batchUploads.map((upload) => (
-//                 <div key={upload.id} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-//                   <div className="flex items-start justify-between mb-2">
-//                     <div className="flex-1 min-w-0">
-//                       <p className="text-sm font-medium text-gray-900 truncate">{upload.fileName}</p>
-//                       <p className="text-xs text-gray-500">{formatFileSize(upload.fileSize)}</p>
-//                     </div>
-//                     <div className="ml-2">
-//                       {upload.status === 'uploaded' && (
-//                         <CheckCircle className="h-5 w-5 text-green-500" />
-//                       )}
-//                       {upload.status === 'failed' && (
-//                         <AlertCircle className="h-5 w-5 text-red-500" />
-//                       )}
-//                       {(upload.status === 'pending' || upload.status === 'uploading') && (
-//                         <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />
-//                       )}
-//                     </div>
-//                   </div>
-                  
-//                   <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-//                     <div
-//                       className={`h-2 rounded-full transition-all duration-300 ${
-//                         upload.status === 'uploaded' ? 'bg-green-500' :
-//                         upload.status === 'failed' ? 'bg-red-500' : 'bg-blue-600'
-//                       }`}
-//                       style={{ width: `${upload.progress}%` }}
-//                     ></div>
-//                   </div>
-                  
-//                   <div className="flex items-center justify-between">
-//                     <p className="text-xs text-gray-600">
-//                       {upload.status === 'uploaded' && '✓ Uploaded successfully'}
-//                       {upload.status === 'failed' && `✗ ${upload.error || 'Upload failed'}`}
-//                       {upload.status === 'uploading' && `${upload.progress}% uploaded`}
-//                       {upload.status === 'pending' && 'Preparing...'}
-//                     </p>
-//                     {upload.fileId && (
-//                       <span className="text-xs font-mono text-gray-400">
-//                         ID: {upload.fileId.substring(0, 8)}
-//                       </span>
-//                     )}
-//                   </div>
-//                 </div>
-//               ))}
-//             </div>
-//           </div>
-//         </div>
-//       )}
-
-//       {/* Conditional Rendering for Single Page vs Split View */}
-//       {!showSplitView ? (
-//         // Single Page View: Only chat input area
-//         <div className="flex flex-col items-center justify-center h-full w-full">
-//           <div className="text-center max-w-2xl px-6 mb-12">
-//             <h3 className="text-3xl font-bold mb-4 text-gray-900">Welcome to Smart Legal Insights</h3>
-//             <p className="text-gray-600 text-xl leading-relaxed">
-//               Upload a legal document or ask a question to begin your AI-powered analysis.
-//             </p>
-//           </div>
-//           <div className="w-full max-w-4xl px-6">
-//             <form onSubmit={handleSend} className="mx-auto">
-//               <div className="flex items-center space-x-3 bg-gray-50 rounded-xl border border-[#21C1B6]/30 px-5 py-6 focus-within:border-[#21C1B6] focus-within:bg-white focus-within:shadow-sm">
-//                 <button
-//                   type="button"
-//                   onClick={() => fileInputRef.current?.click()}
-//                   disabled={isUploading}
-//                   className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
-//                   title="Upload Document"
-//                 >
-//                   {isUploading ? (
-//                     <Loader2 className="h-5 w-5 animate-spin" />
-//                   ) : (
-//                     <Paperclip className="h-5 w-5" />
-//                   )}
-//                 </button>
-                
-//                 <input
-//                   ref={fileInputRef}
-//                   type="file"
-//                   className="hidden"
-//                   accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.tiff"
-//                   onChange={handleFileUpload}
-//                   disabled={isUploading}
-//                   multiple
-//                 />
-
-//                 <div className="relative flex-shrink-0" ref={dropdownRef}>
-//                   <button
-//                     type="button"
-//                     onClick={() => setShowDropdown(!showDropdown)}
-//                     disabled={!fileId || processingStatus?.status !== 'processed' || isLoading || isGeneratingInsights || isLoadingSecrets}
-//                     className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-//                   >
-//                     <BookOpen className="h-4 w-4" />
-//                     <span>{isLoadingSecrets ? 'Loading...' : activeDropdown}</span>
-//                     <ChevronDown className="h-4 w-4" />
-//                   </button>
-
-//                   {showDropdown && !isLoadingSecrets && (
-//                     <div className="absolute bottom-full left-0 mb-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-20 max-h-60 overflow-y-auto">
-//                       {secrets.length > 0 ? (
-//                         secrets.map((secret) => (
-//                           <button
-//                             key={secret.id}
-//                             type="button"
-//                             onClick={() => handleDropdownSelect(secret.name, secret.id, secret.llm_name)}
-//                             className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg"
-//                           >
-//                             {secret.name}
-//                           </button>
-//                         ))
-//                       ) : (
-//                         <div className="px-4 py-2.5 text-sm text-gray-500">
-//                           No analysis prompts available
-//                         </div>
-//                       )}
-//                     </div>
-//                   )}
-//                 </div>
-
-//                 <input
-//                   type="text"
-//                   value={chatInput}
-//                   onChange={handleChatInputChange}
-//                   placeholder={
-//                     isSecretPromptSelected 
-//                       ? `Add optional details for ${activeDropdown}...`
-//                       : fileId 
-//                         ? "Message Legal Assistant..." 
-//                         : "Upload a document to get started"
-//                   }
-//                   className="flex-1 bg-transparent border-none outline-none text-gray-900 placeholder-gray-500 text-[15px] font-medium py-2 min-w-0 analysis-page-user-input"
-//                   disabled={isLoading || isGeneratingInsights || !fileId || processingStatus?.status !== 'processed'}
-//                 />
-// {/* 
-//                 <button
-//                   type={(isLoading || isGeneratingInsights) ? 'button' : 'submit'}
-//                   onClick={(isLoading || isGeneratingInsights) ? handleStop : undefined}
-//                   disabled={
-//                     (!isLoading && !isGeneratingInsights) && 
-//                     ((!chatInput.trim() && !isSecretPromptSelected) || 
-//                     !fileId || 
-//                     processingStatus?.status !== 'processed')
-//                   }
-//                   className="p-2 bg-[#21C1B6] hover:bg-[#1AA49B] disabled:bg-gray-300 text-white rounded-lg transition-colors flex-shrink-0"
-//                   title={(isLoading || isGeneratingInsights) ? 'Stop Generation' : 'Send Message'}
-//                 >
-//                   {isLoading || isGeneratingInsights ? (
-//                     <X className="h-5 w-5" />
-//                   ) : (
-//                     <Send className="h-5 w-5" />
-//                   )}
-//                 </button> */}
-
-//             <button
-//   type={isStopActive ? 'button' : 'submit'}
-//   onClick={isStopActive ? handleStop : undefined}
-//   disabled={
-//     (!isStopActive) &&
-//     ((!chatInput.trim() && !isSecretPromptSelected) ||
-//       !fileId ||
-//       processingStatus?.status !== 'processed')
-//   }
-//   className={`p-2 rounded-lg transition-colors flex-shrink-0 ${
-//     isStopActive
-//       ? 'bg-red-600 hover:bg-red-700 text-white'
-//       : 'bg-[#21C1B6] hover:bg-[#1AA49B] text-white disabled:bg-gray-300'
-//   }`}
-//   title={isStopActive ? 'Stop Generation' : 'Send Message'}
-// >
-//   {isStopActive ? (
-//     <X className="h-5 w-5" />
-//   ) : (
-//     <Send className="h-5 w-5" />
-//   )}
-// </button>
-
-
-
-//               </div>
-              
-//               {documentData && (processingStatus?.status === 'processing' || processingStatus?.status === 'batch_processing') && (
-//                 <div className="mt-3 text-center">
-//                   <div className="inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-sm">
-//                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
-//                     Processing document...
-//                     {processingStatus.processing_progress && (
-//                       <span className="ml-1">({Math.round(processingStatus.processing_progress)}%)</span>
-//                     )}
-//                   </div>
-//                 </div>
-//               )}
-
-//               {documentData && !hasResponse && (
-//                 <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-//                   <div className="flex items-center space-x-3">
-//                     <FileCheck className="h-5 w-5 text-green-600" />
-//                     <div className="flex-1 min-w-0">
-//                       <p className="text-sm font-medium text-gray-900 truncate">{documentData.originalName}</p>
-//                       <p className="text-xs text-gray-500">
-//                         {formatFileSize(documentData.size)} • {formatDate(documentData.uploadedAt)}
-//                       </p>
-//                     </div>
-//                     {processingStatus && (
-//                       <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-//                         processingStatus.status === 'processed'
-//                           ? 'bg-green-100 text-green-800'
-//                           : processingStatus.status === 'processing' || processingStatus.status === 'batch_processing'
-//                           ? 'bg-blue-100 text-blue-800'
-//                           : 'bg-red-100 text-red-800'
-//                       }`}>
-//                         {processingStatus.status.charAt(0).toUpperCase() + processingStatus.status.slice(1)}
-//                       </div>
-//                     )}
-//                   </div>
-//                 </div>
-//               )}
-
-//               {isSecretPromptSelected && (
-//                 <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded-lg">
-//                   <div className="flex items-center space-x-2 text-sm text-blue-800">
-//                     <Bot className="h-4 w-4" />
-//                     <span>Using analysis prompt: <strong>{activeDropdown}</strong></span>
-//                     <button
-//                       type="button"
-//                       onClick={() => {
-//                         setIsSecretPromptSelected(false);
-//                         setActiveDropdown('Custom Query');
-//                         setSelectedSecretId(null);
-//                       }}
-//                       className="ml-auto text-blue-600 hover:text-blue-800"
-//                     >
-//                       <X className="h-4 w-4" />
-//                     </button>
-//                   </div>
-//                 </div>
-//               )}
-//             </form>
-//           </div>
-//         </div>
-//       ) : (
-//         // Split View: Left and Right Panels
-//         <>
-//           {/* Left Panel - Chat Messages List */}
-//           <div className="w-2/5 border-r border-gray-200 flex flex-col bg-white h-full">
-//             <div className="p-4 border-b border-black border-opacity-20">
-//               <div className="flex items-center justify-between mb-4">
-//                 <h2 className="text-lg font-semibold text-gray-900">Questions</h2>
-//                 <button
-//                   onClick={startNewChat}
-//                   className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
-//                 >
-//                   New Chat
-//                 </button>
-//               </div>
-//               <div className="relative mb-4">
-//                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-//                 <input
-//                   type="text"
-//                   placeholder="Search questions..."
-//                   value={searchQuery}
-//                   onChange={(e) => setSearchQuery(e.target.value)}
-//                   className="w-full pl-9 pr-3 py-2 bg-gray-100 rounded-lg text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-//                 />
-//               </div>
-//             </div>
-            
-//             {/* Uploaded Documents Section */}
-//             {uploadedDocuments.length > 0 && (
-//               <div className="px-4 py-3 border-b border-gray-200 bg-blue-50">
-//                 <h3 className="text-xs font-semibold text-gray-700 mb-2 flex items-center">
-//                   <FileText className="h-4 w-4 mr-1" />
-//                   Uploaded Documents ({uploadedDocuments.length})
-//                 </h3>
-//                 <div className="space-y-2 max-h-32 overflow-y-auto">
-//                   {uploadedDocuments.map((doc) => (
-//                     <div
-//                       key={doc.id}
-//                       onClick={() => {
-//                         setFileId(doc.id);
-//                         setDocumentData({
-//                           id: doc.id,
-//                           title: doc.fileName,
-//                           originalName: doc.fileName,
-//                           size: doc.fileSize,
-//                           type: 'unknown',
-//                           uploadedAt: doc.uploadedAt,
-//                           status: doc.status,
-//                         });
-//                         if (doc.status !== 'processed') {
-//                           startProcessingStatusPolling(doc.id);
-//                         }
-//                       }}
-//                       className={`p-2 rounded-md cursor-pointer transition-colors ${
-//                         fileId === doc.id
-//                           ? 'bg-blue-100 border border-blue-300'
-//                           : 'bg-white border border-gray-200 hover:bg-gray-50'
-//                       }`}
-//                     >
-//                       <div className="flex items-center justify-between">
-//                         <div className="flex-1 min-w-0">
-//                           <p className="text-xs font-medium text-gray-900 truncate">{doc.fileName}</p>
-//                           <p className="text-xs text-gray-500">{formatFileSize(doc.fileSize)}</p>
-//                         </div>
-//                         <div className={`ml-2 px-1.5 py-0.5 rounded text-xs font-medium ${
-//                           doc.status === 'processed'
-//                             ? 'bg-green-100 text-green-800'
-//                             : doc.status === 'processing' || doc.status === 'batch_processing'
-//                             ? 'bg-blue-100 text-blue-800'
-//                             : 'bg-yellow-100 text-yellow-800'
-//                         }`}>
-//                           {doc.status}
-//                         </div>
-//                       </div>
-//                     </div>
-//                   ))}
-//                 </div>
-//               </div>
-//             )}
-
-//             <div className="flex-1 overflow-y-auto px-4 py-2">
-//               <div className="space-y-2">
-//                 {messages
-//                   .filter(msg =>
-//                     (msg.display_text_left_panel || msg.question || '').toLowerCase().includes(searchQuery.toLowerCase())
-//                   )
-//                   .slice(0, showAllChats ? messages.length : displayLimit)
-//                   .map((msg, i) => (
-//                     <div
-//                       key={msg.id || i}
-//                       onClick={() => handleMessageClick(msg)}
-//                       className={`p-3 rounded-lg border cursor-pointer transition-all duration-200 hover:shadow-md ${
-//                         selectedMessageId === msg.id
-//                           ? 'bg-[#21C1B6]/10 border-[#21C1B6]/30 shadow-sm'
-//                           : 'bg-white border-[#21C1B6]/30 hover:bg-gray-50'
-//                       }`}
-//                     >
-//                       <div className="flex items-start justify-between">
-//                         <div className="flex-1 min-w-0">
-//                           <p className="text-sm font-medium text-gray-900 mb-1 line-clamp-2">
-//                             {highlightText(msg.display_text_left_panel || msg.question, searchQuery)}
-//                           </p>
-//                           <div className="flex items-center space-x-2 text-xs text-gray-500">
-//                             <span>{formatDate(msg.timestamp || msg.created_at)}</span>
-//                             {msg.session_id && (
-//                               <>
-//                                 <span>•</span>
-//                                 <span className="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded">
-//                                   {msg.session_id.split('-')[1]?.substring(0, 8) || 'N/A'}
-//                                 </span>
-//                               </>
-//                             )}
-//                           </div>
-//                         </div>
-//                         {selectedMessageId === msg.id && (
-//                           <ChevronRight className="h-4 w-4 text-blue-600 flex-shrink-0 ml-2" />
-//                         )}
-//                       </div>
-//                     </div>
-//                   ))}
-
-//                 {messages.length > displayLimit && !showAllChats && (
-//                   <div className="text-center py-4">
-//                     <button
-//                       onClick={() => setShowAllChats(true)}
-//                       className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-//                     >
-//                       See All ({messages.length - displayLimit} more)
-//                     </button>
-//                   </div>
-//                 )}
-                
-//                 {isLoading && (
-//                   <div className="p-3 rounded-lg border bg-blue-50 border-blue-200">
-//                     <div className="flex items-center space-x-2">
-//                       <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-//                       <span className="text-sm text-blue-800">Processing...</span>
-//                     </div>
-//                   </div>
-//                 )}
-                
-//                 {messages.length === 0 && !isLoading && (
-//                   <div className="text-center py-8">
-//                     <MessageSquare className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-//                     <p className="text-gray-500 text-sm">No questions yet</p>
-//                     <p className="text-gray-400 text-xs">Start by asking a question</p>
-//                   </div>
-//                 )}
-//               </div>
-//             </div>
-
-//             <div className="border-t border-gray-200 p-4 bg-white flex-shrink-0">
-//               <form onSubmit={handleSend} className="mx-auto">
-//                 <div className="flex items-center space-x-3 bg-gray-50 rounded-xl border border-[#21C1B6]/30 px-4 py-3 focus-within:border-[#21C1B6] focus-within:bg-white focus-within:shadow-sm">
-//                   <button
-//                     type="button"
-//                     onClick={() => fileInputRef.current?.click()}
-//                     disabled={isUploading}
-//                     className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
-//                     title="Upload Document"
-//                   >
-//                     {isUploading ? (
-//                       <Loader2 className="h-4 w-4 animate-spin" />
-//                     ) : (
-//                       <Paperclip className="h-4 w-4" />
-//                     )}
-//                   </button>
-                  
-//                   <input
-//                     ref={fileInputRef}
-//                     type="file"
-//                     className="hidden"
-//                     accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.tiff"
-//                     onChange={handleFileUpload}
-//                     disabled={isUploading}
-//                     multiple
-//                   />
-
-//                   <div className="relative flex-shrink-0" ref={dropdownRef}>
-//                     <button
-//                       type="button"
-//                       onClick={() => setShowDropdown(!showDropdown)}
-//                       disabled={!fileId || processingStatus?.status !== 'processed' || isLoading || isGeneratingInsights || isLoadingSecrets}
-//                       className="flex items-center space-x-2 px-2.5py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-//                     >
-//                       <BookOpen className="h-3.5 w-3.5" />
-//                       <span>{isLoadingSecrets ? 'Loading...' : activeDropdown}</span>
-//                       <ChevronDown className="h-3.5 w-3.5" />
-//                     </button>
-
-//                     {showDropdown && !isLoadingSecrets && (
-//                       <div className="absolute bottom-full left-0 mb-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-20 max-h-60 overflow-y-auto">
-//                         {secrets.length > 0 ? (
-//                           secrets.map((secret) => (
-//                             <button
-//                               key={secret.id}
-//                               type="button"
-//                               onClick={() => handleDropdownSelect(secret.name, secret.id, secret.llm_name)}
-//                               className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg"
-//                             >
-//                               {secret.name}
-//                             </button>
-//                           ))
-//                         ) : (
-//                           <div className="px-4 py-2.5 text-sm text-gray-500">
-//                             No analysis prompts available
-//                           </div>
-//                         )}
-//                       </div>
-//                     )}
-//                   </div>
-
-//                   <input
-//                     type="text"
-//                     value={chatInput}
-//                     onChange={handleChatInputChange}
-//                     placeholder={
-//                       isSecretPromptSelected 
-//                         ? `Add details for ${activeDropdown}...`
-//                         : fileId 
-//                           ? "Ask a question..." 
-//                           : "Upload a document first"
-//                     }
-//                     className="flex-1 bg-transparent border-none outline-none text-gray-900 placeholder-gray-500 text-sm font-medium py-1 min-w-0 analysis-page-user-input"
-//                     disabled={isLoading || isGeneratingInsights || !fileId || processingStatus?.status !== 'processed'}
-//                   />
-
-//                   <button
-//                     type={(isLoading || isGeneratingInsights) ? 'button' : 'submit'}
-//                     onClick={(isLoading || isGeneratingInsights) ? handleStop : undefined}
-//                     disabled={
-//                       (!isLoading && !isGeneratingInsights) && 
-//                       ((!chatInput.trim() && !isSecretPromptSelected) || 
-//                       !fileId || 
-//                       processingStatus?.status !== 'processed')
-//                     }
-//                     className="p-1.5 bg-[#21C1B6] hover:bg-[#1AA49B] disabled:bg-gray-300 text-white rounded-lg transition-colors flex-shrink-0"
-//                     title={(isLoading || isGeneratingInsights) ? 'Stop Generation' : 'Send Message'}
-//                   >
-//                     {isLoading || isGeneratingInsights ? (
-//                       <X className="h-4 w-4" />
-//                     ) : (
-//                       <Send className="h-4 w-4" />
-//                     )}
-//                   </button>
-//                 </div>
-                
-//                 {documentData && (processingStatus?.status === 'processing' || processingStatus?.status === 'batch_processing') && (
-//                   <div className="mt-2 text-center">
-//                     <div className="inline-flex items-center px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-xs">
-//                       <Loader2 className="h-3 w-3 animate-spin mr-1" />
-//                       Processing document...
-//                       {processingStatus.processing_progress && (
-//                         <span className="ml-1">({Math.round(processingStatus.processing_progress)}%)</span>
-//                       )}
-//                     </div>
-//                   </div>
-//                 )}
-
-//                 {documentData && (
-//                   <div className="mt-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
-//                     <div className="flex items-center space-x-2">
-//                       <FileCheck className="h-4 w-4 text-green-600" />
-//                       <div className="flex-1 min-w-0">
-//                         <p className="text-xs font-medium text-gray-900 truncate">{documentData.originalName}</p>
-//                         <p className="text-xs text-gray-500">
-//                           {formatFileSize(documentData.size)}
-//                         </p>
-//                       </div>
-//                       {processingStatus && (
-//                         <div className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-//                           processingStatus.status === 'processed'
-//                             ? 'bg-green-100 text-green-800'
-//                             : processingStatus.status === 'processing' || processingStatus.status === 'batch_processing'
-//                             ? 'bg-blue-100 text-blue-800'
-//                             : 'bg-red-100 text-red-800'
-//                         }`}>
-//                           {(processingStatus.status ?? '').charAt(0).toUpperCase() + (processingStatus.status ?? '').slice(1)}
-//                         </div>
-//                       )}
-//                     </div>
-//                   </div>
-//                 )}
-
-//                 {isSecretPromptSelected && (
-//                   <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
-//                     <div className="flex items-center space-x-2 text-xs text-blue-800">
-//                       <Bot className="h-3.5 w-3.5" />
-//                       <span>Using: <strong>{activeDropdown}</strong></span>
-//                       <button
-//                         type="button"
-//                         onClick={() => {
-//                           setIsSecretPromptSelected(false);
-//                           setActiveDropdown('Custom Query');
-//                           setSelectedSecretId(null);
-//                         }}
-//                         className="ml-auto text-blue-600 hover:text-blue-800"
-//                       >
-//                         <X className="h-3.5 w-3.5" />
-//                       </button>
-//                     </div>
-//                   </div>
-//                 )}
-//               </form>
-//             </div>
-//           </div>
-
-//           {/* Right Panel - Response Display */}
-//           <div className="w-3/5 flex flex-col h-full bg-gray-50">
-//             <div className="flex-1 overflow-y-auto" ref={responseRef}>
-//               {selectedMessageId && (currentResponse || animatedResponseContent) ? (
-//                 <div className="px-6 py-6">
-//                   <div className="max-w-none">
-//                     {/* Header Section */}
-//                     <div className="mb-6 pb-4 border-b border-gray-200 bg-white rounded-lg p-4 shadow-sm">
-//                       <div className="flex items-center justify-between mb-3">
-//                         <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-//                           <Bot className="h-5 w-5 mr-2 text-blue-600" />
-//                           AI Response
-//                         </h2>
-//                         <div className="flex items-center space-x-2 text-sm text-gray-500">
-//                           <button
-//                             onClick={handleCopyResponse}
-//                             className="flex items-center px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
-//                             title="Copy AI Response"
-//                           >
-//                             <Copy className="h-4 w-4 mr-1" />
-//                             Copy
-//                           </button>
-//                           <DownloadPdf markdownOutputRef={markdownOutputRef} />
-//                           {messages.find(msg => msg.id === selectedMessageId)?.timestamp && (
-//                             <span>{formatDate(messages.find(msg => msg.id === selectedMessageId).timestamp)}</span>
-//                           )}
-//                           {messages.find(msg => msg.id === selectedMessageId)?.session_id && (
-//                             <>
-//                               <span>•</span>
-//                               <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
-//                                 {messages.find(msg => msg.id === selectedMessageId).session_id.split('-')[1]?.substring(0, 6) || 'N/A'}
-//                               </span>
-//                             </>
-//                           )}
-//                         </div>
-//                       </div>
-                      
-//                       {/* Question Display */}
-//                       <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-l-4 border-blue-500">
-//                         <p className="text-sm font-medium text-blue-900 mb-1 flex items-center">
-//                           <MessageSquare className="h-4 w-4 mr-1" />
-//                           Question:
-//                         </p>
-//                         <p className="text-sm text-blue-800 leading-relaxed">
-//                           {messages.find(msg => msg.id === selectedMessageId)?.question || 'No question available'}
-//                         </p>
-//                       </div>
-
-//                       {/* Skip Animation Button */}
-//                       {isAnimatingResponse && (
-//                         <div className="mt-3 flex justify-end">
-//                           <button
-//                             onClick={() => showResponseImmediately(currentResponse)}
-//                             className="text-xs text-blue-600 hover:text-blue-800 flex items-center space-x-1"
-//                           >
-//                             <span>Skip animation</span>
-//                             <ArrowRight className="h-3 w-3" />
-//                           </button>
-//                         </div>
-//                       )}
-//                     </div>
-
-//                     {/* Response Content with Enhanced Markdown Rendering */}
-//                     <div className="bg-white rounded-lg shadow-sm p-6">
-//                       <div className="prose prose-gray prose-lg max-w-none" ref={markdownOutputRef}>
-//                         <ReactMarkdown
-//                           remarkPlugins={[remarkGfm]}
-//                           rehypePlugins={[rehypeRaw, rehypeSanitize]}
-//                           components={markdownComponents}
-//                         >
-//                           {animatedResponseContent || currentResponse || ''}
-//                         </ReactMarkdown>
-
-
-//  import '../styles/AnalysisPage.css';
-
-// import React, { useState, useEffect, useRef } from 'react';
-// import { useLocation, useParams } from 'react-router-dom';
-// import { useSidebar } from '../context/SidebarContext';
-// import DownloadPdf from '../components/DownloadPdf/DownloadPdf';
-// import ReactMarkdown from 'react-markdown';
-// import remarkGfm from 'remark-gfm';
-// import rehypeRaw from 'rehype-raw';
-// import rehypeSanitize from 'rehype-sanitize';
-// import ApiService from '../services/api';
-// import {
-//   Search, Send, FileText, Layers, Trash2, RotateCcw,
-//   ArrowRight, ChevronRight, AlertTriangle, Clock, Loader2,
-//   Upload, Download, AlertCircle, CheckCircle, X, Eye, Quote, BookOpen, Copy,
-//   ChevronDown, Paperclip, MessageSquare, FileCheck, Bot, CheckCircle2
-// } from 'lucide-react';
-
-// const AnalysisPage = () => {
-//   const location = useLocation();
-//   const { fileId: paramFileId, sessionId: paramSessionId } = useParams();
-//   const { setIsSidebarHidden, setIsSidebarCollapsed } = useSidebar();
-  
-//   // State Management
-//   const [activeDropdown, setActiveDropdown] = useState('Summary');
-//   const [isLoading, setIsLoading] = useState(false);
-//   const [isGeneratingInsights, setIsGeneratingInsights] = useState(false);
-//   const [isUploading, setIsUploading] = useState(false);
-//   const [error, setError] = useState(null);
-//   const [success, setSuccess] = useState(null);
-//   const [hasResponse, setHasResponse] = useState(false);
-//   const [isSecretPromptSelected, setIsSecretPromptSelected] = useState(false);
-  
-//   // Document and Analysis Data
-//   const [documentData, setDocumentData] = useState(null);
-//   const [messages, setMessages] = useState([]);
-//   const [fileId, setFileId] = useState(paramFileId || null);
-//   const [sessionId, setSessionId] = useState(paramSessionId || null);
-//   const [processingStatus, setProcessingStatus] = useState(null);
-//   const [currentResponse, setCurrentResponse] = useState('');
-//   const [animatedResponseContent, setAnimatedResponseContent] = useState('');
-//   const [isAnimatingResponse, setIsAnimatingResponse] = useState(false);
-//   const [chatInput, setChatInput] = useState('');
-//   const [showSplitView, setShowSplitView] = useState(false);
-//   const [searchQuery, setSearchQuery] = useState('');
-//   const [selectedMessageId, setSelectedMessageId] = useState(null);
-//   const [displayLimit, setDisplayLimit] = useState(10);
-//   const [showAllChats, setShowAllChats] = useState(false);
-//   const [showDropdown, setShowDropdown] = useState(false);
-  
-//   // Secrets state
-//   const [secrets, setSecrets] = useState([]);
-//   const [isLoadingSecrets, setIsLoadingSecrets] = useState(false);
-//   const [selectedSecretId, setSelectedSecretId] = useState(null);
-//   const [selectedLlmName, setSelectedLlmName] = useState(null);
-  
-//   // Batch upload state
-//   const [batchUploads, setBatchUploads] = useState([]);
-//   const [uploadedDocuments, setUploadedDocuments] = useState([]);
-//   const [uploadProgress, setUploadProgress] = useState(0);
-  
-//   // Refs
-//   const fileInputRef = useRef(null);
-//   const dropdownRef = useRef(null);
-//   const responseRef = useRef(null);
-//   const markdownOutputRef = useRef(null);
-//   const pollingIntervalRef = useRef(null);
-//   const animationFrameRef = useRef(null);
-//   const abortControllerRef = useRef(null);
-
-//   // API Configuration
-//   const API_BASE_URL = 'https://gateway-service-110685455967.asia-south1.run.app';
-  
-//   const getAuthToken = () => {
-//     const tokenKeys = [
-//       'authToken', 'token', 'accessToken', 'jwt', 'bearerToken',
-//       'auth_token', 'access_token', 'api_token', 'userToken'
-//     ];
-    
-//     for (const key of tokenKeys) {
-//       const token = localStorage.getItem(key);
-//       if (token) return token;
-//     }
-//     return null;
-//   };
-
-//   const apiRequest = async (url, options = {}) => {
-//     try {
-//       const token = getAuthToken();
-//       const defaultHeaders = { 'Content-Type': 'application/json' };
-
-//       if (token) {
-//         defaultHeaders['Authorization'] = `Bearer ${token}`;
-//       }
-
-//       const headers = options.body instanceof FormData 
-//         ? (token ? { 'Authorization': `Bearer ${token}` } : {})
-//         : { ...defaultHeaders, ...options.headers };
-
-//       const response = await fetch(`${API_BASE_URL}${url}`, {
-//         ...options,
-//         headers,
-//       });
-
-//       if (!response.ok) {
-//         let errorData;
-//         try {
-//           errorData = await response.json();
-//         } catch {
-//           errorData = { error: `HTTP error! status: ${response.status}` };
-//         }
-        
-//         switch (response.status) {
-//           case 401: throw new Error('Authentication required. Please log in again.');
-//           case 403: throw new Error(errorData.error || 'Access denied.');
-//           case 404: throw new Error('Resource not found.');
-//           case 413: throw new Error('File too large.');
-//           case 415: throw new Error('Unsupported file type.');
-//           case 429: throw new Error('Too many requests.');
-//           default: throw new Error(errorData.error || errorData.message || `Request failed with status ${response.status}`);
-//         }
-//       }
-
-//       const contentType = response.headers.get('content-type');
-//       if (contentType && contentType.includes('application/json')) {
-//         return await response.json();
-//       }
-//       return response;
-//     } catch (error) {
-//       throw error;
-//     }
-//   };
-
-//   // Fetch secrets
-//   const fetchSecrets = async () => {
-//     try {
-//       setIsLoadingSecrets(true);
-//       setError(null);
-      
-//       const token = getAuthToken();
-//       const headers = { 'Content-Type': 'application/json' };
-//       if (token) headers['Authorization'] = `Bearer ${token}`;
-
-//       const response = await fetch(`${API_BASE_URL}/files/secrets?fetch=false`, {
-//         method: 'GET',
-//         headers,
-//       });
-
-//       if (!response.ok) {
-//         throw new Error(`Failed to fetch secrets: ${response.status}`);
-//       }
-
-//       const secretsData = await response.json();
-//       console.log('[fetchSecrets] Raw secrets data:', secretsData);
-//       setSecrets(secretsData || []);
-      
-//       if (secretsData && secretsData.length > 0) {
-//         setActiveDropdown(secretsData[0].name);
-//         setSelectedSecretId(secretsData[0].id);
-//         setSelectedLlmName(secretsData[0].llm_name);
-//       }
-//     } catch (error) {
-//       console.error('Error fetching secrets:', error);
-//       setError(`Failed to load analysis prompts: ${error.message}`);
-//     } finally {
-//       setIsLoadingSecrets(false);
-//     }
-//   };
-
-//   // Batch file upload with progress tracking
-//   const batchUploadDocuments = async (files) => {
-//     console.log('Starting batch upload for', files.length, 'files');
-//     setIsUploading(true);
-//     setUploadProgress(0);
-//     setError(null);
-    
-//     const initialBatchUploads = files.map((file, index) => ({
-//       id: `${file.name}-${Date.now()}-${index}`,
-//       file: file,
-//       fileName: file.name,
-//       fileSize: file.size,
-//       progress: 0,
-//       status: 'pending',
-//       fileId: null,
-//       error: null
-//     }));
-    
-//     setBatchUploads(initialBatchUploads);
-//     setShowSplitView(true);
-
-//     try {
-//       const formData = new FormData();
-//       files.forEach(file => {
-//         formData.append('document', file);
-//       });
-
-//       // Simulate upload progress
-//       const progressInterval = setInterval(() => {
-//         setUploadProgress(prev => {
-//           if (prev >= 90) {
-//             clearInterval(progressInterval);
-//             return 90;
-//           }
-//           return prev + Math.random() * 15;
-//         });
-//       }, 200);
-
-//       setBatchUploads(prev => prev.map(upload => ({ ...upload, status: 'uploading', progress: 10 })));
-
-//       const token = getAuthToken();
-//       const headers = {};
-//       if (token) headers['Authorization'] = `Bearer ${token}`;
-
-//       const response = await fetch(`${API_BASE_URL}/files/batch-upload`, {
-//         method: 'POST',
-//         headers,
-//         body: formData,
-//       });
-
-//       clearInterval(progressInterval);
-//       setUploadProgress(100);
-
-//       if (!response.ok) {
-//         const errorData = await response.json();
-//         throw new Error(errorData.error || `Upload failed with status ${response.status}`);
-//       }
-
-//       const data = await response.json();
-//       console.log('Batch upload response:', data);
-
-//       if (data.uploaded_files && Array.isArray(data.uploaded_files)) {
-//         data.uploaded_files.forEach((uploadedFile, index) => {
-//           const matchingUpload = initialBatchUploads[index];
-          
-//           if (uploadedFile.error) {
-//             setBatchUploads(prev => prev.map(upload =>
-//               upload.id === matchingUpload.id
-//                 ? { ...upload, status: 'failed', error: uploadedFile.error, progress: 0 }
-//                 : upload
-//             ));
-//           } else {
-//             const fileId = uploadedFile.file_id;
-            
-//             setBatchUploads(prev => prev.map(upload =>
-//               upload.id === matchingUpload.id
-//                 ? { ...upload, status: 'uploaded', fileId, progress: 100 }
-//                 : upload
-//             ));
-
-//             setUploadedDocuments(prev => [...prev, {
-//               id: fileId,
-//               fileName: uploadedFile.filename || matchingUpload.fileName,
-//               fileSize: matchingUpload.fileSize,
-//               uploadedAt: new Date().toISOString(),
-//               status: 'batch_processing',
-//               operationName: uploadedFile.operation_name
-//             }]);
-
-//             if (index === 0) {
-//               setFileId(fileId);
-//               setDocumentData({
-//                 id: fileId,
-//                 title: matchingUpload.fileName,
-//                 originalName: matchingUpload.fileName,
-//                 size: matchingUpload.fileSize,
-//                 type: matchingUpload.file.type,
-//                 uploadedAt: new Date().toISOString(),
-//                 status: 'batch_processing'
-//               });
-//               startProcessingStatusPolling(fileId);
-//             }
-//           }
-//         });
-
-//         const successCount = data.uploaded_files.filter(f => !f.error).length;
-//         const failCount = data.uploaded_files.filter(f => f.error).length;
-
-//         if (successCount > 0) {
-//           setSuccess(`${successCount} document(s) uploaded successfully!`);
-//         }
-//         if (failCount > 0) {
-//           setError(`${failCount} document(s) failed to upload.`);
-//         }
-//       }
-
-//       // Clear upload progress after a short delay
-//       setTimeout(() => {
-//         setUploadProgress(0);
-//         setIsUploading(false);
-//       }, 1000);
-
-//     } catch (error) {
-//       console.error('Batch upload error:', error);
-//       setError(`Batch upload failed: ${error.message}`);
-//       setBatchUploads(prev => prev.map(upload => ({
-//         ...upload,
-//         status: 'failed',
-//         error: error.message
-//       })));
-//       setUploadProgress(0);
-//       setIsUploading(false);
-//     }
-//   };
-
-//   // Processing status polling
-//   const getProcessingStatus = async (file_id) => {
-//     try {
-//       const token = getAuthToken();
-//       const headers = { 'Content-Type': 'application/json' };
-//       if (token) headers['Authorization'] = `Bearer ${token}`;
-
-//       const response = await fetch(`${API_BASE_URL}/files/status/${file_id}`, {
-//         method: 'GET',
-//         headers,
-//       });
-
-//       if (!response.ok) {
-//         console.error(`Status check failed with status: ${response.status}`);
-//         return null;
-//       }
-
-//       const data = await response.json();
-//       console.log('Processing status:', data);
-      
-//       setProcessingStatus(data);
-      
-//       setUploadedDocuments(prev => prev.map(doc =>
-//         doc.id === file_id ? { ...doc, status: data.status } : doc
-//       ));
-      
-//       if (data.status === 'processed') {
-//         setDocumentData(prev => ({
-//           ...prev,
-//           status: 'processed',
-//         }));
-        
-//         if (pollingIntervalRef.current) {
-//           clearInterval(pollingIntervalRef.current);
-//           pollingIntervalRef.current = null;
-//         }
-        
-//         setSuccess('Document processing completed!');
-//       } else if (data.status === 'error') {
-//         setError('Document processing failed.');
-        
-//         if (pollingIntervalRef.current) {
-//           clearInterval(pollingIntervalRef.current);
-//           pollingIntervalRef.current = null;
-//         }
-//       }
-      
-//       return data;
-//     } catch (error) {
-//       console.error('Error getting processing status:', error);
-//       return null;
-//     }
-//   };
-
-//   const startProcessingStatusPolling = (file_id) => {
-//     if (pollingIntervalRef.current) {
-//       clearInterval(pollingIntervalRef.current);
-//     }
-
-//     let pollCount = 0;
-//     const maxPolls = 150;
-
-//     pollingIntervalRef.current = setInterval(async () => {
-//       pollCount++;
-//       const status = await getProcessingStatus(file_id);
-      
-//       if (status && (status.status === 'processed' || status.status === 'error')) {
-//         clearInterval(pollingIntervalRef.current);
-//         pollingIntervalRef.current = null;
-//       } else if (pollCount >= maxPolls) {
-//         clearInterval(pollingIntervalRef.current);
-//         pollingIntervalRef.current = null;
-//         setError('Document processing timeout.');
-//       }
-//     }, 2000);
-//   };
-
-//   // Animation with requestAnimationFrame and chunk-based rendering
-//   const animateResponse = (text) => {
-//     if (animationFrameRef.current) {
-//       cancelAnimationFrame(animationFrameRef.current);
-//     }
-
-//     setAnimatedResponseContent('');
-//     setIsAnimatingResponse(true);
-//     setShowSplitView(true);
-    
-//     let currentIndex = 0;
-//     const chunkSize = 5;
-//     const delayMs = 10;
-    
-//     const animate = () => {
-//       if (currentIndex < text.length) {
-//         const nextChunk = text.slice(currentIndex, currentIndex + chunkSize);
-//         setAnimatedResponseContent(prev => prev + nextChunk);
-//         currentIndex += chunkSize;
-        
-//         if (responseRef.current) {
-//           responseRef.current.scrollTop = responseRef.current.scrollHeight;
-//         }
-        
-//         setTimeout(() => {
-//           animationFrameRef.current = requestAnimationFrame(animate);
-//         }, delayMs);
-//       } else {
-//         setIsAnimatingResponse(false);
-//         animationFrameRef.current = null;
-//       }
-//     };
-    
-//     animationFrameRef.current = requestAnimationFrame(animate);
-//   };
-
-//   const showResponseImmediately = (text) => {
-//     if (animationFrameRef.current) {
-//       cancelAnimationFrame(animationFrameRef.current);
-//       animationFrameRef.current = null;
-//     }
-//     setAnimatedResponseContent(text);
-//     setIsAnimatingResponse(false);
-//     setShowSplitView(true);
-    
-//     if (responseRef.current) {
-//       responseRef.current.scrollTop = responseRef.current.scrollHeight;
-//     }
-//   };
-
-//   // Chat with document
-//   const chatWithDocument = async (file_id, question, currentSessionId, llm_name = null) => {
-//     try {
-//       setIsLoading(true);
-//       setError(null);
-
-//       console.log('[chatWithDocument] Sending custom query. LLM:', llm_name || 'default (backend)');
-
-//       abortControllerRef.current = new AbortController();
-//       const body = {
-//         file_id: file_id,
-//         question: question.trim(),
-//         used_secret_prompt: false,
-//         prompt_label: null,
-//         session_id: currentSessionId,
-//       };
-
-//       if (llm_name) {
-//         body.llm_name = llm_name;
-//       }
-
-//       const data = await apiRequest('/files/chat', {
-//         method: 'POST',
-//         body: JSON.stringify(body),
-//         signal: abortControllerRef.current.signal,
-//       });
-
-//       const response = data.answer || data.response || 'No response received';
-//       const newSessionId = data.session_id || currentSessionId;
-
-//       if (data.history && Array.isArray(data.history)) {
-//         setMessages(data.history);
-        
-//         const latestMessage = data.history[data.history.length - 1];
-//         if (latestMessage) {
-//           setSelectedMessageId(latestMessage.id);
-//           setCurrentResponse(latestMessage.answer);
-//           animateResponse(latestMessage.answer);
-//         }
-//       } else {
-//         const newChat = {
-//           id: Date.now(),
-//           file_id: file_id,
-//           session_id: newSessionId,
-//           question: question.trim(),
-//           answer: response,
-//           display_text_left_panel: question.trim(),
-//           timestamp: new Date().toISOString(),
-//           used_chunk_ids: data.used_chunk_ids || [],
-//           confidence: data.confidence || 0.8,
-//           type: 'chat',
-//           used_secret_prompt: false
-//         };
-
-//         setMessages(prev => [...prev, newChat]);
-//         setSelectedMessageId(newChat.id);
-//         setCurrentResponse(response);
-//         animateResponse(response);
-//       }
-      
-//       setSessionId(newSessionId);
-//       setChatInput('');
-//       setHasResponse(true);
-//       setSuccess('Question answered!');
-
-//       return data;
-//     } catch (error) {
-//       if (error.name !== 'AbortError') {
-//         console.error('[chatWithDocument] Error:', error);
-//         setError(`Chat failed: ${error.message}`);
-//       }
-//       throw error;
-//     } finally {
-//       setIsLoading(false);
-//       abortControllerRef.current = null;
-//     }
-//   };
-
-//   const handleFileUpload = async (event) => {
-//     const files = Array.from(event.target.files);
-//     console.log('Files selected:', files.length);
-    
-//     if (files.length === 0) return;
-
-//     const allowedTypes = [
-//       'application/pdf',
-//       'application/msword',
-//       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-//       'text/plain',
-//       'image/png',
-//       'image/jpeg',
-//       'image/tiff'
-//     ];
-
-//     const maxSize = 100 * 1024 * 1024;
-
-//     const validFiles = files.filter(file => {
-//       if (!allowedTypes.includes(file.type)) {
-//         setError(`File "${file.name}" has an unsupported type.`);
-//         return false;
-//       }
-//       if (file.size > maxSize) {
-//         setError(`File "${file.name}" is too large (max 100MB).`);
-//         return false;
-//       }
-//       return true;
-//     });
-
-//     if (validFiles.length === 0) {
-//       event.target.value = '';
-//       return;
-//     }
-
-//     try {
-//       await batchUploadDocuments(validFiles);
-//     } catch (error) {
-//       console.error('Upload error:', error);
-//     }
-
-//     event.target.value = '';
-//   };
-
-//   const handleDropdownSelect = (secretName, secretId, llmName) => {
-//     console.log('[handleDropdownSelect] Selected:', secretName, secretId, 'LLM:', llmName);
-//     setActiveDropdown(secretName);
-//     setSelectedSecretId(secretId);
-//     setSelectedLlmName(llmName);
-//     setIsSecretPromptSelected(true);
-//     setChatInput('');
-//     setShowDropdown(false);
-//   };
-
-//   const handleChatInputChange = (e) => {
-//     setChatInput(e.target.value);
-//   };
-
-//   const handleStop = () => {
-//     if (abortControllerRef.current) {
-//       abortControllerRef.current.abort();
-//       setIsGeneratingInsights(false);
-//       setIsLoading(false);
-//       setSuccess('Generation stopped');
-//       abortControllerRef.current = null;
-//     }
-//   };
-
-//   const handleSend = async (e) => {
-//     e.preventDefault();
-
-//     if (!fileId) {
-//       setError('Please upload a document first.');
-//       return;
-//     }
-    
-//     const currentStatus = processingStatus?.status;
-//     if (currentStatus === 'processing' || currentStatus === 'batch_processing' || currentStatus === 'batch_queued') {
-//       setError('Please wait for document processing to complete.');
-//       return;
-//     }
-
-//     if (isSecretPromptSelected) {
-//       if (!selectedSecretId) {
-//         setError('Please select an analysis type.');
-//         return;
-//       }
-
-//       const selectedSecret = secrets.find(s => s.id === selectedSecretId);
-//       const promptLabel = selectedSecret?.name || 'Secret Prompt';
-
-//       if (!fileId) {
-//         setError('Document ID is missing for secret prompt. Please upload a document.');
-//         return;
-//       }
-
-//       try {
-//         setIsGeneratingInsights(true);
-//         setError(null);
-        
-//         console.log('[handleSend] Triggering secret analysis with:', {
-//           secretId: selectedSecretId,
-//           fileId,
-//           additionalInput: chatInput.trim(),
-//           promptLabel: promptLabel,
-//           llmName: selectedLlmName
-//         });
-        
-//         abortControllerRef.current = new AbortController();
-
-//         const data = await apiRequest('/files/chat', {
-//           method: 'POST',
-//           body: JSON.stringify({
-//             file_id: fileId,
-//             secret_id: selectedSecretId,
-//             used_secret_prompt: true,
-//             prompt_label: promptLabel,
-//             session_id: sessionId,
-//             llm_name: selectedLlmName,
-//             additional_input: chatInput.trim() || ''
-//           }),
-//           signal: abortControllerRef.current.signal,
-//         });
-
-//         console.log('[handleSend] Received response:', data);
-        
-//         const response = data.answer || data.response || 'No response received';
-//         const newSessionId = data.session_id || sessionId;
-
-//         const newChat = {
-//           id: Date.now(),
-//           file_id: fileId,
-//           session_id: newSessionId,
-//           question: promptLabel,
-//           answer: response,
-//           display_text_left_panel: `Analysis: ${promptLabel}`,
-//           timestamp: new Date().toISOString(),
-//           used_chunk_ids: data.used_chunk_ids || [],
-//           confidence: data.confidence || 0.8,
-//           type: 'chat',
-//           used_secret_prompt: true,
-//           prompt_label: promptLabel
-//         };
-
-//         setMessages(prev => [...prev, newChat]);
-//         setSelectedMessageId(newChat.id);
-//         setCurrentResponse(response);
-//         animateResponse(response);
-//         setSessionId(newSessionId);
-//         setChatInput('');
-//         setHasResponse(true);
-//         setSuccess('Analysis completed successfully!');
-        
-//         setIsSecretPromptSelected(false);
-//         setActiveDropdown('Custom Query');
-
-//       } catch (error) {
-//         if (error.name !== 'AbortError') {
-//           console.error('[handleSend] Analysis error:', error);
-//           setError(`Analysis failed: ${error.message}`);
-//         }
-//       } finally {
-//         setIsGeneratingInsights(false);
-//         abortControllerRef.current = null;
-//       }
-//     } else {
-//       if (!chatInput.trim()) {
-//         setError('Please enter a question.');
-//         return;
-//       }
-//       try {
-//         console.log('[handleSend] Using custom query. LLM:', selectedLlmName || 'default (backend)');
-//         await chatWithDocument(fileId, chatInput, sessionId, selectedLlmName);
-//       } catch (error) {
-//         if (error.name !== 'AbortError') {
-//           console.error('[handleSend] Chat error:', error);
-//         }
-//       }
-//     }
-//   };
-
-//   const handleMessageClick = (message) => {
-//     setSelectedMessageId(message.id);
-//     setCurrentResponse(message.answer);
-//     showResponseImmediately(message.answer);
-//   };
-
-//   const clearAllChatData = () => {
-//     if (pollingIntervalRef.current) {
-//       clearInterval(pollingIntervalRef.current);
-//       pollingIntervalRef.current = null;
-//     }
-
-//     if (animationFrameRef.current) {
-//       cancelAnimationFrame(animationFrameRef.current);
-//       animationFrameRef.current = null;
-//     }
-
-//     setMessages([]);
-//     setDocumentData(null);
-//     setFileId(null);
-//     setCurrentResponse('');
-//     setHasResponse(false);
-//     setChatInput('');
-//     setProcessingStatus(null);
-//     setError(null);
-//     setAnimatedResponseContent('');
-//     setIsAnimatingResponse(false);
-//     setShowSplitView(false);
-//     setBatchUploads([]);
-//     setUploadedDocuments([]);
-//     setIsSecretPromptSelected(false);
-//     setSelectedMessageId(null);
-//     setActiveDropdown('Custom Query');
-//     setUploadProgress(0);
-    
-//     const newSessionId = `session-${Date.now()}`;
-//     setSessionId(newSessionId);
-    
-//     setSuccess('New chat session started!');
-//   };
-
-//   const startNewChat = () => {
-//     clearAllChatData();
-//   };
-
-//   const formatFileSize = (bytes) => {
-//     if (bytes === 0) return '0 Bytes';
-//     const k = 1024;
-//     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-//     const i = Math.floor(Math.log(bytes) / Math.log(k));
-//     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-//   };
-
-//   const formatDate = (dateString) => {
-//     try {
-//       return new Date(dateString).toLocaleString('en-IN', {
-//         timeZone: 'Asia/Kolkata',
-//         hour12: true,
-//         year: 'numeric',
-//         month: 'short',
-//         day: 'numeric',
-//         hour: '2-digit',
-//         minute: '2-digit'
-//       });
-//     } catch (e) {
-//       return 'Invalid date';
-//     }
-//   };
-
-//   const handleCopyResponse = async () => {
-//     try {
-//       const textToCopy = animatedResponseContent || currentResponse;
-//       if (textToCopy) {
-//         const tempDiv = document.createElement('div');
-//         tempDiv.innerHTML = textToCopy;
-//         await navigator.clipboard.writeText(tempDiv.innerText);
-//         setSuccess('AI response copied to clipboard!');
-//       } else {
-//         setError('No response to copy.');
-//       }
-//     } catch (err) {
-//       console.error('Failed to copy AI response:', err);
-//       setError('Failed to copy response.');
-//     }
-//   };
-
-//   const highlightText = (text, query) => {
-//     if (!query || !text) return text;
-//     const parts = text.split(new RegExp(`(${query})`, 'gi'));
-//     return parts.map((part, i) =>
-//       part.toLowerCase() === query.toLowerCase() ? (
-//         <span key={i} className="bg-yellow-200 font-semibold text-black">
-//           {part}
-//         </span>
-//       ) : (
-//         part
-//       )
-//     );
-//   };
-
-//   // Inline Status Component
-//   const InlineStatusIndicator = () => {
-//     const currentStatus = processingStatus?.status;
-//     const isProcessing = currentStatus === 'processing' || currentStatus === 'batch_processing' || currentStatus === 'batch_queued';
-//     const isCompleted = currentStatus === 'processed';
-//     const isError = currentStatus === 'error';
-    
-//     if (!isUploading && !isProcessing && !isCompleted && !isError) return null;
-
-//     return (
-//       <div className="w-full mt-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
-//         <div className={`
-//           relative overflow-hidden rounded-lg border backdrop-blur-sm transition-all duration-500
-//           ${isUploading ? 'bg-blue-50/80 border-blue-200' : 
-//             isProcessing ? 'bg-indigo-50/80 border-indigo-200' :
-//             isCompleted ? 'bg-green-50/80 border-green-200' :
-//             isError ? 'bg-red-50/80 border-red-200' : ''}
-//         `}>
-//           <div className="px-4 py-3">
-//             <div className="flex items-center justify-between">
-//               <div className="flex items-center space-x-3">
-//                 {/* Icon */}
-//                 {isUploading && (
-//                   <div className="relative">
-//                     <div className="absolute inset-0 bg-blue-400 rounded-full animate-ping opacity-25"></div>
-//                     <Upload className="h-5 w-5 text-blue-600 animate-pulse relative z-10" />
-//                   </div>
-//                 )}
-//                 {isProcessing && (
-//                   <div className="relative">
-//                     <div className="absolute inset-0 bg-indigo-400 rounded-full animate-ping opacity-25"></div>
-//                     <Loader2 className="h-5 w-5 text-indigo-600 animate-spin relative z-10" />
-//                   </div>
-//                 )}
-//                 {isCompleted && (
-//                   <div className="animate-in zoom-in duration-300">
-//                     <CheckCircle2 className="h-5 w-5 text-green-600" />
-//                   </div>
-//                 )}
-//                 {isError && (
-//                   <AlertCircle className="h-5 w-5 text-red-600 animate-pulse" />
-//                 )}
-                
-//                 {/* Status Text */}
-//                 <div className="flex flex-col">
-//                   <span className={`text-sm font-semibold ${
-//                     isUploading ? 'text-blue-900' :
-//                     isProcessing ? 'text-indigo-900' :
-//                     isCompleted ? 'text-green-900' :
-//                     isError ? 'text-red-900' : ''
-//                   }`}>
-//                     {isUploading ? 'Uploading Document...' :
-//                      isProcessing ? 'Batch Processing Document...' :
-//                      isCompleted ? 'Processing Complete' :
-//                      isError ? 'Processing Failed' : ''}
-//                   </span>
-//                   <span className={`text-xs mt-0.5 ${
-//                     isUploading ? 'text-blue-700' :
-//                     isProcessing ? 'text-indigo-700' :
-//                     isCompleted ? 'text-green-700' :
-//                     isError ? 'text-red-700' : ''
-//                   }`}>
-//                     {isUploading ? 'Transferring file to server...' :
-//                      isProcessing ? 'Extracting text, analyzing content, and preparing embeddings...' :
-//                      isCompleted ? '✓ Document is ready for analysis' :
-//                      isError ? 'Please try uploading the document again' : ''}
-//                   </span>
-//                 </div>
-//               </div>
-              
-//               {/* Percentage */}
-//               {(isUploading || isProcessing) && (
-//                 <div className="flex items-center space-x-2">
-//                   <span className={`text-lg font-bold ${
-//                     isUploading ? 'text-blue-700' : 'text-indigo-700'
-//                   }`}>
-//                     {isUploading ? `${Math.round(uploadProgress)}%` :
-//                      processingStatus?.processing_progress ? `${Math.round(processingStatus.processing_progress)}%` : '0%'}
-//                   </span>
-//                 </div>
-//               )}
-//             </div>
-//           </div>
-          
-//           {/* Progress Bar */}
-//           <div className="relative h-1 bg-gray-200/50">
-//             <div className={`
-//               absolute inset-y-0 left-0 transition-all duration-500 ease-out
-//               ${isUploading ? 'bg-gradient-to-r from-blue-500 to-blue-600' :
-//                 isProcessing ? 'bg-gradient-to-r from-indigo-500 to-purple-600' :
-//                 isCompleted ? 'bg-gradient-to-r from-green-500 to-green-600' :
-//                 isError ? 'bg-gradient-to-r from-red-500 to-red-600' : ''}
-//             `}
-//             style={{
-//               width: isUploading ? `${uploadProgress}%` :
-//                      isProcessing && processingStatus?.processing_progress ? `${processingStatus.processing_progress}%` :
-//                      isCompleted ? '100%' :
-//                      isError ? '100%' :
-//                      isProcessing ? '0%' : '0%'
-//             }}>
-//               {/* Animated shimmer effect for active states */}
-//               {(isUploading || isProcessing) && (
-//                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
-//               )}
-//             </div>
-            
-//             {/* Pulsing animation for processing without percentage */}
-//             {isProcessing && !processingStatus?.processing_progress && (
-//               <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-600 opacity-30 animate-pulse"></div>
-//             )}
-//           </div>
-//         </div>
-//       </div>
-//     );
-//   };
-
-//   // Add CSS for shimmer animation
-//   useEffect(() => {
-//     const style = document.createElement('style');
-//     style.textContent = `
-//       @keyframes shimmer {
-//         0% { transform: translateX(-100%); }
-//         100% { transform: translateX(200%); }
-//       }
-//       .animate-shimmer {
-//         animation: shimmer 2s infinite;
-//       }
-//     `;
-//     document.head.appendChild(style);
-//     return () => document.head.removeChild(style);
-//   }, []);
-
-//   // Enhanced Markdown Components
-//   const markdownComponents = {
-//     h1: ({node, ...props}) => (
-//       <h1 className="text-3xl font-bold mb-6 mt-8 text-gray-900 border-b-2 border-gray-300 pb-3 analysis-page-ai-response" {...props} />
-//     ),
-//     h2: ({node, ...props}) => (
-//       <h2 className="text-2xl font-bold mb-5 mt-7 text-gray-900 border-b border-gray-200 pb-2 analysis-page-ai-response" {...props} />
-//     ),
-//     h3: ({node, ...props}) => (
-//       <h3 className="text-xl font-semibold mb-4 mt-6 text-gray-800 analysis-page-ai-response" {...props} />
-//     ),
-//     h4: ({node, ...props}) => (
-//       <h4 className="text-lg font-semibold mb-3 mt-5 text-gray-800 analysis-page-ai-response" {...props} />
-//     ),
-//     h5: ({node, ...props}) => (
-//       <h5 className="text-base font-semibold mb-2 mt-4 text-gray-700 analysis-page-ai-response" {...props} />
-//     ),
-//     h6: ({node, ...props}) => (
-//       <h6 className="text-sm font-semibold mb-2 mt-3 text-gray-700 analysis-page-ai-response" {...props} />
-//     ),
-//     p: ({node, ...props}) => (
-//       <p className="mb-4 leading-relaxed text-gray-800 text-[15px] analysis-page-ai-response" {...props} />
-//     ),
-//     strong: ({node, ...props}) => (
-//       <strong className="font-bold text-gray-900" {...props} />
-//     ),
-//     em: ({node, ...props}) => (
-//       <em className="italic text-gray-800" {...props} />
-//     ),
-//     ul: ({node, ...props}) => (
-//       <ul className="list-disc pl-6 mb-4 space-y-2 text-gray-800" {...props} />
-//     ),
-//     ol: ({node, ...props}) => (
-//       <ol className="list-decimal pl-6 mb-4 space-y-2 text-gray-800" {...props} />
-//     ),
-//     li: ({node, ...props}) => (
-//       <li className="leading-relaxed text-gray-800 analysis-page-ai-response" {...props} />
-//     ),
-//     a: ({node, ...props}) => (
-//       <a className="text-blue-600 hover:text-blue-800 underline font-medium transition-colors" target="_blank" rel="noopener noreferrer" {...props} />
-//     ),
-//     blockquote: ({node, ...props}) => (
-//       <blockquote className="border-l-4 border-blue-500 pl-4 py-2 my-4 bg-blue-50 text-gray-700 italic rounded-r analysis-page-ai-response" {...props} />
-//     ),
-//     code: ({node, inline, className, children, ...props}) => {
-//       const match = /language-(\w+)/.exec(className || '');
-//       const language = match ? match[1] : '';
-      
-//       if (inline) {
-//         return (
-//           <code className="bg-gray-100 text-red-600 px-1.5 py-0.5 rounded text-sm font-mono border border-gray-200" {...props}>
-//             {children}
-//           </code>
-//         );
-//       }
-      
-//       return (
-//         <div className="relative my-4">
-//           {language && (
-//             <div className="bg-gray-800 text-gray-300 text-xs px-3 py-1 rounded-t font-mono">
-//               {language}
-//             </div>
-//           )}
-//           <pre className={`bg-gray-900 text-gray-100 p-4 ${language ? 'rounded-b' : 'rounded'} overflow-x-auto`}>
-//             <code className="font-mono text-sm" {...props}>
-//               {children}
-//             </code>
-//           </pre>
-//         </div>
-//       );
-//     },
-//     pre: ({node, ...props}) => (
-//       <pre className="bg-gray-900 text-gray-100 p-4 rounded my-4 overflow-x-auto" {...props} />
-//     ),
-//     table: ({node, ...props}) => (
-//       <div className="overflow-x-auto my-6 rounded-lg border border-gray-300">
-//         <table className="min-w-full divide-y divide-gray-300" {...props} />
-//       </div>
-//     ),
-//     thead: ({node, ...props}) => (
-//       <thead className="bg-gray-100" {...props} />
-//     ),
-//     th: ({node, ...props}) => (
-//       <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-300" {...props} />
-//     ),
-//     tbody: ({node, ...props}) => (
-//       <tbody className="bg-white divide-y divide-gray-200" {...props} />
-//     ),
-//     tr: ({node, ...props}) => (
-//       <tr className="hover:bg-gray-50 transition-colors" {...props} />
-//     ),
-//     td: ({node, ...props}) => (
-//       <td className="px-4 py-3 text-sm text-gray-800 border-b border-gray-200" {...props} />
-//     ),
-//     hr: ({node, ...props}) => (
-//       <hr className="my-6 border-t-2 border-gray-300" {...props} />
-//     ),
-//     img: ({node, ...props}) => (
-//       <img className="max-w-full h-auto rounded-lg shadow-md my-4" alt="" {...props} />
-//     ),
-//   };
-
-//   // Cleanup on unmount
-//   useEffect(() => {
-//     return () => {
-//       if (pollingIntervalRef.current) {
-//         clearInterval(pollingIntervalRef.current);
-//       }
-//       if (animationFrameRef.current) {
-//         cancelAnimationFrame(animationFrameRef.current);
-//       }
-//     };
-//   }, []);
-
-//   // Close dropdown when clicking outside
-//   useEffect(() => {
-//     const handleClickOutside = (event) => {
-//       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-//         setShowDropdown(false);
-//       }
-//     };
-
-//     document.addEventListener('mousedown', handleClickOutside);
-//     return () => {
-//       document.removeEventListener('mousedown', handleClickOutside);
-//     };
-//   }, []);
-
-//   useEffect(() => {
-//     fetchSecrets();
-//   }, []);
-
-//   // Persist sessionId and other states to localStorage
-//   useEffect(() => {
-//     if (sessionId) {
-//       localStorage.setItem('sessionId', sessionId);
-//     }
-//   }, [sessionId]);
-
-//   useEffect(() => {
-//     localStorage.setItem('messages', JSON.stringify(messages));
-//   }, [messages]);
-
-//   useEffect(() => {
-//     if (currentResponse) {
-//       localStorage.setItem('currentResponse', currentResponse);
-//       localStorage.setItem('animatedResponseContent', animatedResponseContent);
-//     }
-//   }, [currentResponse, animatedResponseContent]);
-
-//   useEffect(() => {
-//     localStorage.setItem('hasResponse', JSON.stringify(hasResponse));
-//   }, [hasResponse]);
-
-//   useEffect(() => {
-//     if (documentData) {
-//       localStorage.setItem('documentData', JSON.stringify(documentData));
-//     }
-//   }, [documentData]);
-
-//   useEffect(() => {
-//     if (fileId) {
-//       localStorage.setItem('fileId', fileId);
-//     }
-//   }, [fileId]);
-
-//   useEffect(() => {
-//     if (processingStatus) {
-//       localStorage.setItem('processingStatus', JSON.stringify(processingStatus));
-//     }
-//   }, [processingStatus]);
-
-//   // Main loading effect
-//   useEffect(() => {
-//     const fetchChatHistory = async (currentFileId, currentSessionId, selectedChatId = null) => {
-//       try {
-//         console.log('[AnalysisPage] Fetching chat history for fileId:', currentFileId);
-        
-//         const response = await apiRequest(`/files/chat-history/${currentFileId}`, {
-//           method: 'GET',
-//         });
-
-//         const sessions = response || [];
-//         let allMessages = [];
-//         sessions.forEach(session => {
-//           session.messages.forEach(message => {
-//             allMessages.push({
-//               ...message,
-//               session_id: session.session_id,
-//               timestamp: message.created_at || message.timestamp,
-//               display_text_left_panel: message.used_secret_prompt
-//                 ? `Secret Prompt: ${message.prompt_label || 'Unnamed Secret Prompt'}`
-//                 : message.question
-//             });
-//           });
-//         });
-
-//         allMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-        
-//         setMessages(allMessages);
-
-//         if (allMessages.length > 0) {
-//           setDocumentData({
-//             id: currentFileId,
-//             title: `Document for Session ${currentSessionId}`,
-//             originalName: `Document for Session ${currentSessionId}`,
-//             size: 0,
-//             type: 'unknown',
-//             uploadedAt: new Date().toISOString(),
-//             status: 'processed',
-//           });
-//           setFileId(currentFileId);
-//           setSessionId(currentSessionId);
-//           setProcessingStatus({ status: 'processed' });
-//           setHasResponse(true);
-//           setShowSplitView(true);
-
-//           const chatToDisplay = selectedChatId
-//             ? allMessages.find(chat => chat.id === selectedChatId)
-//             : allMessages[allMessages.length - 1];
-
-//           if (chatToDisplay) {
-//             setCurrentResponse(chatToDisplay.answer);
-//             showResponseImmediately(chatToDisplay.answer);
-//             setSelectedMessageId(chatToDisplay.id);
-//           }
-//         }
-//         setSuccess('Chat history loaded successfully!');
-//       } catch (err) {
-//         console.error('[AnalysisPage] Error in fetchChatHistory:', err);
-//         setError(`Failed to load chat history: ${err.message}`);
-//       }
-//     };
-
-//     try {
-//       const savedMessages = localStorage.getItem('messages');
-//       if (savedMessages) setMessages(JSON.parse(savedMessages));
-
-//       const savedSessionId = localStorage.getItem('sessionId');
-//       if (savedSessionId) {
-//         setSessionId(savedSessionId);
-//       } else {
-//         const newSessionId = `session-${Date.now()}`;
-//         setSessionId(newSessionId);
-//       }
-
-//       const savedCurrentResponse = localStorage.getItem('currentResponse');
-//       const savedAnimatedResponseContent = localStorage.getItem('animatedResponseContent');
-//       if (savedCurrentResponse) {
-//         setCurrentResponse(savedCurrentResponse);
-//         if (savedAnimatedResponseContent) {
-//           setAnimatedResponseContent(savedAnimatedResponseContent);
-//           setShowSplitView(true);
-//         } else {
-//           setAnimatedResponseContent(savedCurrentResponse);
-//         }
-//         setIsAnimatingResponse(false);
-//       }
-
-//       const savedHasResponse = localStorage.getItem('hasResponse');
-//       if (savedHasResponse) {
-//         const parsedHasResponse = JSON.parse(savedHasResponse);
-//         setHasResponse(parsedHasResponse);
-//         if (parsedHasResponse) {
-//           setShowSplitView(true);
-//         }
-//       }
-
-//       const savedDocumentData = localStorage.getItem('documentData');
-//       if (savedDocumentData) setDocumentData(JSON.parse(savedDocumentData));
-
-//       const savedFileId = localStorage.getItem('fileId');
-//       if (savedFileId) setFileId(savedFileId);
-
-//       const savedProcessingStatus = localStorage.getItem('processingStatus');
-//       if (savedProcessingStatus) setProcessingStatus(JSON.parse(savedProcessingStatus));
-
-//     } catch (error) {
-//       console.error('[AnalysisPage] Error restoring from localStorage:', error);
-//       if (!sessionId) {
-//         const newSessionId = `session-${Date.now()}`;
-//         setSessionId(newSessionId);
-//       }
-//     }
-
-//     if (location.state?.newChat) {
-//       clearAllChatData();
-//       window.history.replaceState({}, document.title);
-//     } else if (paramFileId && paramSessionId) {
-//       console.log('[AnalysisPage] Loading chat from URL params:', { paramFileId, paramSessionId });
-//       setFileId(paramFileId);
-//       setSessionId(paramSessionId);
-//       fetchChatHistory(paramFileId, paramSessionId);
-//     } else if (location.state?.chat) {
-//       const chatData = location.state.chat;
-//       console.log('[AnalysisPage] Loading chat from location state:', chatData);
-      
-//       if (chatData.file_id && chatData.session_id) {
-//         setFileId(chatData.file_id);
-//         setSessionId(chatData.session_id);
-//         fetchChatHistory(chatData.file_id, chatData.session_id, chatData.id);
-//       } else {
-//         setError('Unable to load chat: Missing required information');
-//       }
-      
-//       window.history.replaceState({}, document.title);
-//     }
-//   }, [location.state, paramFileId, paramSessionId]);
-
-//   useEffect(() => {
-//     if (showSplitView) {
-//       setIsSidebarHidden(false);
-//       setIsSidebarCollapsed(true);
-//     } else if (hasResponse) {
-//       setIsSidebarHidden(false);
-//       setIsSidebarCollapsed(false);
-//     } else {
-//       setIsSidebarHidden(false);
-//       setIsSidebarCollapsed(false);
-//     }
-//   }, [hasResponse, showSplitView, setIsSidebarHidden, setIsSidebarCollapsed]);
-
-//   useEffect(() => {
-//     localStorage.setItem('messages', JSON.stringify(messages));
-//   }, [messages]);
-
-//   useEffect(() => {
-//     if (success) {
-//       const timer = setTimeout(() => setSuccess(null), 5000);
-//       return () => clearTimeout(timer);
-//     }
-//   }, [success]);
-
-//   useEffect(() => {
-//     if (error) {
-//       const timer = setTimeout(() => setError(null), 8000);
-//       return () => clearTimeout(timer);
-//     }
-//   }, [error]);
-
-//   return (
-//     <div className="flex h-screen bg-white">
-//       {/* Error Messages */}
-//       {error && (
-//         <div className="fixed top-4 right-4 z-50 max-w-sm">
-//           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg shadow-lg flex items-start space-x-2">
-//             <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
-//             <div className="flex-1">
-//               <p className="text-sm">{error}</p>
-//             </div>
-//             <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700">
-//               <X className="h-4 w-4" />
-//             </button>
-//           </div>
-//         </div>
-//       )}
-
-//       {/* Success Messages */}
-//       {success && (
-//         <div className="fixed top-4 right-4 z-50 max-w-sm">
-//           <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2">
-//             <CheckCircle className="h-5 w-5 flex-shrink-0" />
-//             <span className="text-sm">{success}</span>
-//             <button onClick={() => setSuccess(null)} className="ml-auto text-green-500 hover:text-green-700">
-//               <X className="h-4 w-4" />
-//             </button>
-//           </div>
-//         </div>
-//       )}
-
-//       {/* Batch Upload Progress Panel */}
-//       {(isUploading || batchUploads.length > 0) && (
-//         <div className="fixed top-20 right-4 z-40 max-w-md w-full bg-white rounded-lg shadow-xl border border-gray-200 max-h-96 overflow-hidden flex flex-col">
-//           <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-gray-50">
-//             <div className="flex items-center space-x-2">
-//               <Upload className="h-5 w-5 text-blue-600" />
-//               <h3 className="font-semibold text-gray-900">
-//                 Uploading {batchUploads.length} file{batchUploads.length > 1 ? 's' : ''}
-//               </h3>
-//             </div>
-//             {!isUploading && (
-//               <button
-//                 onClick={() => setBatchUploads([])}
-//                 className="text-gray-400 hover:text-gray-600"
-//               >
-//                 <X className="h-4 w-4" />
-//               </button>
-//             )}
-//           </div>
-          
-//           <div className="overflow-y-auto flex-1 p-4">
-//             <div className="space-y-3">
-//               {batchUploads.map((upload) => (
-//                 <div key={upload.id} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-//                   <div className="flex items-start justify-between mb-2">
-//                     <div className="flex-1 min-w-0">
-//                       <p className="text-sm font-medium text-gray-900 truncate">{upload.fileName}</p>
-//                       <p className="text-xs text-gray-500">{formatFileSize(upload.fileSize)}</p>
-//                     </div>
-//                     <div className="ml-2">
-//                       {upload.status === 'uploaded' && (
-//                         <CheckCircle className="h-5 w-5 text-green-500" />
-//                       )}
-//                       {upload.status === 'failed' && (
-//                         <AlertCircle className="h-5 w-5 text-red-500" />
-//                       )}
-//                       {(upload.status === 'pending' || upload.status === 'uploading') && (
-//                         <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />
-//                       )}
-//                     </div>
-//                   </div>
-                  
-//                   <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-//                     <div
-//                       className={`h-2 rounded-full transition-all duration-300 ${
-//                         upload.status === 'uploaded' ? 'bg-green-500' :
-//                         upload.status === 'failed' ? 'bg-red-500' : 'bg-blue-600'
-//                       }`}
-//                       style={{ width: `${upload.progress}%` }}
-//                     ></div>
-//                   </div>
-                  
-//                   <div className="flex items-center justify-between">
-//                     <p className="text-xs text-gray-600">
-//                       {upload.status === 'uploaded' && '✓ Uploaded successfully'}
-//                       {upload.status === 'failed' && `✗ ${upload.error || 'Upload failed'}`}
-//                       {upload.status === 'uploading' && `${upload.progress}% uploaded`}
-//                       {upload.status === 'pending' && 'Preparing...'}
-//                     </p>
-//                     {upload.fileId && (
-//                       <span className="text-xs font-mono text-gray-400">
-//                         ID: {upload.fileId.substring(0, 8)}
-//                       </span>
-//                     )}
-//                   </div>
-//                 </div>
-//               ))}
-//             </div>
-//           </div>
-//         </div>
-//       )}
-
-//       {/* Conditional Rendering for Single Page vs Split View */}
-//       {!showSplitView ? (
-//         // Single Page View: Only chat input area
-//         <div className="flex flex-col items-center justify-center h-full w-full">
-//           <div className="text-center max-w-2xl px-6 mb-12">
-//             <h3 className="text-3xl font-bold mb-4 text-gray-900">Welcome to Smart Legal Insights</h3>
-//             <p className="text-gray-600 text-xl leading-relaxed">
-//               Upload a legal document or ask a question to begin your AI-powered analysis.
-//             </p>
-//           </div>
-//           <div className="w-full max-w-4xl px-6">
-//             <form onSubmit={handleSend} className="mx-auto">
-//               <div className="flex items-center space-x-3 bg-gray-50 rounded-xl border border-[#21C1B6]/30 px-5 py-6 focus-within:border-[#21C1B6] focus-within:bg-white focus-within:shadow-sm">
-//                 <button
-//                   type="button"
-//                   onClick={() => fileInputRef.current?.click()}
-//                   disabled={isUploading}
-//                   className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
-//                   title="Upload Document"
-//                 >
-//                   {isUploading ? (
-//                     <Loader2 className="h-5 w-5 animate-spin" />
-//                   ) : (
-//                     <Paperclip className="h-5 w-5" />
-//                   )}
-//                 </button>
-                
-//                 <input
-//                   ref={fileInputRef}
-//                   type="file"
-//                   className="hidden"
-//                   accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.tiff"
-//                   onChange={handleFileUpload}
-//                   disabled={isUploading}
-//                   multiple
-//                 />
-
-//                 <div className="relative flex-shrink-0" ref={dropdownRef}>
-//                   <button
-//                     type="button"
-//                     onClick={() => setShowDropdown(!showDropdown)}
-//                     disabled={!fileId || processingStatus?.status !== 'processed' || isLoading || isGeneratingInsights || isLoadingSecrets}
-//                     className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-//                   >
-//                     <BookOpen className="h-4 w-4" />
-//                     <span>{isLoadingSecrets ? 'Loading...' : activeDropdown}</span>
-//                     <ChevronDown className="h-4 w-4" />
-//                   </button>
-
-//                   {showDropdown && !isLoadingSecrets && (
-//                     <div className="absolute bottom-full left-0 mb-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-20 max-h-60 overflow-y-auto">
-//                       {secrets.length > 0 ? (
-//                         secrets.map((secret) => (
-//                           <button
-//                             key={secret.id}
-//                             type="button"
-//                             onClick={() => handleDropdownSelect(secret.name, secret.id, secret.llm_name)}
-//                             className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg"
-//                           >
-//                             {secret.name}
-//                           </button>
-//                         ))
-//                       ) : (
-//                         <div className="px-4 py-2.5 text-sm text-gray-500">
-//                           No analysis prompts available
-//                         </div>
-//                       )}
-//                     </div>
-//                   )}
-//                 </div>
-
-//                 <input
-//                   type="text"
-//                   value={chatInput}
-//                   onChange={handleChatInputChange}
-//                   placeholder={
-//                     isSecretPromptSelected 
-//                       ? `Add optional details for ${activeDropdown}...`
-//                       : fileId 
-//                         ? "Message Legal Assistant..." 
-//                         : "Upload a document to get started"
-//                   }
-//                   className="flex-1 bg-transparent border-none outline-none text-gray-900 placeholder-gray-500 text-[15px] font-medium py-2 min-w-0 analysis-page-user-input"
-//                   disabled={isLoading || isGeneratingInsights || !fileId || processingStatus?.status !== 'processed'}
-//                 />
-
-//                 {/* Send Button (Normal State) */}
-//                 {!isLoading && !isGeneratingInsights && (
-//                   <button
-//                     type="submit"
-//                     disabled={
-//                       (!chatInput.trim() && !isSecretPromptSelected) || 
-//                       !fileId || 
-//                       processingStatus?.status !== 'processed'
-//                     }
-//                     className="p-2 bg-[#21C1B6] hover:bg-[#1AA49B] disabled:bg-gray-300 text-white rounded-lg transition-colors flex-shrink-0"
-//                     title="Send Message"
-//                   >
-//                     <Send className="h-5 w-5" />
-//                   </button>
-//                 )}
-
-//                 {/* Grok-Style Stop Button (Appears During Generation) */}
-//                 {(isLoading || isGeneratingInsights) && (
-//                   <button
-//                     type="button"
-//                     onClick={handleStop}
-//                     className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex-shrink-0"
-//                     title="Stop Generation"
-//                   >
-//                     <X className="h-5 w-5" />
-//                   </button>
-//                 )}
-//               </div>
-              
-//               <InlineStatusIndicator />
-              
-//               {documentData && !hasResponse && (
-//                 <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-//                   <div className="flex items-center space-x-3">
-//                     <FileCheck className="h-5 w-5 text-green-600" />
-//                     <div className="flex-1 min-w-0">
-//                       <p className="text-sm font-medium text-gray-900 truncate">{documentData.originalName}</p>
-//                       <p className="text-xs text-gray-500">
-//                         {formatFileSize(documentData.size)} • {formatDate(documentData.uploadedAt)}
-//                       </p>
-//                     </div>
-//                     {processingStatus && (
-//                       <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-//                         processingStatus.status === 'processed'
-//                           ? 'bg-green-100 text-green-800'
-//                           : processingStatus.status === 'processing' || processingStatus.status === 'batch_processing'
-//                           ? 'bg-blue-100 text-blue-800'
-//                           : 'bg-red-100 text-red-800'
-//                       }`}>
-//                         {processingStatus.status.charAt(0).toUpperCase() + processingStatus.status.slice(1)}
-//                       </div>
-//                     )}
-//                   </div>
-//                 </div>
-//               )}
-
-//               {isSecretPromptSelected && (
-//                 <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded-lg">
-//                   <div className="flex items-center space-x-2 text-sm text-blue-800">
-//                     <Bot className="h-4 w-4" />
-//                     <span>Using analysis prompt: <strong>{activeDropdown}</strong></span>
-//                     <button
-//                       type="button"
-//                       onClick={() => {
-//                         setIsSecretPromptSelected(false);
-//                         setActiveDropdown('Custom Query');
-//                         setSelectedSecretId(null);
-//                       }}
-//                       className="ml-auto text-blue-600 hover:text-blue-800"
-//                     >
-//                       <X className="h-4 w-4" />
-//                     </button>
-//                   </div>
-//                 </div>
-//               )}
-//             </form>
-//           </div>
-//         </div>
-//       ) : (
-//         // Split View: Left and Right Panels
-//         <>
-//           {/* Left Panel - Chat Messages List */}
-//           <div className="w-2/5 border-r border-gray-200 flex flex-col bg-white h-full">
-//             <div className="p-4 border-b border-black border-opacity-20">
-//               <div className="flex items-center justify-between mb-4">
-//                 <h2 className="text-lg font-semibold text-gray-900">Questions</h2>
-//                 <button
-//                   onClick={startNewChat}
-//                   className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
-//                 >
-//                   New Chat
-//                 </button>
-//               </div>
-//               <div className="relative mb-4">
-//                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-//                 <input
-//                   type="text"
-//                   placeholder="Search questions..."
-//                   value={searchQuery}
-//                   onChange={(e) => setSearchQuery(e.target.value)}
-//                   className="w-full pl-9 pr-3 py-2 bg-gray-100 rounded-lg text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-//                 />
-//               </div>
-//             </div>
-            
-//             {/* Uploaded Documents Section */}
-//             {uploadedDocuments.length > 0 && (
-//               <div className="px-4 py-3 border-b border-gray-200 bg-blue-50">
-//                 <h3 className="text-xs font-semibold text-gray-700 mb-2 flex items-center">
-//                   <FileText className="h-4 w-4 mr-1" />
-//                   Uploaded Documents ({uploadedDocuments.length})
-//                 </h3>
-//                 <div className="space-y-2 max-h-32 overflow-y-auto">
-//                   {uploadedDocuments.map((doc) => (
-//                     <div
-//                       key={doc.id}
-//                       onClick={() => {
-//                         setFileId(doc.id);
-//                         setDocumentData({
-//                           id: doc.id,
-//                           title: doc.fileName,
-//                           originalName: doc.fileName,
-//                           size: doc.fileSize,
-//                           type: 'unknown',
-//                           uploadedAt: doc.uploadedAt,
-//                           status: doc.status,
-//                         });
-//                         if (doc.status !== 'processed') {
-//                           startProcessingStatusPolling(doc.id);
-//                         }
-//                       }}
-//                       className={`p-2 rounded-md cursor-pointer transition-colors ${
-//                         fileId === doc.id
-//                           ? 'bg-blue-100 border border-blue-300'
-//                           : 'bg-white border border-gray-200 hover:bg-gray-50'
-//                       }`}
-//                     >
-//                       <div className="flex items-center justify-between">
-//                         <div className="flex-1 min-w-0">
-//                           <p className="text-xs font-medium text-gray-900 truncate">{doc.fileName}</p>
-//                           <p className="text-xs text-gray-500">{formatFileSize(doc.fileSize)}</p>
-//                         </div>
-//                         <div className={`ml-2 px-1.5 py-0.5 rounded text-xs font-medium ${
-//                           doc.status === 'processed'
-//                             ? 'bg-green-100 text-green-800'
-//                             : doc.status === 'processing' || doc.status === 'batch_processing'
-//                             ? 'bg-blue-100 text-blue-800'
-//                             : 'bg-yellow-100 text-yellow-800'
-//                         }`}>
-//                           {doc.status}
-//                         </div>
-//                       </div>
-//                     </div>
-//                   ))}
-//                 </div>
-//               </div>
-//             )}
-
-//             <div className="flex-1 overflow-y-auto px-4 py-2">
-//               <div className="space-y-2">
-//                 {messages
-//                   .filter(msg =>
-//                     (msg.display_text_left_panel || msg.question || '').toLowerCase().includes(searchQuery.toLowerCase())
-//                   )
-//                   .slice(0, showAllChats ? messages.length : displayLimit)
-//                   .map((msg, i) => (
-//                     <div
-//                       key={msg.id || i}
-//                       onClick={() => handleMessageClick(msg)}
-//                       className={`p-3 rounded-lg border cursor-pointer transition-all duration-200 hover:shadow-md ${
-//                         selectedMessageId === msg.id
-//                           ? 'bg-[#21C1B6]/10 border-[#21C1B6]/30 shadow-sm'
-//                           : 'bg-white border-[#21C1B6]/30 hover:bg-gray-50'
-//                       }`}
-//                     >
-//                       <div className="flex items-start justify-between">
-//                         <div className="flex-1 min-w-0">
-//                           <p className="text-sm font-medium text-gray-900 mb-1 line-clamp-2">
-//                             {highlightText(msg.display_text_left_panel || msg.question, searchQuery)}
-//                           </p>
-//                           <div className="flex items-center space-x-2 text-xs text-gray-500">
-//                             <span>{formatDate(msg.timestamp || msg.created_at)}</span>
-//                             {msg.session_id && (
-//                               <>
-//                                 <span>•</span>
-//                                 <span className="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded">
-//                                   {msg.session_id.split('-')[1]?.substring(0, 8) || 'N/A'}
-//                                 </span>
-//                               </>
-//                             )}
-//                           </div>
-//                         </div>
-//                         {selectedMessageId === msg.id && (
-//                           <ChevronRight className="h-4 w-4 text-blue-600 flex-shrink-0 ml-2" />
-//                         )}
-//                       </div>
-//                     </div>
-//                   ))}
-
-//                 {messages.length > displayLimit && !showAllChats && (
-//                   <div className="text-center py-4">
-//                     <button
-//                       onClick={() => setShowAllChats(true)}
-//                       className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-//                     >
-//                       See All ({messages.length - displayLimit} more)
-//                     </button>
-//                   </div>
-//                 )}
-                
-//                 {isLoading && (
-//                   <div className="p-3 rounded-lg border bg-blue-50 border-blue-200">
-//                     <div className="flex items-center space-x-2">
-//                       <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-//                       <span className="text-sm text-blue-800">Processing...</span>
-//                     </div>
-//                   </div>
-//                 )}
-                
-//                 {messages.length === 0 && !isLoading && (
-//                   <div className="text-center py-8">
-//                     <MessageSquare className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-//                     <p className="text-gray-500 text-sm">No questions yet</p>
-//                     <p className="text-gray-400 text-xs">Start by asking a question</p>
-//                   </div>
-//                 )}
-//               </div>
-//             </div>
-
-//             <div className="border-t border-gray-200 p-4 bg-white flex-shrink-0">
-//               <form onSubmit={handleSend} className="mx-auto">
-//                 <div className="flex items-center space-x-3 bg-gray-50 rounded-xl border border-[#21C1B6]/30 px-4 py-3 focus-within:border-[#21C1B6] focus-within:bg-white focus-within:shadow-sm">
-//                   <button
-//                     type="button"
-//                     onClick={() => fileInputRef.current?.click()}
-//                     disabled={isUploading}
-//                     className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
-//                     title="Upload Document"
-//                   >
-//                     {isUploading ? (
-//                       <Loader2 className="h-4 w-4 animate-spin" />
-//                     ) : (
-//                       <Paperclip className="h-4 w-4" />
-//                     )}
-//                   </button>
-                  
-//                   <input
-//                     ref={fileInputRef}
-//                     type="file"
-//                     className="hidden"
-//                     accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.tiff"
-//                     onChange={handleFileUpload}
-//                     disabled={isUploading}
-//                     multiple
-//                   />
-
-//                   <div className="relative flex-shrink-0" ref={dropdownRef}>
-//                     <button
-//                       type="button"
-//                       onClick={() => setShowDropdown(!showDropdown)}
-//                       disabled={!fileId || processingStatus?.status !== 'processed' || isLoading || isGeneratingInsights || isLoadingSecrets}
-//                       className="flex items-center space-x-2 px-2.5 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-//                     >
-//                       <BookOpen className="h-3.5 w-3.5" />
-//                       <span>{isLoadingSecrets ? 'Loading...' : activeDropdown}</span>
-//                       <ChevronDown className="h-3.5 w-3.5" />
-//                     </button>
-
-//                     {showDropdown && !isLoadingSecrets && (
-//                       <div className="absolute bottom-full left-0 mb-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-20 max-h-60 overflow-y-auto">
-//                         {secrets.length > 0 ? (
-//                           secrets.map((secret) => (
-//                             <button
-//                               key={secret.id}
-//                               type="button"
-//                               onClick={() => handleDropdownSelect(secret.name, secret.id, secret.llm_name)}
-//                               className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg"
-//                             >
-//                               {secret.name}
-//                             </button>
-//                           ))
-//                         ) : (
-//                           <div className="px-4 py-2.5 text-sm text-gray-500">
-//                             No analysis prompts available
-//                           </div>
-//                         )}
-//                       </div>
-//                     )}
-//                   </div>
-
-//                   <input
-//                     type="text"
-//                     value={chatInput}
-//                     onChange={handleChatInputChange}
-//                     placeholder={
-//                       isSecretPromptSelected 
-//                         ? `Add details for ${activeDropdown}...`
-//                         : fileId 
-//                           ? "Ask a question..." 
-//                           : "Upload a document first"
-//                     }
-//                     className="flex-1 bg-transparent border-none outline-none text-gray-900 placeholder-gray-500 text-sm font-medium py-1 min-w-0 analysis-page-user-input"
-//                     disabled={isLoading || isGeneratingInsights || !fileId || processingStatus?.status !== 'processed'}
-//                   />
-
-//                   {/* Send Button (Normal State) */}
-//                   {!isLoading && !isGeneratingInsights && (
-//                     <button
-//                       type="submit"
-//                       disabled={
-//                         (!chatInput.trim() && !isSecretPromptSelected) || 
-//                         !fileId || 
-//                         processingStatus?.status !== 'processed'
-//                       }
-//                       className="p-1.5 bg-[#21C1B6] hover:bg-[#1AA49B] disabled:bg-gray-300 text-white rounded-lg transition-colors flex-shrink-0"
-//                       title="Send Message"
-//                     >
-//                       <Send className="h-4 w-4" />
-//                     </button>
-//                   )}
-
-//                   {/* Grok-Style Stop Button (Appears During Generation) */}
-//                   {(isLoading || isGeneratingInsights) && (
-//                     <button
-//                       type="button"
-//                       onClick={handleStop}
-//                       className="p-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex-shrink-0"
-//                       title="Stop Generation"
-//                     >
-//                       <X className="h-4 w-4" />
-//                     </button>
-//                   )}
-//                 </div>
-                
-//                 <InlineStatusIndicator />
-                
-//                 {documentData && (
-//                   <div className="mt-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
-//                     <div className="flex items-center space-x-2">
-//                       <FileCheck className="h-4 w-4 text-green-600" />
-//                       <div className="flex-1 min-w-0">
-//                         <p className="text-xs font-medium text-gray-900 truncate">{documentData.originalName}</p>
-//                         <p className="text-xs text-gray-500">
-//                           {formatFileSize(documentData.size)}
-//                         </p>
-//                       </div>
-//                       {processingStatus && (
-//                         <div className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-//                           processingStatus.status === 'processed'
-//                             ? 'bg-green-100 text-green-800'
-//                             : processingStatus.status === 'processing' || processingStatus.status === 'batch_processing'
-//                             ? 'bg-blue-100 text-blue-800'
-//                             : 'bg-red-100 text-red-800'
-//                         }`}>
-//                           {(processingStatus.status ?? '').charAt(0).toUpperCase() + (processingStatus.status ?? '').slice(1)}
-//                         </div>
-//                       )}
-//                     </div>
-//                   </div>
-//                 )}
-
-//                 {isSecretPromptSelected && (
-//                   <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
-//                     <div className="flex items-center space-x-2 text-xs text-blue-800">
-//                       <Bot className="h-3.5 w-3.5" />
-//                       <span>Using: <strong>{activeDropdown}</strong></span>
-//                       <button
-//                         type="button"
-//                         onClick={() => {
-//                           setIsSecretPromptSelected(false);
-//                           setActiveDropdown('Custom Query');
-//                           setSelectedSecretId(null);
-//                         }}
-//                         className="ml-auto text-blue-600 hover:text-blue-800"
-//                       >
-//                         <X className="h-3.5 w-3.5" />
-//                       </button>
-//                     </div>
-//                   </div>
-//                 )}
-//               </form>
-//             </div>
-//           </div>
-
-//           {/* Right Panel - Response Display */}
-//           <div className="w-3/5 flex flex-col h-full bg-gray-50">
-//             <div className="flex-1 overflow-y-auto" ref={responseRef}>
-//               {selectedMessageId && (currentResponse || animatedResponseContent) ? (
-//                 <div className="px-6 py-6">
-//                   <div className="max-w-none">
-//                     {/* Header Section */}
-//                     <div className="mb-6 pb-4 border-b border-gray-200 bg-white rounded-lg p-4 shadow-sm">
-//                       <div className="flex items-center justify-between mb-3">
-//                         <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-//                           <Bot className="h-5 w-5 mr-2 text-blue-600" />
-//                           AI Response
-//                         </h2>
-//                         <div className="flex items-center space-x-2 text-sm text-gray-500">
-//                           <button
-//                             onClick={handleCopyResponse}
-//                             className="flex items-center px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
-//                             title="Copy AI Response"
-//                           >
-//                             <Copy className="h-4 w-4 mr-1" />
-//                             Copy
-//                           </button>
-//                           <DownloadPdf markdownOutputRef={markdownOutputRef} />
-//                           {messages.find(msg => msg.id === selectedMessageId)?.timestamp && (
-//                             <span>{formatDate(messages.find(msg => msg.id === selectedMessageId).timestamp)}</span>
-//                           )}
-//                           {messages.find(msg => msg.id === selectedMessageId)?.session_id && (
-//                             <>
-//                               <span>•</span>
-//                               <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
-//                                 {messages.find(msg => msg.id === selectedMessageId).session_id.split('-')[1]?.substring(0, 6) || 'N/A'}
-//                               </span>
-//                             </>
-//                           )}
-//                         </div>
-//                       </div>
-                      
-//                       {/* Question Display */}
-//                       <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-l-4 border-blue-500">
-//                         <p className="text-sm font-medium text-blue-900 mb-1 flex items-center">
-//                           <MessageSquare className="h-4 w-4 mr-1" />
-//                           Question:
-//                         </p>
-//                         <p className="text-sm text-blue-800 leading-relaxed">
-//                           {messages.find(msg => msg.id === selectedMessageId)?.question || 'No question available'}
-//                         </p>
-//                       </div>
-
-//                       {/* Skip Animation Button */}
-//                       {isAnimatingResponse && (
-//                         <div className="mt-3 flex justify-end">
-//                           <button
-//                             onClick={() => showResponseImmediately(currentResponse)}
-//                             className="text-xs text-blue-600 hover:text-blue-800 flex items-center space-x-1"
-//                           >
-//                             <span>Skip animation</span>
-//                             <ArrowRight className="h-3 w-3" />
-//                           </button>
-//                         </div>
-//                       )}
-//                     </div>
-
-//                     {/* Response Content with Enhanced Markdown Rendering */}
-//                     <div className="bg-white rounded-lg shadow-sm p-6">
-//                       <div className="prose prose-gray prose-lg max-w-none" ref={markdownOutputRef}>
-//                         <ReactMarkdown
-//                           remarkPlugins={[remarkGfm]}
-//                           rehypePlugins={[rehypeRaw, rehypeSanitize]}
+//                           rehypePlugins={[rehypeRaw, rehypeSanitize]} // rehypeSanitize re-added
 //                           components={markdownComponents}
 //                         >
 //                           {animatedResponseContent || currentResponse || ''}
@@ -5590,3578 +1824,18 @@
 
 
 
-// import '../styles/AnalysisPage.css';
-// import React, { useState, useEffect, useRef } from 'react';
-// import { useLocation, useParams } from 'react-router-dom';
-// import { useSidebar } from '../context/SidebarContext';
-// import DownloadPdf from '../components/DownloadPdf/DownloadPdf';
-// import ReactMarkdown from 'react-markdown';
-// import remarkGfm from 'remark-gfm';
-// import rehypeRaw from 'rehype-raw';
-// import rehypeSanitize from 'rehype-sanitize';
-// import {
-//   Search, Send, FileText, Layers, Trash2, RotateCcw,
-//   ArrowRight, ChevronRight, AlertTriangle, Clock, Loader2,
-//   Upload, Download, AlertCircle, CheckCircle, X, Eye, Quote, BookOpen, Copy,
-//   ChevronDown, Paperclip, MessageSquare, FileCheck, Bot, CheckCircle2
-// } from 'lucide-react';
-
-// const AnalysisPage = () => {
-//   const location = useLocation();
-//   const { fileId: paramFileId, sessionId: paramSessionId } = useParams();
-//   const { setIsSidebarHidden, setIsSidebarCollapsed } = useSidebar();
-
-//   // State Management
-//   const [activeDropdown, setActiveDropdown] = useState('Summary');
-//   const [isLoading, setIsLoading] = useState(false);
-//   const [isGeneratingInsights, setIsGeneratingInsights] = useState(false);
-//   const [isUploading, setIsUploading] = useState(false);
-//   const [error, setError] = useState(null);
-//   const [success, setSuccess] = useState(null);
-//   const [hasResponse, setHasResponse] = useState(false);
-//   const [isSecretPromptSelected, setIsSecretPromptSelected] = useState(false);
-//   const [documentData, setDocumentData] = useState(null);
-//   const [messages, setMessages] = useState([]);
-//   const [fileId, setFileId] = useState(paramFileId || null);
-//   const [sessionId, setSessionId] = useState(paramSessionId || null);
-//   const [currentResponse, setCurrentResponse] = useState('');
-//   const [animatedResponseContent, setAnimatedResponseContent] = useState('');
-//   const [isAnimatingResponse, setIsAnimatingResponse] = useState(false);
-//   const [chatInput, setChatInput] = useState('');
-//   const [showSplitView, setShowSplitView] = useState(false);
-//   const [searchQuery, setSearchQuery] = useState('');
-//   const [selectedMessageId, setSelectedMessageId] = useState(null);
-//   const [displayLimit, setDisplayLimit] = useState(10);
-//   const [showAllChats, setShowAllChats] = useState(false);
-//   const [showDropdown, setShowDropdown] = useState(false);
-//   const [secrets, setSecrets] = useState([]);
-//   const [isLoadingSecrets, setIsLoadingSecrets] = useState(false);
-//   const [selectedSecretId, setSelectedSecretId] = useState(null);
-//   const [selectedLlmName, setSelectedLlmName] = useState(null);
-//   const [batchUploads, setBatchUploads] = useState([]);
-//   const [uploadedDocuments, setUploadedDocuments] = useState([]);
-
-//   // Refs
-//   const fileInputRef = useRef(null);
-//   const dropdownRef = useRef(null);
-//   const responseRef = useRef(null);
-//   const markdownOutputRef = useRef(null);
-//   const pollingIntervalRef = useRef({});
-//   const processingSimRef = useRef({});
-//   const animationFrameRef = useRef(null);
-//   const abortControllerRef = useRef(null);
-
-//   // API Configuration
-//   const API_BASE_URL = 'https://gateway-service-110685455967.asia-south1.run.app';
-
-//   const getAuthToken = () => {
-//     const tokenKeys = [
-//       'authToken', 'token', 'accessToken', 'jwt', 'bearerToken',
-//       'auth_token', 'access_token', 'api_token', 'userToken'
-//     ];
-//     for (const key of tokenKeys) {
-//       const token = localStorage.getItem(key);
-//       if (token) return token;
-//     }
-//     return null;
-//   };
-
-//   const apiRequest = async (url, options = {}) => {
-//     try {
-//       const token = getAuthToken();
-//       const defaultHeaders = { 'Content-Type': 'application/json' };
-//       if (token) {
-//         defaultHeaders['Authorization'] = `Bearer ${token}`;
-//       }
-
-//       const headers = options.body instanceof FormData
-//         ? (token ? { 'Authorization': `Bearer ${token}` } : {})
-//         : { ...defaultHeaders, ...options.headers };
-
-//       const response = await fetch(`${API_BASE_URL}${url}`, {
-//         ...options,
-//         headers,
-//       });
-
-//       if (!response.ok) {
-//         let errorData;
-//         try {
-//           errorData = await response.json();
-//         } catch {
-//           errorData = { error: `HTTP error! status: ${response.status}` };
-//         }
-//         switch (response.status) {
-//           case 401: throw new Error('Authentication required. Please log in again.');
-//           case 403: throw new Error(errorData.error || 'Access denied.');
-//           case 404: throw new Error('Resource not found.');
-//           case 413: throw new Error('File too large.');
-//           case 415: throw new Error('Unsupported file type.');
-//           case 429: throw new Error('Too many requests.');
-//           default: throw new Error(errorData.error || errorData.message || `Request failed with status ${response.status}`);
-//         }
-//       }
-
-//       const contentType = response.headers.get('content-type');
-//       if (contentType && contentType.includes('application/json')) {
-//         return await response.json();
-//       }
-//       return response;
-//     } catch (error) {
-//       throw error;
-//     }
-//   };
-
-//   // Fetch secrets
-//   const fetchSecrets = async () => {
-//     try {
-//       setIsLoadingSecrets(true);
-//       setError(null);
-//       const token = getAuthToken();
-//       const headers = { 'Content-Type': 'application/json' };
-//       if (token) headers['Authorization'] = `Bearer ${token}`;
-
-//       const response = await fetch(`${API_BASE_URL}/files/secrets?fetch=false`, {
-//         method: 'GET',
-//         headers,
-//       });
-
-//       if (!response.ok) {
-//         throw new Error(`Failed to fetch secrets: ${response.status}`);
-//       }
-
-//       const secretsData = await response.json();
-//       setSecrets(secretsData || []);
-//       if (secretsData && secretsData.length > 0) {
-//         setActiveDropdown(secretsData[0].name);
-//         setSelectedSecretId(secretsData[0].id);
-//         setSelectedLlmName(secretsData[0].llm_name);
-//       }
-//     } catch (error) {
-//       console.error('Error fetching secrets:', error);
-//       setError(`Failed to load analysis prompts: ${error.message}`);
-//     } finally {
-//       setIsLoadingSecrets(false);
-//     }
-//   };
-
-//   // Batch file upload with progress tracking
-//   const batchUploadDocuments = async (files) => {
-//     console.log('Starting batch upload for', files.length, 'files');
-//     setIsUploading(true);
-//     setError(null);
-
-//     const initialBatchUploads = files.map((file, index) => ({
-//       id: `${file.name}-${Date.now()}-${index}`,
-//       file: file,
-//       fileName: file.name,
-//       fileSize: file.size,
-//       uploadProgress: 0,
-//       processingProgress: 0,
-//       status: 'pending',
-//       fileId: null,
-//       error: null
-//     }));
-
-//     setBatchUploads(initialBatchUploads);
-
-//     const initialUploaded = initialBatchUploads.map(u => ({
-//       id: u.id, // temp
-//       fileName: u.fileName,
-//       fileSize: u.fileSize,
-//       uploadedAt: new Date().toISOString(),
-//       status: 'pending',
-//       operationName: null,
-//       uploadProgress: 0,
-//       processingProgress: 0,
-//       error: null
-//     }));
-
-//     setUploadedDocuments(prev => [...prev, ...initialUploaded]);
-
-//     setShowSplitView(true);
-
-//     try {
-//       const formData = new FormData();
-//       files.forEach(file => {
-//         formData.append('document', file);
-//       });
-
-//       // Simulate upload progress for each file
-//       const progressInterval = setInterval(() => {
-//         setBatchUploads(prev => prev.map(upload => {
-//           if (upload.status === 'uploading') {
-//             const newProgress = Math.min(upload.uploadProgress + Math.random() * 15, 90);
-//             return { ...upload, uploadProgress: newProgress };
-//           }
-//           return upload;
-//         }));
-//         setUploadedDocuments(prev => prev.map(doc => {
-//           if (doc.status === 'uploading') {
-//             const newProgress = Math.min(doc.uploadProgress + Math.random() * 15, 90);
-//             return { ...doc, uploadProgress: newProgress };
-//           }
-//           return doc;
-//         }));
-//       }, 200);
-
-//       setBatchUploads(prev => prev.map(upload => ({ ...upload, status: 'uploading', uploadProgress: 10 })));
-//       setUploadedDocuments(prev => prev.map(doc => ({ ...doc, status: 'uploading', uploadProgress: 10 })));
-
-//       const token = getAuthToken();
-//       const headers = {};
-//       if (token) headers['Authorization'] = `Bearer ${token}`;
-
-//       const response = await fetch(`${API_BASE_URL}/files/batch-upload`, {
-//         method: 'POST',
-//         headers,
-//         body: formData,
-//       });
-
-//       clearInterval(progressInterval);
-//       setBatchUploads(prev => prev.map(upload => ({ ...upload, uploadProgress: 100 })));
-//       setUploadedDocuments(prev => prev.map(doc => ({ ...doc, uploadProgress: 100 })));
-
-//       if (!response.ok) {
-//         const errorData = await response.json();
-//         throw new Error(errorData.error || `Upload failed with status ${response.status}`);
-//       }
-
-//       const data = await response.json();
-//       console.log('Batch upload response:', data);
-
-//       if (data.uploaded_files && Array.isArray(data.uploaded_files)) {
-//         data.uploaded_files.forEach((uploadedFile, index) => {
-//           const matchingUpload = initialBatchUploads[index];
-
-//           if (uploadedFile.error) {
-//             setBatchUploads(prev => prev.map(upload =>
-//               upload.id === matchingUpload.id
-//                 ? { ...upload, status: 'failed', error: uploadedFile.error, uploadProgress: 0 }
-//                 : upload
-//             ));
-//             setUploadedDocuments(prev => prev.map(doc =>
-//               doc.id === matchingUpload.id
-//                 ? { ...doc, status: 'failed', error: uploadedFile.error, uploadProgress: 0 }
-//                 : doc
-//             ));
-//           } else {
-//             const fileId = uploadedFile.file_id;
-//             setBatchUploads(prev => prev.map(upload =>
-//               upload.id === matchingUpload.id
-//                 ? { ...upload, status: 'batch_processing', fileId, processingProgress: 0 }
-//                 : upload
-//             ));
-//             setUploadedDocuments(prev => prev.map(doc =>
-//               doc.id === matchingUpload.id
-//                 ? { ...doc, id: fileId, status: 'batch_processing', processingProgress: 0, operationName: uploadedFile.operation_name }
-//                 : doc
-//             ));
-
-//             if (index === 0) {
-//               setFileId(fileId);
-//               setDocumentData({
-//                 id: fileId,
-//                 title: matchingUpload.fileName,
-//                 originalName: matchingUpload.fileName,
-//                 size: matchingUpload.fileSize,
-//                 type: matchingUpload.file.type,
-//                 uploadedAt: new Date().toISOString(),
-//                 status: 'batch_processing'
-//               });
-//             }
-//             startProcessingStatusPolling(fileId);
-//           }
-//         });
-
-//         const successCount = data.uploaded_files.filter(f => !f.error).length;
-//         const failCount = data.uploaded_files.filter(f => f.error).length;
-
-//         if (successCount > 0) {
-//           setSuccess(`${successCount} document(s) uploaded successfully!`);
-//         }
-//         if (failCount > 0) {
-//           setError(`${failCount} document(s) failed to upload.`);
-//         }
-//       }
-
-//       setTimeout(() => {
-//         setIsUploading(false);
-//       }, 1000);
-//     } catch (error) {
-//       console.error('Batch upload error:', error);
-//       setError(`Batch upload failed: ${error.message}`);
-//       setBatchUploads(prev => prev.map(upload => ({
-//         ...upload,
-//         status: 'failed',
-//         error: error.message,
-//         uploadProgress: 0
-//       })));
-//       setUploadedDocuments(prev => prev.map(doc => ({
-//         ...doc,
-//         status: 'failed',
-//         error: error.message,
-//         uploadProgress: 0
-//       })));
-//       setIsUploading(false);
-//     }
-//   };
-
-//   // Processing status polling
-//   const getProcessingStatus = async (file_id) => {
-//     try {
-//       const token = getAuthToken();
-//       const headers = { 'Content-Type': 'application/json' };
-//       if (token) headers['Authorization'] = `Bearer ${token}`;
-
-//       const response = await fetch(`${API_BASE_URL}/files/status/${file_id}`, {
-//         method: 'GET',
-//         headers,
-//       });
-
-//       if (!response.ok) {
-//         console.error(`Status check failed for file ${file_id}: ${response.status}`);
-//         return null;
-//       }
-
-//       const data = await response.json();
-//       console.log(`Processing status for ${file_id}:`, data);
-
-//       setBatchUploads(prev => prev.map(upload =>
-//         upload.fileId === file_id
-//           ? {
-//               ...upload,
-//               status: data.status,
-//               processingProgress: data.processing_progress || upload.processingProgress || 0
-//             }
-//           : upload
-//       ));
-
-//       setUploadedDocuments(prev => prev.map(doc =>
-//         doc.id === file_id
-//           ? { ...doc, status: data.status, processingProgress: data.processing_progress || doc.processingProgress || 0 }
-//           : doc
-//       ));
-
-//       if (data.status === 'processed') {
-//         setDocumentData(prev => (prev && prev.id === file_id
-//           ? { ...prev, status: 'processed' }
-//           : prev
-//         ));
-
-//         if (pollingIntervalRef.current[file_id]) {
-//           clearInterval(pollingIntervalRef.current[file_id]);
-//           delete pollingIntervalRef.current[file_id];
-//         }
-//         if (processingSimRef.current[file_id]) {
-//           clearInterval(processingSimRef.current[file_id]);
-//           delete processingSimRef.current[file_id];
-//         }
-
-//         setSuccess(`Processing completed for ${file_id.substring(0, 8)}!`);
-//       } else if (data.status === 'error') {
-//         setError(`Processing failed for ${file_id.substring(0, 8)}.`);
-//         if (pollingIntervalRef.current[file_id]) {
-//           clearInterval(pollingIntervalRef.current[file_id]);
-//           delete pollingIntervalRef.current[file_id];
-//         }
-//         if (processingSimRef.current[file_id]) {
-//           clearInterval(processingSimRef.current[file_id]);
-//           delete processingSimRef.current[file_id];
-//         }
-//       }
-
-//       return data;
-//     } catch (error) {
-//       console.error(`Error getting processing status for ${file_id}:`, error);
-//       return null;
-//     }
-//   };
-
-//   const startProcessingStatusPolling = (file_id) => {
-//     if (pollingIntervalRef.current[file_id]) {
-//       clearInterval(pollingIntervalRef.current[file_id]);
-//     }
-//     if (processingSimRef.current[file_id]) {
-//       clearInterval(processingSimRef.current[file_id]);
-//     }
-
-//     // Start simulation for processing progress
-//     const simInterval = setInterval(() => {
-//       setBatchUploads(prev => prev.map(upload => 
-//         upload.fileId === file_id && (upload.status === 'batch_processing' || upload.status === 'processing')
-//           ? { ...upload, processingProgress: Math.min(upload.processingProgress + Math.random() * 10, 90) }
-//           : upload
-//       ));
-//       setUploadedDocuments(prev => prev.map(doc => 
-//         doc.id === file_id && (doc.status === 'batch_processing' || doc.status === 'processing')
-//           ? { ...doc, processingProgress: Math.min(doc.processingProgress + Math.random() * 10, 90) }
-//           : doc
-//       ));
-//     }, 300);
-//     processingSimRef.current[file_id] = simInterval;
-
-//     let pollCount = 0;
-//     const maxPolls = 150;
-
-//     pollingIntervalRef.current[file_id] = setInterval(async () => {
-//       pollCount++;
-//       const status = await getProcessingStatus(file_id);
-
-//       if (status && (status.status === 'processed' || status.status === 'error')) {
-//         clearInterval(pollingIntervalRef.current[file_id]);
-//         delete pollingIntervalRef.current[file_id];
-//         clearInterval(processingSimRef.current[file_id]);
-//         delete processingSimRef.current[file_id];
-//       } else if (pollCount >= maxPolls) {
-//         clearInterval(pollingIntervalRef.current[file_id]);
-//         delete pollingIntervalRef.current[file_id];
-//         clearInterval(processingSimRef.current[file_id]);
-//         delete processingSimRef.current[file_id];
-//         setError(`Processing timeout for ${file_id.substring(0, 8)}.`);
-//         setBatchUploads(prev => prev.map(upload =>
-//           upload.fileId === file_id
-//             ? { ...upload, status: 'error', error: 'Processing timeout' }
-//             : upload
-//         ));
-//         setUploadedDocuments(prev => prev.map(doc =>
-//           doc.id === file_id
-//             ? { ...doc, status: 'error', error: 'Processing timeout' }
-//             : doc
-//         ));
-//       }
-//     }, 2000);
-//   };
-
-//   // Animation for response
-//   const animateResponse = (text) => {
-//     if (animationFrameRef.current) {
-//       cancelAnimationFrame(animationFrameRef.current);
-//     }
-
-//     setAnimatedResponseContent('');
-//     setIsAnimatingResponse(true);
-//     setShowSplitView(true);
-
-//     let currentIndex = 0;
-//     const chunkSize = 5;
-//     const delayMs = 10;
-
-//     const animate = () => {
-//       if (currentIndex < text.length) {
-//         const nextChunk = text.slice(currentIndex, currentIndex + chunkSize);
-//         setAnimatedResponseContent(prev => prev + nextChunk);
-//         currentIndex += chunkSize;
-
-//         if (responseRef.current) {
-//           responseRef.current.scrollTop = responseRef.current.scrollHeight;
-//         }
-
-//         setTimeout(() => {
-//           animationFrameRef.current = requestAnimationFrame(animate);
-//         }, delayMs);
-//       } else {
-//         setIsAnimatingResponse(false);
-//         animationFrameRef.current = null;
-//       }
-//     };
-
-//     animationFrameRef.current = requestAnimationFrame(animate);
-//   };
-
-//   const showResponseImmediately = (text) => {
-//     if (animationFrameRef.current) {
-//       cancelAnimationFrame(animationFrameRef.current);
-//       animationFrameRef.current = null;
-//     }
-//     setAnimatedResponseContent(text);
-//     setIsAnimatingResponse(false);
-//     setShowSplitView(true);
-
-//     if (responseRef.current) {
-//       responseRef.current.scrollTop = responseRef.current.scrollHeight;
-//     }
-//   };
-
-//   // Chat with document
-//   const chatWithDocument = async (file_id, question, currentSessionId, llm_name = null) => {
-//     try {
-//       setIsLoading(true);
-//       setError(null);
-
-//       abortControllerRef.current = new AbortController();
-//       const body = {
-//         file_id: file_id,
-//         question: question.trim(),
-//         used_secret_prompt: false,
-//         prompt_label: null,
-//         session_id: currentSessionId,
-//       };
-
-//       if (llm_name) {
-//         body.llm_name = llm_name;
-//       }
-
-//       const data = await apiRequest('/files/chat', {
-//         method: 'POST',
-//         body: JSON.stringify(body),
-//         signal: abortControllerRef.current.signal,
-//       });
-
-//       const response = data.answer || data.response || 'No response received';
-//       const newSessionId = data.session_id || currentSessionId;
-
-//       if (data.history && Array.isArray(data.history)) {
-//         setMessages(data.history);
-//         const latestMessage = data.history[data.history.length - 1];
-//         if (latestMessage) {
-//           setSelectedMessageId(latestMessage.id);
-//           setCurrentResponse(latestMessage.answer);
-//           animateResponse(latestMessage.answer);
-//         }
-//       } else {
-//         const newChat = {
-//           id: Date.now(),
-//           file_id: file_id,
-//           session_id: newSessionId,
-//           question: question.trim(),
-//           answer: response,
-//           display_text_left_panel: question.trim(),
-//           timestamp: new Date().toISOString(),
-//           used_chunk_ids: data.used_chunk_ids || [],
-//           confidence: data.confidence || 0.8,
-//           type: 'chat',
-//           used_secret_prompt: false
-//         };
-
-//         setMessages(prev => [...prev, newChat]);
-//         setSelectedMessageId(newChat.id);
-//         setCurrentResponse(response);
-//         animateResponse(response);
-//       }
-
-//       setSessionId(newSessionId);
-//       setChatInput('');
-//       setHasResponse(true);
-//       setSuccess('Question answered!');
-
-//       return data;
-//     } catch (error) {
-//       if (error.name !== 'AbortError') {
-//         console.error('[chatWithDocument] Error:', error);
-//         setError(`Chat failed: ${error.message}`);
-//       }
-//       throw error;
-//     } finally {
-//       setIsLoading(false);
-//       abortControllerRef.current = null;
-//     }
-//   };
-
-//   const handleFileUpload = async (event) => {
-//     const files = Array.from(event.target.files);
-//     console.log('Files selected:', files.length);
-
-//     if (files.length === 0) return;
-
-//     const allowedTypes = [
-//       'application/pdf',
-//       'application/msword',
-//       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-//       'text/plain',
-//       'image/png',
-//       'image/jpeg',
-//       'image/tiff'
-//     ];
-
-//     const maxSize = 100 * 1024 * 1024;
-
-//     const validFiles = files.filter(file => {
-//       if (!allowedTypes.includes(file.type)) {
-//         setError(`File "${file.name}" has an unsupported type.`);
-//         return false;
-//       }
-//       if (file.size > maxSize) {
-//         setError(`File "${file.name}" is too large (max 100MB).`);
-//         return false;
-//       }
-//       return true;
-//     });
-
-//     if (validFiles.length === 0) {
-//       event.target.value = '';
-//       return;
-//     }
-
-//     try {
-//       await batchUploadDocuments(validFiles);
-//     } catch (error) {
-//       console.error('Upload error:', error);
-//     }
-
-//     event.target.value = '';
-//   };
-
-//   const handleDropdownSelect = (secretName, secretId, llmName) => {
-//     console.log('[handleDropdownSelect] Selected:', secretName, secretId, 'LLM:', llmName);
-//     setActiveDropdown(secretName);
-//     setSelectedSecretId(secretId);
-//     setSelectedLlmName(llmName);
-//     setIsSecretPromptSelected(true);
-//     setChatInput('');
-//     setShowDropdown(false);
-//   };
-
-//   const handleChatInputChange = (e) => {
-//     setChatInput(e.target.value);
-//   };
-
-//   const handleStop = () => {
-//     if (abortControllerRef.current) {
-//       abortControllerRef.current.abort();
-//       setIsGeneratingInsights(false);
-//       setIsLoading(false);
-//       setSuccess('Generation stopped');
-//       abortControllerRef.current = null;
-//     }
-//   };
-
-//   const handleSend = async (e) => {
-//     e.preventDefault();
-
-//     if (!fileId) {
-//       setError('Please upload a document first.');
-//       return;
-//     }
-
-//     const currentStatus = batchUploads.find(upload => upload.fileId === fileId)?.status;
-//     if (currentStatus === 'processing' || currentStatus === 'batch_processing' || currentStatus === 'batch_queued') {
-//       setError('Please wait for document processing to complete.');
-//       return;
-//     }
-
-//     if (isSecretPromptSelected) {
-//       if (!selectedSecretId) {
-//         setError('Please select an analysis type.');
-//         return;
-//       }
-
-//       const selectedSecret = secrets.find(s => s.id === selectedSecretId);
-//       const promptLabel = selectedSecret?.name || 'Secret Prompt';
-
-//       try {
-//         setIsGeneratingInsights(true);
-//         setError(null);
-
-//         abortControllerRef.current = new AbortController();
-
-//         const data = await apiRequest('/files/chat', {
-//           method: 'POST',
-//           body: JSON.stringify({
-//             file_id: fileId,
-//             secret_id: selectedSecretId,
-//             used_secret_prompt: true,
-//             prompt_label: promptLabel,
-//             session_id: sessionId,
-//             llm_name: selectedLlmName,
-//             additional_input: chatInput.trim() || ''
-//           }),
-//           signal: abortControllerRef.current.signal,
-//         });
-
-//         const response = data.answer || data.response || 'No response received';
-//         const newSessionId = data.session_id || sessionId;
-
-//         const newChat = {
-//           id: Date.now(),
-//           file_id: fileId,
-//           session_id: newSessionId,
-//           question: promptLabel,
-//           answer: response,
-//           display_text_left_panel: `Analysis: ${promptLabel}`,
-//           timestamp: new Date().toISOString(),
-//           used_chunk_ids: data.used_chunk_ids || [],
-//           confidence: data.confidence || 0.8,
-//           type: 'chat',
-//           used_secret_prompt: true,
-//           prompt_label: promptLabel
-//         };
-
-//         setMessages(prev => [...prev, newChat]);
-//         setSelectedMessageId(newChat.id);
-//         setCurrentResponse(response);
-//         animateResponse(response);
-//         setSessionId(newSessionId);
-//         setChatInput('');
-//         setHasResponse(true);
-//         setSuccess('Analysis completed successfully!');
-//         setIsSecretPromptSelected(false);
-//         setActiveDropdown('Custom Query');
-//       } catch (error) {
-//         if (error.name !== 'AbortError') {
-//           console.error('[handleSend] Analysis error:', error);
-//           setError(`Analysis failed: ${error.message}`);
-//         }
-//       } finally {
-//         setIsGeneratingInsights(false);
-//         abortControllerRef.current = null;
-//       }
-//     } else {
-//       if (!chatInput.trim()) {
-//         setError('Please enter a question.');
-//         return;
-//       }
-//       try {
-//         await chatWithDocument(fileId, chatInput, sessionId, selectedLlmName);
-//       } catch (error) {
-//         if (error.name !== 'AbortError') {
-//           console.error('[handleSend] Chat error:', error);
-//         }
-//       }
-//     }
-//   };
-
-//   const handleMessageClick = (message) => {
-//     setSelectedMessageId(message.id);
-//     setCurrentResponse(message.answer);
-//     showResponseImmediately(message.answer);
-//   };
-
-//   const clearAllChatData = () => {
-//     Object.keys(pollingIntervalRef.current).forEach(fileId => {
-//       clearInterval(pollingIntervalRef.current[fileId]);
-//     });
-//     pollingIntervalRef.current = {};
-
-//     Object.keys(processingSimRef.current).forEach(fileId => {
-//       clearInterval(processingSimRef.current[fileId]);
-//     });
-//     processingSimRef.current = {};
-
-//     if (animationFrameRef.current) {
-//       cancelAnimationFrame(animationFrameRef.current);
-//       animationFrameRef.current = null;
-//     }
-
-//     setMessages([]);
-//     setDocumentData(null);
-//     setFileId(null);
-//     setCurrentResponse('');
-//     setHasResponse(false);
-//     setChatInput('');
-//     setBatchUploads([]);
-//     setUploadedDocuments([]);
-//     setIsSecretPromptSelected(false);
-//     setSelectedMessageId(null);
-//     setActiveDropdown('Custom Query');
-//     setAnimatedResponseContent('');
-//     setIsAnimatingResponse(false);
-//     setShowSplitView(false);
-
-//     const newSessionId = `session-${Date.now()}`;
-//     setSessionId(newSessionId);
-
-//     setSuccess('New chat session started!');
-//   };
-
-//   const startNewChat = () => {
-//     clearAllChatData();
-//   };
-
-//   const formatFileSize = (bytes) => {
-//     if (bytes === 0) return '0 Bytes';
-//     const k = 1024;
-//     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-//     const i = Math.floor(Math.log(bytes) / Math.log(k));
-//     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-//   };
-
-//   const formatDate = (dateString) => {
-//     try {
-//       return new Date(dateString).toLocaleString('en-IN', {
-//         timeZone: 'Asia/Kolkata',
-//         hour12: true,
-//         year: 'numeric',
-//         month: 'short',
-//         day: 'numeric',
-//         hour: '2-digit',
-//         minute: '2-digit'
-//       });
-//     } catch (e) {
-//       return 'Invalid date';
-//     }
-//   };
-
-//   const handleCopyResponse = async () => {
-//     try {
-//       const textToCopy = animatedResponseContent || currentResponse;
-//       if (textToCopy) {
-//         const tempDiv = document.createElement('div');
-//         tempDiv.innerHTML = textToCopy;
-//         await navigator.clipboard.writeText(tempDiv.innerText);
-//         setSuccess('AI response copied to clipboard!');
-//       } else {
-//         setError('No response to copy.');
-//       }
-//     } catch (err) {
-//       console.error('Failed to copy AI response:', err);
-//       setError('Failed to copy response.');
-//     }
-//   };
-
-//   const highlightText = (text, query) => {
-//     if (!query || !text) return text;
-//     const parts = text.split(new RegExp(`(${query})`, 'gi'));
-//     return parts.map((part, i) =>
-//       part.toLowerCase() === query.toLowerCase() ? (
-//         <span key={i} className="bg-yellow-200 font-semibold text-black">
-//           {part}
-//         </span>
-//       ) : (
-//         part
-//       )
-//     );
-//   };
-
-//   // Markdown Components
-//   const markdownComponents = {
-//     h1: ({node, ...props}) => (
-//       <h1 className="text-3xl font-bold mb-6 mt-8 text-gray-900 border-b-2 border-gray-300 pb-3 analysis-page-ai-response" {...props} />
-//     ),
-//     h2: ({node, ...props}) => (
-//       <h2 className="text-2xl font-bold mb-5 mt-7 text-gray-900 border-b border-gray-200 pb-2 analysis-page-ai-response" {...props} />
-//     ),
-//     h3: ({node, ...props}) => (
-//       <h3 className="text-xl font-semibold mb-4 mt-6 text-gray-800 analysis-page-ai-response" {...props} />
-//     ),
-//     h4: ({node, ...props}) => (
-//       <h4 className="text-lg font-semibold mb-3 mt-5 text-gray-800 analysis-page-ai-response" {...props} />
-//     ),
-//     h5: ({node, ...props}) => (
-//       <h5 className="text-base font-semibold mb-2 mt-4 text-gray-700 analysis-page-ai-response" {...props} />
-//     ),
-//     h6: ({node, ...props}) => (
-//       <h6 className="text-sm font-semibold mb-2 mt-3 text-gray-700 analysis-page-ai-response" {...props} />
-//     ),
-//     p: ({node, ...props}) => (
-//       <p className="mb-4 leading-relaxed text-gray-800 text-[15px] analysis-page-ai-response" {...props} />
-//     ),
-//     strong: ({node, ...props}) => (
-//       <strong className="font-bold text-gray-900" {...props} />
-//     ),
-//     em: ({node, ...props}) => (
-//       <em className="italic text-gray-800" {...props} />
-//     ),
-//     ul: ({node, ...props}) => (
-//       <ul className="list-disc pl-6 mb-4 space-y-2 text-gray-800" {...props} />
-//     ),
-//     ol: ({node, ...props}) => (
-//       <ol className="list-decimal pl-6 mb-4 space-y-2 text-gray-800" {...props} />
-//     ),
-//     li: ({node, ...props}) => (
-//       <li className="leading-relaxed text-gray-800 analysis-page-ai-response" {...props} />
-//     ),
-//     a: ({node, ...props}) => (
-//       <a className="text-blue-600 hover:text-blue-800 underline font-medium transition-colors" target="_blank" rel="noopener noreferrer" {...props} />
-//     ),
-//     blockquote: ({node, ...props}) => (
-//       <blockquote className="border-l-4 border-blue-500 pl-4 py-2 my-4 bg-blue-50 text-gray-700 italic rounded-r analysis-page-ai-response" {...props} />
-//     ),
-//     code: ({node, inline, className, children, ...props}) => {
-//       const match = /language-(\w+)/.exec(className || '');
-//       const language = match ? match[1] : '';
-//       if (inline) {
-//         return (
-//           <code className="bg-gray-100 text-red-600 px-1.5 py-0.5 rounded text-sm font-mono border border-gray-200" {...props}>
-//             {children}
-//           </code>
-//         );
-//       }
-//       return (
-//         <div className="relative my-4">
-//           {language && (
-//             <div className="bg-gray-800 text-gray-300 text-xs px-3 py-1 rounded-t font-mono">
-//               {language}
-//             </div>
-//           )}
-//           <pre className={`bg-gray-900 text-gray-100 p-4 ${language ? 'rounded-b' : 'rounded'} overflow-x-auto`}>
-//             <code className="font-mono text-sm" {...props}>
-//               {children}
-//             </code>
-//           </pre>
-//         </div>
-//       );
-//     },
-//     pre: ({node, ...props}) => (
-//       <pre className="bg-gray-900 text-gray-100 p-4 rounded my-4 overflow-x-auto" {...props} />
-//     ),
-//     table: ({node, ...props}) => (
-//       <div className="overflow-x-auto my-6 rounded-lg border border-gray-300">
-//         <table className="min-w-full divide-y divide-gray-300" {...props} />
-//       </div>
-//     ),
-//     thead: ({node, ...props}) => (
-//       <thead className="bg-gray-100" {...props} />
-//     ),
-//     th: ({node, ...props}) => (
-//       <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-300" {...props} />
-//     ),
-//     tbody: ({node, ...props}) => (
-//       <tbody className="bg-white divide-y divide-gray-200" {...props} />
-//     ),
-//     tr: ({node, ...props}) => (
-//       <tr className="hover:bg-gray-50 transition-colors" {...props} />
-//     ),
-//     td: ({node, ...props}) => (
-//       <td className="px-4 py-3 text-sm text-gray-800 border-b border-gray-200" {...props} />
-//     ),
-//     hr: ({node, ...props}) => (
-//       <hr className="my-6 border-t-2 border-gray-300" {...props} />
-//     ),
-//     img: ({node, ...props}) => (
-//       <img className="max-w-full h-auto rounded-lg shadow-md my-4" alt="" {...props} />
-//     ),
-//   };
-
-//   // Cleanup on unmount
-//   useEffect(() => {
-//     return () => {
-//       Object.keys(pollingIntervalRef.current).forEach(fileId => {
-//         clearInterval(pollingIntervalRef.current[fileId]);
-//       });
-//       Object.keys(processingSimRef.current).forEach(fileId => {
-//         clearInterval(processingSimRef.current[fileId]);
-//       });
-//       if (animationFrameRef.current) {
-//         cancelAnimationFrame(animationFrameRef.current);
-//       }
-//     };
-//   }, []);
-
-//   // Close dropdown when clicking outside
-//   useEffect(() => {
-//     const handleClickOutside = (event) => {
-//       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-//         setShowDropdown(false);
-//       }
-//     };
-//     document.addEventListener('mousedown', handleClickOutside);
-//     return () => {
-//       document.removeEventListener('mousedown', handleClickOutside);
-//     };
-//   }, []);
-
-//   useEffect(() => {
-//     fetchSecrets();
-//   }, []);
-
-//   // Persist states to localStorage
-//   useEffect(() => {
-//     if (sessionId) localStorage.setItem('sessionId', sessionId);
-//   }, [sessionId]);
-
-//   useEffect(() => {
-//     localStorage.setItem('messages', JSON.stringify(messages));
-//   }, [messages]);
-
-//   useEffect(() => {
-//     if (currentResponse) {
-//       localStorage.setItem('currentResponse', currentResponse);
-//       localStorage.setItem('animatedResponseContent', animatedResponseContent);
-//     }
-//   }, [currentResponse, animatedResponseContent]);
-
-//   useEffect(() => {
-//     localStorage.setItem('hasResponse', JSON.stringify(hasResponse));
-//   }, [hasResponse]);
-
-//   useEffect(() => {
-//     if (documentData) {
-//       localStorage.setItem('documentData', JSON.stringify(documentData));
-//     }
-//   }, [documentData]);
-
-//   useEffect(() => {
-//     if (fileId) localStorage.setItem('fileId', fileId);
-//   }, [fileId]);
-
-//   useEffect(() => {
-//     localStorage.setItem('batchUploads', JSON.stringify(batchUploads));
-//   }, [batchUploads]);
-
-//   // Main loading effect
-//   useEffect(() => {
-//     const fetchChatHistory = async (currentFileId, currentSessionId, selectedChatId = null) => {
-//       try {
-//         console.log('[AnalysisPage] Fetching chat history for fileId:', currentFileId);
-//         const response = await apiRequest(`/files/chat-history/${currentFileId}`, {
-//           method: 'GET',
-//         });
-
-//         const sessions = response || [];
-//         let allMessages = [];
-//         sessions.forEach(session => {
-//           session.messages.forEach(message => {
-//             allMessages.push({
-//               ...message,
-//               session_id: session.session_id,
-//               timestamp: message.created_at || message.timestamp,
-//               display_text_left_panel: message.used_secret_prompt
-//                 ? `Secret Prompt: ${message.prompt_label || 'Unnamed Secret Prompt'}`
-//                 : message.question
-//             });
-//           });
-//         });
-
-//         allMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-//         setMessages(allMessages);
-
-//         if (allMessages.length > 0) {
-//           setDocumentData({
-//             id: currentFileId,
-//             title: `Document for Session ${currentSessionId}`,
-//             originalName: `Document for Session ${currentSessionId}`,
-//             size: 0,
-//             type: 'unknown',
-//             uploadedAt: new Date().toISOString(),
-//             status: 'processed',
-//           });
-//           setFileId(currentFileId);
-//           setSessionId(currentSessionId);
-//           setHasResponse(true);
-//           setShowSplitView(true);
-
-//           const chatToDisplay = selectedChatId
-//             ? allMessages.find(chat => chat.id === selectedChatId)
-//             : allMessages[allMessages.length - 1];
-
-//           if (chatToDisplay) {
-//             setCurrentResponse(chatToDisplay.answer);
-//             showResponseImmediately(chatToDisplay.answer);
-//             setSelectedMessageId(chatToDisplay.id);
-//           }
-//           setSuccess('Chat history loaded successfully!');
-//         }
-//       } catch (err) {
-//         console.error('[AnalysisPage] Error in fetchChatHistory:', err);
-//         setError(`Failed to load chat history: ${err.message}`);
-//       }
-//     };
-
-//     try {
-//       const savedMessages = localStorage.getItem('messages');
-//       if (savedMessages) setMessages(JSON.parse(savedMessages));
-
-//       const savedSessionId = localStorage.getItem('sessionId');
-//       if (savedSessionId) {
-//         setSessionId(savedSessionId);
-//       } else {
-//         const newSessionId = `session-${Date.now()}`;
-//         setSessionId(newSessionId);
-//       }
-
-//       const savedCurrentResponse = localStorage.getItem('currentResponse');
-//       const savedAnimatedResponseContent = localStorage.getItem('animatedResponseContent');
-//       if (savedCurrentResponse) {
-//         setCurrentResponse(savedCurrentResponse);
-//         if (savedAnimatedResponseContent) {
-//           setAnimatedResponseContent(savedAnimatedResponseContent);
-//           setShowSplitView(true);
-//         } else {
-//           setAnimatedResponseContent(savedCurrentResponse);
-//         }
-//         setIsAnimatingResponse(false);
-//       }
-
-//       const savedHasResponse = localStorage.getItem('hasResponse');
-//       if (savedHasResponse) {
-//         const parsedHasResponse = JSON.parse(savedHasResponse);
-//         setHasResponse(parsedHasResponse);
-//         if (parsedHasResponse) {
-//           setShowSplitView(true);
-//         }
-//       }
-
-//       const savedDocumentData = localStorage.getItem('documentData');
-//       if (savedDocumentData) setDocumentData(JSON.parse(savedDocumentData));
-
-//       const savedFileId = localStorage.getItem('fileId');
-//       if (savedFileId) setFileId(savedFileId);
-
-//       const savedBatchUploads = localStorage.getItem('batchUploads');
-//       if (savedBatchUploads) {
-//         const parsedBatchUploads = JSON.parse(savedBatchUploads);
-//         setBatchUploads(parsedBatchUploads);
-//         parsedBatchUploads.forEach(upload => {
-//           if (upload.status === 'batch_processing' || upload.status === 'processing') {
-//             startProcessingStatusPolling(upload.fileId);
-//           }
-//         });
-//       }
-
-//     } catch (error) {
-//       console.error('[AnalysisPage] Error restoring from localStorage:', error);
-//       if (!sessionId) {
-//         const newSessionId = `session-${Date.now()}`;
-//         setSessionId(newSessionId);
-//       }
-//     }
-
-//     if (location.state?.newChat) {
-//       clearAllChatData();
-//       window.history.replaceState({}, document.title);
-//     } else if (paramFileId && paramSessionId) {
-//       console.log('[AnalysisPage] Loading chat from URL params:', { paramFileId, paramSessionId });
-//       setFileId(paramFileId);
-//       setSessionId(paramSessionId);
-//       fetchChatHistory(paramFileId, paramSessionId);
-//     } else if (location.state?.chat) {
-//       const chatData = location.state.chat;
-//       console.log('[AnalysisPage] Loading chat from location state:', chatData);
-
-//       if (chatData.file_id && chatData.session_id) {
-//         setFileId(chatData.file_id);
-//         setSessionId(chatData.session_id);
-//         fetchChatHistory(chatData.file_id, chatData.session_id, chatData.id);
-//       } else {
-//         setError('Unable to load chat: Missing required information');
-//       }
-
-//       window.history.replaceState({}, document.title);
-//     }
-//   }, [location.state, paramFileId, paramSessionId]);
-
-//   useEffect(() => {
-//     if (showSplitView) {
-//       setIsSidebarHidden(false);
-//       setIsSidebarCollapsed(true);
-//     } else if (hasResponse) {
-//       setIsSidebarHidden(false);
-//       setIsSidebarCollapsed(false);
-//     } else {
-//       setIsSidebarHidden(false);
-//       setIsSidebarCollapsed(false);
-//     }
-//   }, [hasResponse, showSplitView, setIsSidebarHidden, setIsSidebarCollapsed]);
-
-//   useEffect(() => {
-//     if (success) {
-//       const timer = setTimeout(() => setSuccess(null), 5000);
-//       return () => clearTimeout(timer);
-//     }
-//   }, [success]);
-
-//   useEffect(() => {
-//     if (error) {
-//       const timer = setTimeout(() => setError(null), 8000);
-//       return () => clearTimeout(timer);
-//     }
-//   }, [error]);
-
-//   return (
-//     <div className="flex h-screen bg-white">
-//       {/* Error Messages */}
-//       {error && (
-//         <div className="fixed top-4 right-4 z-50 max-w-sm">
-//           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg shadow-lg flex items-start space-x-2">
-//             <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
-//             <div className="flex-1">
-//               <p className="text-sm">{error}</p>
-//             </div>
-//             <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700">
-//               <X className="h-4 w-4" />
-//             </button>
-//           </div>
-//         </div>
-//       )}
-
-//       {/* Success Messages */}
-//       {success && (
-//         <div className="fixed top-4 right-4 z-50 max-w-sm">
-//           <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2">
-//             <CheckCircle className="h-5 w-5 flex-shrink-0" />
-//             <span className="text-sm">{success}</span>
-//             <button onClick={() => setSuccess(null)} className="ml-auto text-green-500 hover:text-green-700">
-//               <X className="h-4 w-4" />
-//             </button>
-//           </div>
-//         </div>
-//       )}
-
-//       {/* Conditional Rendering for Single Page vs Split View */}
-//       {!showSplitView ? (
-//         <div className="flex flex-col items-center justify-center h-full w-full">
-//           <div className="text-center max-w-2xl px-6 mb-12">
-//             <h3 className="text-3xl font-bold mb-4 text-gray-900">Welcome to Smart Legal Insights</h3>
-//             <p className="text-gray-600 text-xl leading-relaxed">
-//               Upload a legal document or ask a question to begin your AI-powered analysis.
-//             </p>
-//           </div>
-//           <div className="w-full max-w-4xl px-6">
-//             <form onSubmit={handleSend} className="mx-auto">
-//               <div className="flex items-center space-x-3 bg-gray-50 rounded-xl border border-[#21C1B6]/30 px-5 py-6 focus-within:border-[#21C1B6] focus-within:bg-white focus-within:shadow-sm">
-//                 <button
-//                   type="button"
-//                   onClick={() => fileInputRef.current?.click()}
-//                   disabled={isUploading}
-//                   className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
-//                   title="Upload Document"
-//                 >
-//                   {isUploading ? (
-//                     <Loader2 className="h-5 w-5 animate-spin" />
-//                   ) : (
-//                     <Paperclip className="h-5 w-5" />
-//                   )}
-//                 </button>
-
-//                 <input
-//                   ref={fileInputRef}
-//                   type="file"
-//                   className="hidden"
-//                   accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.tiff"
-//                   onChange={handleFileUpload}
-//                   disabled={isUploading}
-//                   multiple
-//                 />
-
-//                 <div className="relative flex-shrink-0" ref={dropdownRef}>
-//                   <button
-//                     type="button"
-//                     onClick={() => setShowDropdown(!showDropdown)}
-//                     disabled={!fileId || batchUploads.find(upload => upload.fileId === fileId)?.status !== 'processed' || isLoading || isGeneratingInsights || isLoadingSecrets}
-//                     className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-//                   >
-//                     <BookOpen className="h-4 w-4" />
-//                     <span>{isLoadingSecrets ? 'Loading...' : activeDropdown}</span>
-//                     <ChevronDown className="h-4 w-4" />
-//                   </button>
-
-//                   {showDropdown && !isLoadingSecrets && (
-//                     <div className="absolute bottom-full left-0 mb-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-20 max-h-60 overflow-y-auto">
-//                       {secrets.length > 0 ? (
-//                         secrets.map((secret) => (
-//                           <button
-//                             key={secret.id}
-//                             type="button"
-//                             onClick={() => handleDropdownSelect(secret.name, secret.id, secret.llm_name)}
-//                             className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg"
-//                           >
-//                             {secret.name}
-//                           </button>
-//                         ))
-//                       ) : (
-//                         <div className="px-4 py-2.5 text-sm text-gray-500">
-//                           No analysis prompts available
-//                         </div>
-//                       )}
-//                     </div>
-//                   )}
-//                 </div>
-
-//                 <input
-//                   type="text"
-//                   value={chatInput}
-//                   onChange={handleChatInputChange}
-//                   placeholder={
-//                     isSecretPromptSelected
-//                       ? `Add optional details for ${activeDropdown}...`
-//                       : fileId
-//                         ? "Message Legal Assistant..."
-//                         : "Upload a document to get started"
-//                   }
-//                   className="flex-1 bg-transparent border-none outline-none text-gray-900 placeholder-gray-500 text-[15px] font-medium py-2 min-w-0 analysis-page-user-input"
-//                   disabled={isLoading || isGeneratingInsights || !fileId || batchUploads.find(upload => upload.fileId === fileId)?.status !== 'processed'}
-//                 />
-
-//                 {!isLoading && !isGeneratingInsights && (
-//                   <button
-//                     type="submit"
-//                     disabled={
-//                       (!chatInput.trim() && !isSecretPromptSelected) ||
-//                       !fileId ||
-//                       batchUploads.find(upload => upload.fileId === fileId)?.status !== 'processed'
-//                     }
-//                     className="p-2 bg-[#21C1B6] hover:bg-[#1AA49B] disabled:bg-gray-300 text-white rounded-lg transition-colors flex-shrink-0"
-//                     title="Send Message"
-//                   >
-//                     <Send className="h-5 w-5" />
-//                   </button>
-//                 )}
-
-//                 {(isLoading || isGeneratingInsights) && (
-//                   <button
-//                     type="button"
-//                     onClick={handleStop}
-//                     className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex-shrink-0"
-//                     title="Stop Generation"
-//                   >
-//                     <X className="h-5 w-5" />
-//                   </button>
-//                 )}
-//               </div>
-
-//               {documentData && !hasResponse && (
-//                 <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-//                   <div className="flex items-center space-x-3">
-//                     <FileCheck className="h-5 w-5 text-green-600" />
-//                     <div className="flex-1 min-w-0">
-//                       <p className="text-sm font-medium text-gray-900 truncate">{documentData.originalName}</p>
-//                       <p className="text-xs text-gray-500">
-//                         {formatFileSize(documentData.size)} • {formatDate(documentData.uploadedAt)}
-//                       </p>
-//                     </div>
-//                     {batchUploads.find(upload => upload.fileId === fileId) && (
-//                       <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-//                         batchUploads.find(upload => upload.fileId === fileId).status === 'processed'
-//                           ? 'bg-green-100 text-green-800'
-//                           : batchUploads.find(upload => upload.fileId === fileId).status === 'processing' || batchUploads.find(upload => upload.fileId === fileId).status === 'batch_processing'
-//                           ? 'bg-blue-100 text-blue-800'
-//                           : 'bg-red-100 text-red-800'
-//                       }`}>
-//                         {batchUploads.find(upload => upload.fileId === fileId).status.charAt(0).toUpperCase() + batchUploads.find(upload => upload.fileId === fileId).status.slice(1)}
-//                       </div>
-//                     )}
-//                   </div>
-//                 </div>
-//               )}
-
-//               {isSecretPromptSelected && (
-//                 <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded-lg">
-//                   <div className="flex items-center space-x-2 text-sm text-blue-800">
-//                     <Bot className="h-4 w-4" />
-//                     <span>Using analysis prompt: <strong>{activeDropdown}</strong></span>
-//                     <button
-//                       type="button"
-//                       onClick={() => {
-//                         setIsSecretPromptSelected(false);
-//                         setActiveDropdown('Custom Query');
-//                         setSelectedSecretId(null);
-//                       }}
-//                       className="ml-auto text-blue-600 hover:text-blue-800"
-//                     >
-//                       <X className="h-4 w-4" />
-//                     </button>
-//                   </div>
-//                 </div>
-//               )}
-//             </form>
-//           </div>
-//         </div>
-//       ) : (
-//         <>
-//           <div className="w-2/5 border-r border-gray-200 flex flex-col bg-white h-full">
-//             <div className="p-4 border-b border-black border-opacity-20">
-//               <div className="flex items-center justify-between mb-4">
-//                 <h2 className="text-lg font-semibold text-gray-900">Questions</h2>
-//                 <button
-//                   onClick={startNewChat}
-//                   className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
-//                 >
-//                   New Chat
-//                 </button>
-//               </div>
-//               <div className="relative mb-4">
-//                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-//                 <input
-//                   type="text"
-//                   placeholder="Search questions..."
-//                   value={searchQuery}
-//                   onChange={(e) => setSearchQuery(e.target.value)}
-//                   className="w-full pl-9 pr-3 py-2 bg-gray-100 rounded-lg text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-//                 />
-//               </div>
-//             </div>
-
-//             {uploadedDocuments.length > 0 && (
-//               <div className="px-4 py-3 border-b border-gray-200 bg-blue-50">
-//                 <h3 className="text-xs font-semibold text-gray-700 mb-2 flex items-center">
-//                   <FileText className="h-4 w-4 mr-1" />
-//                   Uploaded Documents ({uploadedDocuments.length})
-//                 </h3>
-//                 <div className="space-y-2 max-h-32 overflow-y-auto">
-//                   {uploadedDocuments.map((doc) => (
-//                     <div
-//                       key={doc.id}
-//                       onClick={() => {
-//                         if (doc.status === 'processed') {
-//                           setFileId(doc.id);
-//                           setDocumentData({
-//                             id: doc.id,
-//                             title: doc.fileName,
-//                             originalName: doc.fileName,
-//                             size: doc.fileSize,
-//                             type: 'unknown',
-//                             uploadedAt: doc.uploadedAt,
-//                             status: doc.status,
-//                           });
-//                         }
-//                       }}
-//                       className={`p-2 rounded-md cursor-pointer transition-colors ${
-//                         fileId === doc.id
-//                           ? 'bg-blue-100 border border-blue-300'
-//                           : 'bg-white border border-gray-200 hover:bg-gray-50'
-//                       } ${doc.status !== 'processed' ? 'cursor-wait' : ''}`}
-//                     >
-//                       <div className="flex items-center justify-between">
-//                         <div className="flex-1 min-w-0">
-//                           <p className="text-xs font-medium text-gray-900 truncate">{doc.fileName}</p>
-//                           <p className="text-xs text-gray-500">{formatFileSize(doc.fileSize)}</p>
-//                         </div>
-//                         <div className="flex items-center space-x-1 ml-2">
-//                           {(doc.status === 'uploading' || doc.status === 'batch_processing' || doc.status === 'processing') && (
-//                             <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-//                           )}
-//                           {(doc.status === 'uploading' || doc.status === 'batch_processing' || doc.status === 'processing') && (
-//                             <span className="text-xs font-bold text-blue-700">
-//                               {Math.round(doc.status === 'uploading' ? doc.uploadProgress : doc.processingProgress)}%
-//                             </span>
-//                           )}
-//                           <div className={`px-1.5 py-0.5 rounded text-xs font-medium ${
-//                             doc.status === 'processed'
-//                               ? 'bg-green-100 text-green-800'
-//                               : (doc.status === 'processing' || doc.status === 'batch_processing' || doc.status === 'uploading')
-//                               ? 'bg-blue-100 text-blue-800'
-//                               : 'bg-red-100 text-red-800'
-//                           }`}>
-//                             {doc.status.charAt(0).toUpperCase() + doc.status.slice(1)}
-//                           </div>
-//                         </div>
-//                       </div>
-//                     </div>
-//                   ))}
-//                 </div>
-//               </div>
-//             )}
-
-//             <div className="flex-1 overflow-y-auto px-4 py-2">
-//               <div className="space-y-2">
-//                 {messages
-//                   .filter(msg =>
-//                     (msg.display_text_left_panel || msg.question || '').toLowerCase().includes(searchQuery.toLowerCase())
-//                   )
-//                   .slice(0, showAllChats ? messages.length : displayLimit)
-//                   .map((msg, i) => (
-//                     <div
-//                       key={msg.id || i}
-//                       onClick={() => handleMessageClick(msg)}
-//                       className={`p-3 rounded-lg border cursor-pointer transition-all duration-200 hover:shadow-md ${
-//                         selectedMessageId === msg.id
-//                           ? 'bg-[#21C1B6]/10 border-[#21C1B6]/30 shadow-sm'
-//                           : 'bg-white border-[#21C1B6]/30 hover:bg-gray-50'
-//                       }`}
-//                     >
-//                       <div className="flex items-start justify-between">
-//                         <div className="flex-1 min-w-0">
-//                           <p className="text-sm font-medium text-gray-900 mb-1 line-clamp-2">
-//                             {highlightText(msg.display_text_left_panel || msg.question, searchQuery)}
-//                           </p>
-//                           <div className="flex items-center space-x-2 text-xs text-gray-500">
-//                             <span>{formatDate(msg.timestamp || msg.created_at)}</span>
-//                             {msg.session_id && (
-//                               <>
-//                                 <span>•</span>
-//                                 <span className="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded">
-//                                   {msg.session_id.split('-')[1]?.substring(0, 8) || 'N/A'}
-//                                 </span>
-//                               </>
-//                             )}
-//                           </div>
-//                         </div>
-//                         {selectedMessageId === msg.id && (
-//                           <ChevronRight className="h-4 w-4 text-blue-600 flex-shrink-0 ml-2" />
-//                         )}
-//                       </div>
-//                     </div>
-//                   ))}
-
-//                 {messages.length > displayLimit && !showAllChats && (
-//                   <div className="text-center py-4">
-//                     <button
-//                       onClick={() => setShowAllChats(true)}
-//                       className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-//                     >
-//                       See All ({messages.length - displayLimit} more)
-//                     </button>
-//                   </div>
-//                 )}
-
-//                 {isLoading && (
-//                   <div className="p-3 rounded-lg border bg-blue-50 border-blue-200">
-//                     <div className="flex items-center space-x-2">
-//                       <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-//                       <span className="text-sm text-blue-800">Processing...</span>
-//                     </div>
-//                   </div>
-//                 )}
-
-//                 {messages.length === 0 && !isLoading && (
-//                   <div className="text-center py-8">
-//                     <MessageSquare className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-//                     <p className="text-gray-500 text-sm">No questions yet</p>
-//                     <p className="text-gray-400 text-xs">Start by asking a question</p>
-//                   </div>
-//                 )}
-//               </div>
-//             </div>
-
-//             <div className="border-t border-gray-200 p-4 bg-white flex-shrink-0">
-//               <form onSubmit={handleSend} className="mx-auto">
-//                 <div className="flex items-center space-x-3 bg-gray-50 rounded-xl border border-[#21C1B6]/30 px-4 py-3 focus-within:border-[#21C1B6] focus-within:bg-white focus-within:shadow-sm">
-//                   <button
-//                     type="button"
-//                     onClick={() => fileInputRef.current?.click()}
-//                     disabled={isUploading}
-//                     className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
-//                     title="Upload Document"
-//                   >
-//                     {isUploading ? (
-//                       <Loader2 className="h-4 w-4 animate-spin" />
-//                     ) : (
-//                       <Paperclip className="h-4 w-4" />
-//                     )}
-//                   </button>
-
-//                   <input
-//                     ref={fileInputRef}
-//                     type="file"
-//                     className="hidden"
-//                     accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.tiff"
-//                     onChange={handleFileUpload}
-//                     disabled={isUploading}
-//                     multiple
-//                   />
-
-//                   <div className="relative flex-shrink-0" ref={dropdownRef}>
-//                     <button
-//                       type="button"
-//                       onClick={() => setShowDropdown(!showDropdown)}
-//                       disabled={!fileId || batchUploads.find(upload => upload.fileId === fileId)?.status !== 'processed' || isLoading || isGeneratingInsights || isLoadingSecrets}
-//                       className="flex items-center space-x-2 px-2.5 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-//                     >
-//                       <BookOpen className="h-3.5 w-3.5" />
-//                       <span>{isLoadingSecrets ? 'Loading...' : activeDropdown}</span>
-//                       <ChevronDown className="h-3.5 w-3.5" />
-//                     </button>
-
-//                     {showDropdown && !isLoadingSecrets && (
-//                       <div className="absolute bottom-full left-0 mb-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-20 max-h-60 overflow-y-auto">
-//                         {secrets.length > 0 ? (
-//                           secrets.map((secret) => (
-//                             <button
-//                               key={secret.id}
-//                               type="button"
-//                               onClick={() => handleDropdownSelect(secret.name, secret.id, secret.llm_name)}
-//                               className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg"
-//                             >
-//                               {secret.name}
-//                             </button>
-//                           ))
-//                         ) : (
-//                           <div className="px-4 py-2.5 text-sm text-gray-500">
-//                             No analysis prompts available
-//                           </div>
-//                         )}
-//                       </div>
-//                     )}
-//                   </div>
-
-//                   <input
-//                     type="text"
-//                     value={chatInput}
-//                     onChange={handleChatInputChange}
-//                     placeholder={
-//                       isSecretPromptSelected
-//                         ? `Add details for ${activeDropdown}...`
-//                         : fileId
-//                           ? "Ask a question..."
-//                           : "Upload a document first"
-//                     }
-//                     className="flex-1 bg-transparent border-none outline-none text-gray-900 placeholder-gray-500 text-sm font-medium py-1 min-w-0 analysis-page-user-input"
-//                     disabled={isLoading || isGeneratingInsights || !fileId || batchUploads.find(upload => upload.fileId === fileId)?.status !== 'processed'}
-//                   />
-
-//                   {!isLoading && !isGeneratingInsights && (
-//                     <button
-//                       type="submit"
-//                       disabled={
-//                         (!chatInput.trim() && !isSecretPromptSelected) ||
-//                         !fileId ||
-//                         batchUploads.find(upload => upload.fileId === fileId)?.status !== 'processed'
-//                       }
-//                       className="p-1.5 bg-[#21C1B6] hover:bg-[#1AA49B] disabled:bg-gray-300 text-white rounded-lg transition-colors flex-shrink-0"
-//                       title="Send Message"
-//                     >
-//                       <Send className="h-4 w-4" />
-//                     </button>
-//                   )}
-
-//                   {(isLoading || isGeneratingInsights) && (
-//                     <button
-//                       type="button"
-//                       onClick={handleStop}
-//                       className="p-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex-shrink-0"
-//                       title="Stop Generation"
-//                     >
-//                       <X className="h-4 w-4" />
-//                     </button>
-//                   )}
-//                 </div>
-
-//                 {documentData && (
-//                   <div className="mt-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
-//                     <div className="flex items-center space-x-2">
-//                       <FileCheck className="h-4 w-4 text-green-600" />
-//                       <div className="flex-1 min-w-0">
-//                         <p className="text-xs font-medium text-gray-900 truncate">{documentData.originalName}</p>
-//                         <p className="text-xs text-gray-500">
-//                           {formatFileSize(documentData.size)}
-//                         </p>
-//                       </div>
-//                       {batchUploads.find(upload => upload.fileId === fileId) && (
-//                         <div className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-//                           batchUploads.find(upload => upload.fileId === fileId).status === 'processed'
-//                             ? 'bg-green-100 text-green-800'
-//                             : batchUploads.find(upload => upload.fileId === fileId).status === 'processing' || batchUploads.find(upload => upload.fileId === fileId).status === 'batch_processing'
-//                             ? 'bg-blue-100 text-blue-800'
-//                             : 'bg-red-100 text-red-800'
-//                         }`}>
-//                           {batchUploads.find(upload => upload.fileId === fileId).status.charAt(0).toUpperCase() + batchUploads.find(upload => upload.fileId === fileId).status.slice(1)}
-//                         </div>
-//                       )}
-//                     </div>
-//                   </div>
-//                 )}
-
-//                 {isSecretPromptSelected && (
-//                   <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
-//                     <div className="flex items-center space-x-2 text-xs text-blue-800">
-//                       <Bot className="h-3.5 w-3.5" />
-//                       <span>Using: <strong>{activeDropdown}</strong></span>
-//                       <button
-//                         type="button"
-//                         onClick={() => {
-//                           setIsSecretPromptSelected(false);
-//                           setActiveDropdown('Custom Query');
-//                           setSelectedSecretId(null);
-//                         }}
-//                         className="ml-auto text-blue-600 hover:text-blue-800"
-//                       >
-//                         <X className="h-3.5 w-3.5" />
-//                       </button>
-//                     </div>
-//                   </div>
-//                 )}
-//               </form>
-//             </div>
-//           </div>
-
-//           <div className="w-3/5 flex flex-col h-full bg-gray-50">
-//             <div className="flex-1 overflow-y-auto" ref={responseRef}>
-//               {selectedMessageId && (currentResponse || animatedResponseContent) ? (
-//                 <div className="px-6 py-6">
-//                   <div className="max-w-none">
-//                     <div className="mb-6 pb-4 border-b border-gray-200 bg-white rounded-lg p-4 shadow-sm">
-//                       <div className="flex items-center justify-between mb-3">
-//                         <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-//                           <Bot className="h-5 w-5 mr-2 text-blue-600" />
-//                           AI Response
-//                         </h2>
-//                         <div className="flex items-center space-x-2 text-sm text-gray-500">
-//                           <button
-//                             onClick={handleCopyResponse}
-//                             className="flex items-center px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
-//                             title="Copy AI Response"
-//                           >
-//                             <Copy className="h-4 w-4 mr-1" />
-//                             Copy
-//                           </button>
-//                           <DownloadPdf markdownOutputRef={markdownOutputRef} />
-//                           {messages.find(msg => msg.id === selectedMessageId)?.timestamp && (
-//                             <span>{formatDate(messages.find(msg => msg.id === selectedMessageId).timestamp)}</span>
-//                           )}
-//                           {messages.find(msg => msg.id === selectedMessageId)?.session_id && (
-//                             <>
-//                               <span>•</span>
-//                               <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
-//                                 {messages.find(msg => msg.id === selectedMessageId).session_id.split('-')[1]?.substring(0, 6) || 'N/A'}
-//                               </span>
-//                             </>
-//                           )}
-//                         </div>
-//                       </div>
-
-//                       <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-l-4 border-blue-500">
-//                         <p className="text-sm font-medium text-blue-900 mb-1 flex items-center">
-//                           <MessageSquare className="h-4 w-4 mr-1" />
-//                           Question:
-//                         </p>
-//                         <p className="text-sm text-blue-800 leading-relaxed">
-//                           {messages.find(msg => msg.id === selectedMessageId)?.question || 'No question available'}
-//                         </p>
-//                       </div>
-
-//                       {isAnimatingResponse && (
-//                         <div className="mt-3 flex justify-end">
-//                           <button
-//                             onClick={() => showResponseImmediately(currentResponse)}
-//                             className="text-xs text-blue-600 hover:text-blue-800 flex items-center space-x-1"
-//                           >
-//                             <span>Skip animation</span>
-//                             <ArrowRight className="h-3 w-3" />
-//                           </button>
-//                         </div>
-//                       )}
-//                     </div>
-
-//                     <div className="bg-white rounded-lg shadow-sm p-6">
-//                       <div className="prose prose-gray prose-lg max-w-none" ref={markdownOutputRef}>
-//                         <ReactMarkdown
-//                           remarkPlugins={[remarkGfm]}
-//                           rehypePlugins={[rehypeRaw, rehypeSanitize]}
-//                           components={markdownComponents}
-//                         >
-//                           {animatedResponseContent || currentResponse || ''}
-//                         </ReactMarkdown>
-//                         {isAnimatingResponse && (
-//                           <span className="inline-flex items-center ml-1">
-//                             <span className="inline-block w-2 h-5 bg-blue-600 animate-pulse"></span>
-//                           </span>
-//                         )}
-//                       </div>
-//                     </div>
-//                   </div>
-//                 </div>
-//               ) : (
-//                 <div className="flex items-center justify-center h-full">
-//                   <div className="text-center max-w-md px-6">
-//                     <div className="bg-white rounded-full p-6 inline-block mb-6 shadow-lg">
-//                       <MessageSquare className="h-16 w-16 text-blue-500" />
-//                     </div>
-//                     <h3 className="text-2xl font-semibold mb-4 text-gray-900">Select a Question</h3>
-//                     <p className="text-gray-600 text-lg leading-relaxed">
-//                       Click on any question from the left panel to view the AI response here.
-//                     </p>
-//                   </div>
-//                 </div>
-//               )}
-//             </div>
-//           </div>
-//         </>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default AnalysisPage;
-
-
-// import '../styles/AnalysisPage.css';
-// import React, { useState, useEffect, useRef } from 'react';
-// import { useLocation, useParams } from 'react-router-dom';
-// import { useSidebar } from '../context/SidebarContext';
-// import DownloadPdf from '../components/DownloadPdf/DownloadPdf';
-// import ReactMarkdown from 'react-markdown';
-// import remarkGfm from 'remark-gfm';
-// import rehypeRaw from 'rehype-raw';
-// import rehypeSanitize from 'rehype-sanitize';
-// import {
-//   Search, Send, FileText, Layers, Trash2, RotateCcw,
-//   ArrowRight, ChevronRight, AlertTriangle, Clock, Loader2,
-//   Upload, Download, AlertCircle, CheckCircle, X, Eye, Quote, BookOpen, Copy,
-//   ChevronDown, Paperclip, MessageSquare, FileCheck, Bot, CheckCircle2
-// } from 'lucide-react';
-
-// const AnalysisPage = () => {
-//   const location = useLocation();
-//   const { fileId: paramFileId, sessionId: paramSessionId } = useParams();
-//   const { setIsSidebarHidden, setIsSidebarCollapsed } = useSidebar();
-
-//   // State Management
-//   const [activeDropdown, setActiveDropdown] = useState('Summary');
-//   const [isLoading, setIsLoading] = useState(false);
-//   const [isGeneratingInsights, setIsGeneratingInsights] = useState(false);
-//   const [isUploading, setIsUploading] = useState(false);
-//   const [error, setError] = useState(null);
-//   const [success, setSuccess] = useState(null);
-//   const [hasResponse, setHasResponse] = useState(false);
-//   const [isSecretPromptSelected, setIsSecretPromptSelected] = useState(false);
-//   const [documentData, setDocumentData] = useState(null);
-//   const [messages, setMessages] = useState([]);
-//   const [fileId, setFileId] = useState(paramFileId || null);
-//   const [sessionId, setSessionId] = useState(paramSessionId || null);
-//   const [currentResponse, setCurrentResponse] = useState('');
-//   const [animatedResponseContent, setAnimatedResponseContent] = useState('');
-//   const [isAnimatingResponse, setIsAnimatingResponse] = useState(false);
-//   const [chatInput, setChatInput] = useState('');
-//   const [showSplitView, setShowSplitView] = useState(false);
-//   const [searchQuery, setSearchQuery] = useState('');
-//   const [selectedMessageId, setSelectedMessageId] = useState(null);
-//   const [displayLimit, setDisplayLimit] = useState(10);
-//   const [showAllChats, setShowAllChats] = useState(false);
-//   const [showDropdown, setShowDropdown] = useState(false);
-//   const [secrets, setSecrets] = useState([]);
-//   const [isLoadingSecrets, setIsLoadingSecrets] = useState(false);
-//   const [selectedSecretId, setSelectedSecretId] = useState(null);
-//   const [selectedLlmName, setSelectedLlmName] = useState(null);
-//   const [batchUploads, setBatchUploads] = useState([]);
-//   const [uploadedDocuments, setUploadedDocuments] = useState([]);
-
-//   // Refs
-//   const fileInputRef = useRef(null);
-//   const dropdownRef = useRef(null);
-//   const responseRef = useRef(null);
-//   const markdownOutputRef = useRef(null);
-//   const pollingIntervalRef = useRef({});
-//   const animationFrameRef = useRef(null);
-//   const abortControllerRef = useRef(null);
-// const processingSimRef = useRef({});
-//   // API Configuration
-//   const API_BASE_URL = 'https://gateway-service-110685455967.asia-south1.run.app';
-
-//   const getAuthToken = () => {
-//     const tokenKeys = [
-//       'authToken', 'token', 'accessToken', 'jwt', 'bearerToken',
-//       'auth_token', 'access_token', 'api_token', 'userToken'
-//     ];
-//     for (const key of tokenKeys) {
-//       const token = localStorage.getItem(key);
-//       if (token) return token;
-//     }
-//     return null;
-//   };
-
-//   const apiRequest = async (url, options = {}) => {
-//     try {
-//       const token = getAuthToken();
-//       const defaultHeaders = { 'Content-Type': 'application/json' };
-//       if (token) {
-//         defaultHeaders['Authorization'] = `Bearer ${token}`;
-//       }
-
-//       const headers = options.body instanceof FormData
-//         ? (token ? { 'Authorization': `Bearer ${token}` } : {})
-//         : { ...defaultHeaders, ...options.headers };
-
-//       const response = await fetch(`${API_BASE_URL}${url}`, {
-//         ...options,
-//         headers,
-//       });
-
-//       if (!response.ok) {
-//         let errorData;
-//         try {
-//           errorData = await response.json();
-//         } catch {
-//           errorData = { error: `HTTP error! status: ${response.status}` };
-//         }
-//         switch (response.status) {
-//           case 401: throw new Error('Authentication required. Please log in again.');
-//           case 403: throw new Error(errorData.error || 'Access denied.');
-//           case 404: throw new Error('Resource not found.');
-//           case 413: throw new Error('File too large.');
-//           case 415: throw new Error('Unsupported file type.');
-//           case 429: throw new Error('Too many requests.');
-//           default: throw new Error(errorData.error || errorData.message || `Request failed with status ${response.status}`);
-//         }
-//       }
-
-//       const contentType = response.headers.get('content-type');
-//       if (contentType && contentType.includes('application/json')) {
-//         return await response.json();
-//       }
-//       return response;
-//     } catch (error) {
-//       throw error;
-//     }
-//   };
-
-//   // Fetch secrets
-//   const fetchSecrets = async () => {
-//     try {
-//       setIsLoadingSecrets(true);
-//       setError(null);
-//       const token = getAuthToken();
-//       const headers = { 'Content-Type': 'application/json' };
-//       if (token) headers['Authorization'] = `Bearer ${token}`;
-
-//       const response = await fetch(`${API_BASE_URL}/files/secrets?fetch=false`, {
-//         method: 'GET',
-//         headers,
-//       });
-
-//       if (!response.ok) {
-//         throw new Error(`Failed to fetch secrets: ${response.status}`);
-//       }
-
-//       const secretsData = await response.json();
-//       setSecrets(secretsData || []);
-//       if (secretsData && secretsData.length > 0) {
-//         setActiveDropdown(secretsData[0].name);
-//         setSelectedSecretId(secretsData[0].id);
-//         setSelectedLlmName(secretsData[0].llm_name);
-//       }
-//     } catch (error) {
-//       console.error('Error fetching secrets:', error);
-//       setError(`Failed to load analysis prompts: ${error.message}`);
-//     } finally {
-//       setIsLoadingSecrets(false);
-//     }
-//   };
-
-
-//   // Inside batchUploadDocuments
-// const batchUploadDocuments = async (files) => {
-//   console.log('Starting batch upload for', files.length, 'files');
-//   setIsUploading(true);
-//   setError(null);
-
-//   const initialBatchUploads = files.map((file, index) => ({
-//     id: `${file.name}-${Date.now()}-${index}`,
-//     file: file,
-//     fileName: file.name,
-//     fileSize: file.size,
-//     uploadProgress: 0,
-//     processingProgress: 0,
-//     status: 'pending',
-//     fileId: null,
-//     error: null
-//   }));
-
-//   setBatchUploads(initialBatchUploads);
-
-//   const initialUploaded = initialBatchUploads.map(u => ({
-//     id: u.id,
-//     fileName: u.fileName,
-//     fileSize: u.fileSize,
-//     uploadedAt: new Date().toISOString(),
-//     status: 'pending',
-//     operationName: null,
-//     uploadProgress: 0,
-//     processingProgress: 0,
-//     error: null
-//   }));
-
-//   setUploadedDocuments(prev => [...prev, ...initialUploaded]);
-//   setShowSplitView(true);
-
-//   try {
-//     const formData = new FormData();
-//     files.forEach(file => formData.append('document', file));
-
-//     const progressInterval = setInterval(() => {
-//       setBatchUploads(prev => prev.map(upload => {
-//         if (upload.status === 'uploading' && upload.uploadProgress < 90) {
-//           const newProgress = Math.min(upload.uploadProgress + 5, 90);
-//           console.log(`Upload progress for ${upload.id}: ${newProgress}%`);
-//           return { ...upload, uploadProgress: newProgress };
-//         }
-//         return upload;
-//       }));
-//       setUploadedDocuments(prev => prev.map(doc => {
-//         if (doc.status === 'uploading' && doc.uploadProgress < 90) {
-//           const newProgress = Math.min(doc.uploadProgress + 5, 90);
-//           console.log(`Upload progress for ${doc.id}: ${newProgress}%`);
-//           return { ...doc, uploadProgress: newProgress };
-//         }
-//         return doc;
-//       }));
-//     }, 500);
-
-//     setBatchUploads(prev => prev.map(upload => ({ ...upload, status: 'uploading', uploadProgress: 10 })));
-//     setUploadedDocuments(prev => prev.map(doc => ({ ...doc, status: 'uploading', uploadProgress: 10 })));
-
-//     const token = getAuthToken();
-//     const headers = {};
-//     if (token) headers['Authorization'] = `Bearer ${token}`;
-
-//     const response = await fetch(`${API_BASE_URL}/files/batch-upload`, {
-//       method: 'POST',
-//       headers,
-//       body: formData,
-//     });
-
-//     clearInterval(progressInterval);
-//     setBatchUploads(prev => prev.map(upload => ({ ...upload, uploadProgress: 100 })));
-//     setUploadedDocuments(prev => prev.map(doc => ({ ...doc, uploadProgress: 100 })));
-
-//     if (!response.ok) {
-//       const errorData = await response.json();
-//       throw new Error(errorData.error || `Upload failed with status ${response.status}`);
-//     }
-
-//     const data = await response.json();
-//     console.log('Batch upload response:', data);
-
-//     if (data.uploaded_files && Array.isArray(data.uploaded_files)) {
-//       data.uploaded_files.forEach((uploadedFile, index) => {
-//         const matchingUpload = initialBatchUploads[index];
-
-//         if (uploadedFile.error) {
-//           setBatchUploads(prev => prev.map(upload =>
-//             upload.id === matchingUpload.id
-//               ? { ...upload, status: 'failed', error: uploadedFile.error, uploadProgress: 0, processingProgress: 0 }
-//               : upload
-//           ));
-//           setUploadedDocuments(prev => prev.map(doc =>
-//             doc.id === matchingUpload.id
-//               ? { ...doc, status: 'failed', error: uploadedFile.error, uploadProgress: 0, processingProgress: 0 }
-//               : doc
-//           ));
-//         } else {
-//           const fileId = uploadedFile.file_id;
-//           setBatchUploads(prev => prev.map(upload =>
-//             upload.id === matchingUpload.id
-//               ? { ...upload, status: 'batch_processing', fileId, processingProgress: 10 } // Start at 10% for processing
-//               : upload
-//           ));
-//           setUploadedDocuments(prev => prev.map(doc =>
-//             doc.id === matchingUpload.id
-//               ? { ...doc, id: fileId, status: 'batch_processing', processingProgress: 10, operationName: uploadedFile.operation_name }
-//               : doc
-//           ));
-
-//           if (index === 0) {
-//             setFileId(fileId);
-//             setDocumentData({
-//               id: fileId,
-//               title: matchingUpload.fileName,
-//               originalName: matchingUpload.fileName,
-//               size: matchingUpload.fileSize,
-//               type: matchingUpload.file.type,
-//               uploadedAt: new Date().toISOString(),
-//               status: 'batch_processing'
-//             });
-//           }
-//           startProcessingStatusPolling(fileId);
-//         }
-//       });
-
-//       const successCount = data.uploaded_files.filter(f => !f.error).length;
-//       const failCount = data.uploaded_files.filter(f => f.error).length;
-
-//       if (successCount > 0) setSuccess(`${successCount} document(s) uploaded successfully!`);
-//       if (failCount > 0) setError(`${failCount} document(s) failed to upload.`);
-
-//       setTimeout(() => setIsUploading(false), 1000);
-//     }
-//   } catch (error) {
-//     console.error('Batch upload error:', error);
-//     setError(`Batch upload failed: ${error.message}`);
-//     setBatchUploads(prev => prev.map(upload => ({
-//       ...upload,
-//       status: 'failed',
-//       error: error.message,
-//       uploadProgress: 0,
-//       processingProgress: 0
-//     })));
-//     setUploadedDocuments(prev => prev.map(doc => ({
-//       ...doc,
-//       status: 'failed',
-//       error: error.message,
-//       uploadProgress: 0,
-//       processingProgress: 0
-//     })));
-//     setIsUploading(false);
-//   }
-// };
-
-// // Inside startProcessingStatusPolling
-// const startProcessingStatusPolling = (file_id) => {
-//   if (pollingIntervalRef.current[file_id]) clearInterval(pollingIntervalRef.current[file_id]);
-//   if (processingSimRef.current[file_id]) clearInterval(processingSimRef.current[file_id]);
-
-//   const simInterval = setInterval(() => {
-//     setBatchUploads(prev => prev.map(upload =>
-//       upload.fileId === file_id && (upload.status === 'batch_processing' || upload.status === 'processing') && upload.processingProgress < 95
-//         ? { ...upload, processingProgress: Math.min(upload.processingProgress + 5, 95) }
-//         : upload
-//     ));
-//     setUploadedDocuments(prev => prev.map(doc =>
-//       doc.id === file_id && (doc.status === 'batch_processing' || doc.status === 'processing') && doc.processingProgress < 95
-//         ? { ...doc, processingProgress: Math.min(doc.processingProgress + 5, 95) }
-//         : doc
-//     ));
-//     console.log(`Simulated processing progress for ${file_id}:`, batchUploads.find(u => u.fileId === file_id)?.processingProgress);
-//   }, 500);
-//   processingSimRef.current[file_id] = simInterval;
-
-//   let pollCount = 0;
-//   const maxPolls = 150;
-
-//   pollingIntervalRef.current[file_id] = setInterval(async () => {
-//     pollCount++;
-//     const status = await getProcessingStatus(file_id);
-
-//     if (status && (status.status === 'processed' || status.status === 'error')) {
-//       clearInterval(pollingIntervalRef.current[file_id]);
-//       clearInterval(processingSimRef.current[file_id]);
-//       delete pollingIntervalRef.current[file_id];
-//       delete processingSimRef.current[file_id];
-//       setBatchUploads(prev => prev.map(upload =>
-//         upload.fileId === file_id
-//           ? { ...upload, processingProgress: 100, status: status.status }
-//           : upload
-//       ));
-//       setUploadedDocuments(prev => prev.map(doc =>
-//         doc.id === file_id
-//           ? { ...doc, processingProgress: 100, status: status.status }
-//           : doc
-//       ));
-//     } else if (pollCount >= maxPolls) {
-//       clearInterval(pollingIntervalRef.current[file_id]);
-//       clearInterval(processingSimRef.current[file_id]);
-//       delete pollingIntervalRef.current[file_id];
-//       delete processingSimRef.current[file_id];
-//       setError(`Processing timeout for ${file_id.substring(0, 8)}.`);
-//       setBatchUploads(prev => prev.map(upload =>
-//         upload.fileId === file_id
-//           ? { ...upload, status: 'error', error: 'Processing timeout', processingProgress: 0 }
-//           : upload
-//       ));
-//       setUploadedDocuments(prev => prev.map(doc =>
-//         doc.id === file_id
-//           ? { ...doc, status: 'error', error: 'Processing timeout', processingProgress: 0 }
-//           : doc
-//       ));
-//     }
-//   }, 2000);
-// };
-
-// // Inside getProcessingStatus
-// const getProcessingStatus = async (file_id) => {
-//   try {
-//     const token = getAuthToken();
-//     const headers = { 'Content-Type': 'application/json' };
-//     if (token) headers['Authorization'] = `Bearer ${token}`;
-
-//     const response = await fetch(`${API_BASE_URL}/files/status/${file_id}`, {
-//       method: 'GET',
-//       headers,
-//     });
-
-//     if (!response.ok) {
-//       console.error(`Status check failed for file ${file_id}: ${response.status}`);
-//       return null;
-//     }
-
-//     const data = await response.json();
-//     console.log(`Processing status for ${file_id}:`, data);
-
-//     // Only update progress if API provides a valid value, otherwise keep simulation
-//     setBatchUploads(prev => prev.map(upload =>
-//       upload.fileId === file_id
-//         ? {
-//             ...upload,
-//             status: data.status,
-//             processingProgress: (data.processing_progress !== undefined && !isNaN(data.processing_progress) && data.processing_progress >= 0)
-//               ? data.processing_progress
-//               : upload.processingProgress || 0
-//           }
-//         : upload
-//     ));
-
-//     setUploadedDocuments(prev => prev.map(doc =>
-//       doc.id === file_id
-//         ? {
-//             ...doc,
-//             status: data.status,
-//             processingProgress: (data.processing_progress !== undefined && !isNaN(data.processing_progress) && data.processing_progress >= 0)
-//               ? data.processing_progress
-//               : doc.processingProgress || 0
-//           }
-//         : doc
-//     ));
-
-//     if (data.status === 'processed') {
-//       setDocumentData(prev => (prev && prev.id === file_id
-//         ? { ...prev, status: 'processed' }
-//         : prev
-//       ));
-//       setSuccess(`Processing completed for ${file_id.substring(0, 8)}!`);
-//     } else if (data.status === 'error') {
-//       setError(`Processing failed for ${file_id.substring(0, 8)}.`);
-//     }
-
-//     return data;
-//   } catch (error) {
-//     console.error(`Error getting processing status for ${file_id}:`, error);
-//     return null;
-//   }
-// };
-//   const animateResponse = (text) => {
-//     if (animationFrameRef.current) {
-//       cancelAnimationFrame(animationFrameRef.current);
-//     }
-
-//     setAnimatedResponseContent('');
-//     setIsAnimatingResponse(true);
-//     setShowSplitView(true);
-
-//     let currentIndex = 0;
-//     const chunkSize = 5;
-//     const delayMs = 10;
-
-//     const animate = () => {
-//       if (currentIndex < text.length) {
-//         const nextChunk = text.slice(currentIndex, currentIndex + chunkSize);
-//         setAnimatedResponseContent(prev => prev + nextChunk);
-//         currentIndex += chunkSize;
-
-//         if (responseRef.current) {
-//           responseRef.current.scrollTop = responseRef.current.scrollHeight;
-//         }
-
-//         setTimeout(() => {
-//           animationFrameRef.current = requestAnimationFrame(animate);
-//         }, delayMs);
-//       } else {
-//         setIsAnimatingResponse(false);
-//         animationFrameRef.current = null;
-//       }
-//     };
-
-//     animationFrameRef.current = requestAnimationFrame(animate);
-//   };
-
-//   const showResponseImmediately = (text) => {
-//     if (animationFrameRef.current) {
-//       cancelAnimationFrame(animationFrameRef.current);
-//       animationFrameRef.current = null;
-//     }
-//     setAnimatedResponseContent(text);
-//     setIsAnimatingResponse(false);
-//     setShowSplitView(true);
-
-//     if (responseRef.current) {
-//       responseRef.current.scrollTop = responseRef.current.scrollHeight;
-//     }
-//   };
-
-//   // Chat with document
-//   const chatWithDocument = async (file_id, question, currentSessionId, llm_name = null) => {
-//     try {
-//       setIsLoading(true);
-//       setError(null);
-
-//       abortControllerRef.current = new AbortController();
-//       const body = {
-//         file_id: file_id,
-//         question: question.trim(),
-//         used_secret_prompt: false,
-//         prompt_label: null,
-//         session_id: currentSessionId,
-//       };
-
-//       if (llm_name) {
-//         body.llm_name = llm_name;
-//       }
-
-//       const data = await apiRequest('/files/chat', {
-//         method: 'POST',
-//         body: JSON.stringify(body),
-//         signal: abortControllerRef.current.signal,
-//       });
-
-//       const response = data.answer || data.response || 'No response received';
-//       const newSessionId = data.session_id || currentSessionId;
-
-//       if (data.history && Array.isArray(data.history)) {
-//         setMessages(data.history);
-//         const latestMessage = data.history[data.history.length - 1];
-//         if (latestMessage) {
-//           setSelectedMessageId(latestMessage.id);
-//           setCurrentResponse(latestMessage.answer);
-//           animateResponse(latestMessage.answer);
-//         }
-//       } else {
-//         const newChat = {
-//           id: Date.now(),
-//           file_id: file_id,
-//           session_id: newSessionId,
-//           question: question.trim(),
-//           answer: response,
-//           display_text_left_panel: question.trim(),
-//           timestamp: new Date().toISOString(),
-//           used_chunk_ids: data.used_chunk_ids || [],
-//           confidence: data.confidence || 0.8,
-//           type: 'chat',
-//           used_secret_prompt: false
-//         };
-
-//         setMessages(prev => [...prev, newChat]);
-//         setSelectedMessageId(newChat.id);
-//         setCurrentResponse(response);
-//         animateResponse(response);
-//       }
-
-//       setSessionId(newSessionId);
-//       setChatInput('');
-//       setHasResponse(true);
-//       setSuccess('Question answered!');
-
-//       return data;
-//     } catch (error) {
-//       if (error.name !== 'AbortError') {
-//         console.error('[chatWithDocument] Error:', error);
-//         setError(`Chat failed: ${error.message}`);
-//       }
-//       throw error;
-//     } finally {
-//       setIsLoading(false);
-//       abortControllerRef.current = null;
-//     }
-//   };
-
-//   const handleFileUpload = async (event) => {
-//     const files = Array.from(event.target.files);
-//     console.log('Files selected:', files.length);
-
-//     if (files.length === 0) return;
-
-//     const allowedTypes = [
-//       'application/pdf',
-//       'application/msword',
-//       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-//       'text/plain',
-//       'image/png',
-//       'image/jpeg',
-//       'image/tiff'
-//     ];
-
-//     const maxSize = 100 * 1024 * 1024;
-
-//     const validFiles = files.filter(file => {
-//       if (!allowedTypes.includes(file.type)) {
-//         setError(`File "${file.name}" has an unsupported type.`);
-//         return false;
-//       }
-//       if (file.size > maxSize) {
-//         setError(`File "${file.name}" is too large (max 100MB).`);
-//         return false;
-//       }
-//       return true;
-//     });
-
-//     if (validFiles.length === 0) {
-//       event.target.value = '';
-//       return;
-//     }
-
-//     try {
-//       await batchUploadDocuments(validFiles);
-//     } catch (error) {
-//       console.error('Upload error:', error);
-//     }
-
-//     event.target.value = '';
-//   };
-
-//   const handleDropdownSelect = (secretName, secretId, llmName) => {
-//     console.log('[handleDropdownSelect] Selected:', secretName, secretId, 'LLM:', llmName);
-//     setActiveDropdown(secretName);
-//     setSelectedSecretId(secretId);
-//     setSelectedLlmName(llmName);
-//     setIsSecretPromptSelected(true);
-//     setChatInput('');
-//     setShowDropdown(false);
-//   };
-
-//   const handleChatInputChange = (e) => {
-//     setChatInput(e.target.value);
-//   };
-
-//   const handleStop = () => {
-//     if (abortControllerRef.current) {
-//       abortControllerRef.current.abort();
-//       setIsGeneratingInsights(false);
-//       setIsLoading(false);
-//       setSuccess('Generation stopped');
-//       abortControllerRef.current = null;
-//     }
-//   };
-
-//   const handleSend = async (e) => {
-//     e.preventDefault();
-
-//     if (!fileId) {
-//       setError('Please upload a document first.');
-//       return;
-//     }
-
-//     const currentStatus = batchUploads.find(upload => upload.fileId === fileId)?.status;
-//     if (currentStatus === 'processing' || currentStatus === 'batch_processing' || currentStatus === 'batch_queued') {
-//       setError('Please wait for document processing to complete.');
-//       return;
-//     }
-
-//     if (isSecretPromptSelected) {
-//       if (!selectedSecretId) {
-//         setError('Please select an analysis type.');
-//         return;
-//       }
-
-//       const selectedSecret = secrets.find(s => s.id === selectedSecretId);
-//       const promptLabel = selectedSecret?.name || 'Secret Prompt';
-
-//       try {
-//         setIsGeneratingInsights(true);
-//         setError(null);
-
-//         abortControllerRef.current = new AbortController();
-
-//         const data = await apiRequest('/files/chat', {
-//           method: 'POST',
-//           body: JSON.stringify({
-//             file_id: fileId,
-//             secret_id: selectedSecretId,
-//             used_secret_prompt: true,
-//             prompt_label: promptLabel,
-//             session_id: sessionId,
-//             llm_name: selectedLlmName,
-//             additional_input: chatInput.trim() || ''
-//           }),
-//           signal: abortControllerRef.current.signal,
-//         });
-
-//         const response = data.answer || data.response || 'No response received';
-//         const newSessionId = data.session_id || sessionId;
-
-//         const newChat = {
-//           id: Date.now(),
-//           file_id: fileId,
-//           session_id: newSessionId,
-//           question: promptLabel,
-//           answer: response,
-//           display_text_left_panel: `Analysis: ${promptLabel}`,
-//           timestamp: new Date().toISOString(),
-//           used_chunk_ids: data.used_chunk_ids || [],
-//           confidence: data.confidence || 0.8,
-//           type: 'chat',
-//           used_secret_prompt: true,
-//           prompt_label: promptLabel
-//         };
-
-//         setMessages(prev => [...prev, newChat]);
-//         setSelectedMessageId(newChat.id);
-//         setCurrentResponse(response);
-//         animateResponse(response);
-//         setSessionId(newSessionId);
-//         setChatInput('');
-//         setHasResponse(true);
-//         setSuccess('Analysis completed successfully!');
-//         setIsSecretPromptSelected(false);
-//         setActiveDropdown('Custom Query');
-//       } catch (error) {
-//         if (error.name !== 'AbortError') {
-//           console.error('[handleSend] Analysis error:', error);
-//           setError(`Analysis failed: ${error.message}`);
-//         }
-//       } finally {
-//         setIsGeneratingInsights(false);
-//         abortControllerRef.current = null;
-//       }
-//     } else {
-//       if (!chatInput.trim()) {
-//         setError('Please enter a question.');
-//         return;
-//       }
-//       try {
-//         await chatWithDocument(fileId, chatInput, sessionId, selectedLlmName);
-//       } catch (error) {
-//         if (error.name !== 'AbortError') {
-//           console.error('[handleSend] Chat error:', error);
-//         }
-//       }
-//     }
-//   };
-
-//   const handleMessageClick = (message) => {
-//     setSelectedMessageId(message.id);
-//     setCurrentResponse(message.answer);
-//     showResponseImmediately(message.answer);
-//   };
-
-//   // const clearAllChatData = () => {
-//   //   Object.keys(pollingIntervalRef.current).forEach(fileId => {
-//   //     clearInterval(pollingIntervalRef.current[fileId]);
-//   //   });
-//   //   pollingIntervalRef.current = {};
-
-//   //   Object.keys(processingSimRef.current).forEach(fileId => {
-//   //     clearInterval(processingSimRef.current[fileId]);
-//   //   });
-//   //   processingSimRef.current = {};
-
-//   //   if (animationFrameRef.current) {
-//   //     cancelAnimationFrame(animationFrameRef.current);
-//   //     animationFrameRef.current = null;
-//   //   }
-
-//   //   setMessages([]);
-//   //   setDocumentData(null);
-//   //   setFileId(null);
-//   //   setCurrentResponse('');
-//   //   setHasResponse(false);
-//   //   setChatInput('');
-//   //   setBatchUploads([]);
-//   //   setUploadedDocuments([]);
-//   //   setIsSecretPromptSelected(false);
-//   //   setSelectedMessageId(null);
-//   //   setActiveDropdown('Custom Query');
-//   //   setAnimatedResponseContent('');
-//   //   setIsAnimatingResponse(false);
-//   //   setShowSplitView(false);
-
-//   //   const newSessionId = `session-${Date.now()}`;
-//   //   setSessionId(newSessionId);
-
-//   //   setSuccess('New chat session started!');
-//   // };
-// const clearAllChatData = () => {
-//   // Safely clear polling intervals
-//   Object.keys(pollingIntervalRef.current || {}).forEach(fileId => {
-//     if (pollingIntervalRef.current[fileId]) {
-//       clearInterval(pollingIntervalRef.current[fileId]);
-//     }
-//   });
-//   pollingIntervalRef.current = {};
-
-//   // Safely clear processing simulation intervals
-//   Object.keys(processingSimRef.current || {}).forEach(fileId => {
-//     if (processingSimRef.current[fileId]) {
-//       clearInterval(processingSimRef.current[fileId]);
-//     }
-//   });
-//   processingSimRef.current = {};
-
-//   if (animationFrameRef.current) {
-//     cancelAnimationFrame(animationFrameRef.current);
-//     animationFrameRef.current = null;
-//   }
-
-//   setMessages([]);
-//   setDocumentData(null);
-//   setFileId(null);
-//   setCurrentResponse('');
-//   setHasResponse(false);
-//   setChatInput('');
-//   setBatchUploads([]);
-//   setUploadedDocuments([]);
-//   setIsSecretPromptSelected(false);
-//   setSelectedMessageId(null);
-//   setActiveDropdown('Custom Query');
-//   setAnimatedResponseContent('');
-//   setIsAnimatingResponse(false);
-//   setShowSplitView(false);
-
-//   const newSessionId = `session-${Date.now()}`;
-//   setSessionId(newSessionId);
-
-//   setSuccess('New chat session started!');
-// };
-//   const startNewChat = () => {
-//     clearAllChatData();
-//   };
-
-//   const formatFileSize = (bytes) => {
-//     if (bytes === 0) return '0 Bytes';
-//     const k = 1024;
-//     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-//     const i = Math.floor(Math.log(bytes) / Math.log(k));
-//     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-//   };
-
-//   const formatDate = (dateString) => {
-//     try {
-//       return new Date(dateString).toLocaleString('en-IN', {
-//         timeZone: 'Asia/Kolkata',
-//         hour12: true,
-//         year: 'numeric',
-//         month: 'short',
-//         day: 'numeric',
-//         hour: '2-digit',
-//         minute: '2-digit'
-//       });
-//     } catch (e) {
-//       return 'Invalid date';
-//     }
-//   };
-
-//   const handleCopyResponse = async () => {
-//     try {
-//       const textToCopy = animatedResponseContent || currentResponse;
-//       if (textToCopy) {
-//         const tempDiv = document.createElement('div');
-//         tempDiv.innerHTML = textToCopy;
-//         await navigator.clipboard.writeText(tempDiv.innerText);
-//         setSuccess('AI response copied to clipboard!');
-//       } else {
-//         setError('No response to copy.');
-//       }
-//     } catch (err) {
-//       console.error('Failed to copy AI response:', err);
-//       setError('Failed to copy response.');
-//     }
-//   };
-
-//   const highlightText = (text, query) => {
-//     if (!query || !text) return text;
-//     const parts = text.split(new RegExp(`(${query})`, 'gi'));
-//     return parts.map((part, i) =>
-//       part.toLowerCase() === query.toLowerCase() ? (
-//         <span key={i} className="bg-yellow-200 font-semibold text-black">
-//           {part}
-//         </span>
-//       ) : (
-//         part
-//       )
-//     );
-//   };
-
-//   // Markdown Components
-//   const markdownComponents = {
-//     h1: ({node, ...props}) => (
-//       <h1 className="text-3xl font-bold mb-6 mt-8 text-gray-900 border-b-2 border-gray-300 pb-3 analysis-page-ai-response" {...props} />
-//     ),
-//     h2: ({node, ...props}) => (
-//       <h2 className="text-2xl font-bold mb-5 mt-7 text-gray-900 border-b border-gray-200 pb-2 analysis-page-ai-response" {...props} />
-//     ),
-//     h3: ({node, ...props}) => (
-//       <h3 className="text-xl font-semibold mb-4 mt-6 text-gray-800 analysis-page-ai-response" {...props} />
-//     ),
-//     h4: ({node, ...props}) => (
-//       <h4 className="text-lg font-semibold mb-3 mt-5 text-gray-800 analysis-page-ai-response" {...props} />
-//     ),
-//     h5: ({node, ...props}) => (
-//       <h5 className="text-base font-semibold mb-2 mt-4 text-gray-700 analysis-page-ai-response" {...props} />
-//     ),
-//     h6: ({node, ...props}) => (
-//       <h6 className="text-sm font-semibold mb-2 mt-3 text-gray-700 analysis-page-ai-response" {...props} />
-//     ),
-//     p: ({node, ...props}) => (
-//       <p className="mb-4 leading-relaxed text-gray-800 text-[15px] analysis-page-ai-response" {...props} />
-//     ),
-//     strong: ({node, ...props}) => (
-//       <strong className="font-bold text-gray-900" {...props} />
-//     ),
-//     em: ({node, ...props}) => (
-//       <em className="italic text-gray-800" {...props} />
-//     ),
-//     ul: ({node, ...props}) => (
-//       <ul className="list-disc pl-6 mb-4 space-y-2 text-gray-800" {...props} />
-//     ),
-//     ol: ({node, ...props}) => (
-//       <ol className="list-decimal pl-6 mb-4 space-y-2 text-gray-800" {...props} />
-//     ),
-//     li: ({node, ...props}) => (
-//       <li className="leading-relaxed text-gray-800 analysis-page-ai-response" {...props} />
-//     ),
-//     a: ({node, ...props}) => (
-//       <a className="text-blue-600 hover:text-blue-800 underline font-medium transition-colors" target="_blank" rel="noopener noreferrer" {...props} />
-//     ),
-//     blockquote: ({node, ...props}) => (
-//       <blockquote className="border-l-4 border-blue-500 pl-4 py-2 my-4 bg-blue-50 text-gray-700 italic rounded-r analysis-page-ai-response" {...props} />
-//     ),
-//     code: ({node, inline, className, children, ...props}) => {
-//       const match = /language-(\w+)/.exec(className || '');
-//       const language = match ? match[1] : '';
-//       if (inline) {
-//         return (
-//           <code className="bg-gray-100 text-red-600 px-1.5 py-0.5 rounded text-sm font-mono border border-gray-200" {...props}>
-//             {children}
-//           </code>
-//         );
-//       }
-//       return (
-//         <div className="relative my-4">
-//           {language && (
-//             <div className="bg-gray-800 text-gray-300 text-xs px-3 py-1 rounded-t font-mono">
-//               {language}
-//             </div>
-//           )}
-//           <pre className={`bg-gray-900 text-gray-100 p-4 ${language ? 'rounded-b' : 'rounded'} overflow-x-auto`}>
-//             <code className="font-mono text-sm" {...props}>
-//               {children}
-//             </code>
-//           </pre>
-//         </div>
-//       );
-//     },
-//     pre: ({node, ...props}) => (
-//       <pre className="bg-gray-900 text-gray-100 p-4 rounded my-4 overflow-x-auto" {...props} />
-//     ),
-//     table: ({node, ...props}) => (
-//       <div className="overflow-x-auto my-6 rounded-lg border border-gray-300">
-//         <table className="min-w-full divide-y divide-gray-300" {...props} />
-//       </div>
-//     ),
-//     thead: ({node, ...props}) => (
-//       <thead className="bg-gray-100" {...props} />
-//     ),
-//     th: ({node, ...props}) => (
-//       <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-300" {...props} />
-//     ),
-//     tbody: ({node, ...props}) => (
-//       <tbody className="bg-white divide-y divide-gray-200" {...props} />
-//     ),
-//     tr: ({node, ...props}) => (
-//       <tr className="hover:bg-gray-50 transition-colors" {...props} />
-//     ),
-//     td: ({node, ...props}) => (
-//       <td className="px-4 py-3 text-sm text-gray-800 border-b border-gray-200" {...props} />
-//     ),
-//     hr: ({node, ...props}) => (
-//       <hr className="my-6 border-t-2 border-gray-300" {...props} />
-//     ),
-//     img: ({node, ...props}) => (
-//       <img className="max-w-full h-auto rounded-lg shadow-md my-4" alt="" {...props} />
-//     ),
-//   };
-
-//   // Cleanup on unmount
-//   useEffect(() => {
-//     return () => {
-//       Object.keys(pollingIntervalRef.current).forEach(fileId => {
-//         clearInterval(pollingIntervalRef.current[fileId]);
-//       });
-//       if (animationFrameRef.current) {
-//         cancelAnimationFrame(animationFrameRef.current);
-//       }
-//     };
-//   }, []);
-
-//   // Close dropdown when clicking outside
-//   useEffect(() => {
-//     const handleClickOutside = (event) => {
-//       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-//         setShowDropdown(false);
-//       }
-//     };
-//     document.addEventListener('mousedown', handleClickOutside);
-//     return () => {
-//       document.removeEventListener('mousedown', handleClickOutside);
-//     };
-//   }, []);
-
-//   useEffect(() => {
-//     fetchSecrets();
-//   }, []);
-
-//   // Persist states to localStorage
-//   useEffect(() => {
-//     if (sessionId) localStorage.setItem('sessionId', sessionId);
-//   }, [sessionId]);
-
-//   useEffect(() => {
-//     localStorage.setItem('messages', JSON.stringify(messages));
-//   }, [messages]);
-
-//   useEffect(() => {
-//     if (currentResponse) {
-//       localStorage.setItem('currentResponse', currentResponse);
-//       localStorage.setItem('animatedResponseContent', animatedResponseContent);
-//     }
-//   }, [currentResponse, animatedResponseContent]);
-
-//   useEffect(() => {
-//     localStorage.setItem('hasResponse', JSON.stringify(hasResponse));
-//   }, [hasResponse]);
-
-//   useEffect(() => {
-//     if (documentData) {
-//       localStorage.setItem('documentData', JSON.stringify(documentData));
-//     }
-//   }, [documentData]);
-
-//   useEffect(() => {
-//     if (fileId) localStorage.setItem('fileId', fileId);
-//   }, [fileId]);
-
-//   useEffect(() => {
-//     localStorage.setItem('batchUploads', JSON.stringify(batchUploads));
-//   }, [batchUploads]);
-
-//   // Main loading effect
-//   useEffect(() => {
-//     const fetchChatHistory = async (currentFileId, currentSessionId, selectedChatId = null) => {
-//       try {
-//         console.log('[AnalysisPage] Fetching chat history for fileId:', currentFileId);
-//         const response = await apiRequest(`/files/chat-history/${currentFileId}`, {
-//           method: 'GET',
-//         });
-
-//         const sessions = response || [];
-//         let allMessages = [];
-//         sessions.forEach(session => {
-//           session.messages.forEach(message => {
-//             allMessages.push({
-//               ...message,
-//               session_id: session.session_id,
-//               timestamp: message.created_at || message.timestamp,
-//               display_text_left_panel: message.used_secret_prompt
-//                 ? `Secret Prompt: ${message.prompt_label || 'Unnamed Secret Prompt'}`
-//                 : message.question
-//             });
-//           });
-//         });
-
-//         allMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-//         setMessages(allMessages);
-
-//         if (allMessages.length > 0) {
-//           setDocumentData({
-//             id: currentFileId,
-//             title: `Document for Session ${currentSessionId}`,
-//             originalName: `Document for Session ${currentSessionId}`,
-//             size: 0,
-//             type: 'unknown',
-//             uploadedAt: new Date().toISOString(),
-//             status: 'processed',
-//           });
-//           setFileId(currentFileId);
-//           setSessionId(currentSessionId);
-//           setHasResponse(true);
-//           setShowSplitView(true);
-
-//           const chatToDisplay = selectedChatId
-//             ? allMessages.find(chat => chat.id === selectedChatId)
-//             : allMessages[allMessages.length - 1];
-
-//           if (chatToDisplay) {
-//             setCurrentResponse(chatToDisplay.answer);
-//             showResponseImmediately(chatToDisplay.answer);
-//             setSelectedMessageId(chatToDisplay.id);
-//           }
-//           setSuccess('Chat history loaded successfully!');
-//         }
-//       } catch (err) {
-//         console.error('[AnalysisPage] Error in fetchChatHistory:', err);
-//         setError(`Failed to load chat history: ${err.message}`);
-//       }
-//     };
-
-//     try {
-//       const savedMessages = localStorage.getItem('messages');
-//       if (savedMessages) setMessages(JSON.parse(savedMessages));
-
-//       const savedSessionId = localStorage.getItem('sessionId');
-//       if (savedSessionId) {
-//         setSessionId(savedSessionId);
-//       } else {
-//         const newSessionId = `session-${Date.now()}`;
-//         setSessionId(newSessionId);
-//       }
-
-//       const savedCurrentResponse = localStorage.getItem('currentResponse');
-//       const savedAnimatedResponseContent = localStorage.getItem('animatedResponseContent');
-//       if (savedCurrentResponse) {
-//         setCurrentResponse(savedCurrentResponse);
-//         if (savedAnimatedResponseContent) {
-//           setAnimatedResponseContent(savedAnimatedResponseContent);
-//           setShowSplitView(true);
-//         } else {
-//           setAnimatedResponseContent(savedCurrentResponse);
-//         }
-//         setIsAnimatingResponse(false);
-//       }
-
-//       const savedHasResponse = localStorage.getItem('hasResponse');
-//       if (savedHasResponse) {
-//         const parsedHasResponse = JSON.parse(savedHasResponse);
-//         setHasResponse(parsedHasResponse);
-//         if (parsedHasResponse) {
-//           setShowSplitView(true);
-//         }
-//       }
-
-//       const savedDocumentData = localStorage.getItem('documentData');
-//       if (savedDocumentData) setDocumentData(JSON.parse(savedDocumentData));
-
-//       const savedFileId = localStorage.getItem('fileId');
-//       if (savedFileId) setFileId(savedFileId);
-
-//       const savedBatchUploads = localStorage.getItem('batchUploads');
-//       if (savedBatchUploads) {
-//         const parsedBatchUploads = JSON.parse(savedBatchUploads);
-//         setBatchUploads(parsedBatchUploads);
-//         parsedBatchUploads.forEach(upload => {
-//           if (upload.status === 'batch_processing' || upload.status === 'processing') {
-//             startProcessingStatusPolling(upload.fileId);
-//           }
-//         });
-//       }
-
-//     } catch (error) {
-//       console.error('[AnalysisPage] Error restoring from localStorage:', error);
-//       if (!sessionId) {
-//         const newSessionId = `session-${Date.now()}`;
-//         setSessionId(newSessionId);
-//       }
-//     }
-
-//     if (location.state?.newChat) {
-//       clearAllChatData();
-//       window.history.replaceState({}, document.title);
-//     } else if (paramFileId && paramSessionId) {
-//       console.log('[AnalysisPage] Loading chat from URL params:', { paramFileId, paramSessionId });
-//       setFileId(paramFileId);
-//       setSessionId(paramSessionId);
-//       fetchChatHistory(paramFileId, paramSessionId);
-//     } else if (location.state?.chat) {
-//       const chatData = location.state.chat;
-//       console.log('[AnalysisPage] Loading chat from location state:', chatData);
-
-//       if (chatData.file_id && chatData.session_id) {
-//         setFileId(chatData.file_id);
-//         setSessionId(chatData.session_id);
-//         fetchChatHistory(chatData.file_id, chatData.session_id, chatData.id);
-//       } else {
-//         setError('Unable to load chat: Missing required information');
-//       }
-
-//       window.history.replaceState({}, document.title);
-//     }
-//   }, [location.state, paramFileId, paramSessionId]);
-
-//   useEffect(() => {
-//     if (showSplitView) {
-//       setIsSidebarHidden(false);
-//       setIsSidebarCollapsed(true);
-//     } else if (hasResponse) {
-//       setIsSidebarHidden(false);
-//       setIsSidebarCollapsed(false);
-//     } else {
-//       setIsSidebarHidden(false);
-//       setIsSidebarCollapsed(false);
-//     }
-//   }, [hasResponse, showSplitView, setIsSidebarHidden, setIsSidebarCollapsed]);
-
-//   useEffect(() => {
-//     if (success) {
-//       const timer = setTimeout(() => setSuccess(null), 5000);
-//       return () => clearTimeout(timer);
-//     }
-//   }, [success]);
-
-//   useEffect(() => {
-//     if (error) {
-//       const timer = setTimeout(() => setError(null), 8000);
-//       return () => clearTimeout(timer);
-//     }
-//   }, [error]);
-
-//   return (
-//     <div className="flex h-screen bg-white">
-//       {/* Error Messages */}
-//       {error && (
-//         <div className="fixed top-4 right-4 z-50 max-w-sm">
-//           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg shadow-lg flex items-start space-x-2">
-//             <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
-//             <div className="flex-1">
-//               <p className="text-sm">{error}</p>
-//             </div>
-//             <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700">
-//               <X className="h-4 w-4" />
-//             </button>
-//           </div>
-//         </div>
-//       )}
-
-//       {/* Success Messages */}
-//       {success && (
-//         <div className="fixed top-4 right-4 z-50 max-w-sm">
-//           <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2">
-//             <CheckCircle className="h-5 w-5 flex-shrink-0" />
-//             <span className="text-sm">{success}</span>
-//             <button onClick={() => setSuccess(null)} className="ml-auto text-green-500 hover:text-green-700">
-//               <X className="h-4 w-4" />
-//             </button>
-//           </div>
-//         </div>
-//       )}
-
-//       {/* Conditional Rendering for Single Page vs Split View */}
-//       {!showSplitView ? (
-//         <div className="flex flex-col items-center justify-center h-full w-full">
-//           <div className="text-center max-w-2xl px-6 mb-12">
-//             <h3 className="text-3xl font-bold mb-4 text-gray-900">Welcome to Smart Legal Insights</h3>
-//             <p className="text-gray-600 text-xl leading-relaxed">
-//               Upload a legal document or ask a question to begin your AI-powered analysis.
-//             </p>
-//           </div>
-//           <div className="w-full max-w-4xl px-6">
-//             <form onSubmit={handleSend} className="mx-auto">
-//               <div className="flex items-center space-x-3 bg-gray-50 rounded-xl border border-[#21C1B6]/30 px-5 py-6 focus-within:border-[#21C1B6] focus-within:bg-white focus-within:shadow-sm">
-//                 <button
-//                   type="button"
-//                   onClick={() => fileInputRef.current?.click()}
-//                   disabled={isUploading}
-//                   className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
-//                   title="Upload Document"
-//                 >
-//                   {isUploading ? (
-//                     <Loader2 className="h-5 w-5 animate-spin" />
-//                   ) : (
-//                     <Paperclip className="h-5 w-5" />
-//                   )}
-//                 </button>
-
-//                 <input
-//                   ref={fileInputRef}
-//                   type="file"
-//                   className="hidden"
-//                   accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.tiff"
-//                   onChange={handleFileUpload}
-//                   disabled={isUploading}
-//                   multiple
-//                 />
-
-//                 <div className="relative flex-shrink-0" ref={dropdownRef}>
-//                   <button
-//                     type="button"
-//                     onClick={() => setShowDropdown(!showDropdown)}
-//                     disabled={!fileId || batchUploads.find(upload => upload.fileId === fileId)?.status !== 'processed' || isLoading || isGeneratingInsights || isLoadingSecrets}
-//                     className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-//                   >
-//                     <BookOpen className="h-4 w-4" />
-//                     <span>{isLoadingSecrets ? 'Loading...' : activeDropdown}</span>
-//                     <ChevronDown className="h-4 w-4" />
-//                   </button>
-
-//                   {showDropdown && !isLoadingSecrets && (
-//                     <div className="absolute bottom-full left-0 mb-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-20 max-h-60 overflow-y-auto">
-//                       {secrets.length > 0 ? (
-//                         secrets.map((secret) => (
-//                           <button
-//                             key={secret.id}
-//                             type="button"
-//                             onClick={() => handleDropdownSelect(secret.name, secret.id, secret.llm_name)}
-//                             className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg"
-//                           >
-//                             {secret.name}
-//                           </button>
-//                         ))
-//                       ) : (
-//                         <div className="px-4 py-2.5 text-sm text-gray-500">
-//                           No analysis prompts available
-//                         </div>
-//                       )}
-//                     </div>
-//                   )}
-//                 </div>
-
-//                 <input
-//                   type="text"
-//                   value={chatInput}
-//                   onChange={handleChatInputChange}
-//                   placeholder={
-//                     isSecretPromptSelected
-//                       ? `Add optional details for ${activeDropdown}...`
-//                       : fileId
-//                         ? "Message Legal Assistant..."
-//                         : "Upload a document to get started"
-//                   }
-//                   className="flex-1 bg-transparent border-none outline-none text-gray-900 placeholder-gray-500 text-[15px] font-medium py-2 min-w-0 analysis-page-user-input"
-//                   disabled={isLoading || isGeneratingInsights || !fileId || batchUploads.find(upload => upload.fileId === fileId)?.status !== 'processed'}
-//                 />
-
-//                 {!isLoading && !isGeneratingInsights && (
-//                   <button
-//                     type="submit"
-//                     disabled={
-//                       (!chatInput.trim() && !isSecretPromptSelected) ||
-//                       !fileId ||
-//                       batchUploads.find(upload => upload.fileId === fileId)?.status !== 'processed'
-//                     }
-//                     className="p-2 bg-[#21C1B6] hover:bg-[#1AA49B] disabled:bg-gray-300 text-white rounded-lg transition-colors flex-shrink-0"
-//                     title="Send Message"
-//                   >
-//                     <Send className="h-5 w-5" />
-//                   </button>
-//                 )}
-
-//                 {(isLoading || isGeneratingInsights) && (
-//                   <button
-//                     type="button"
-//                     onClick={handleStop}
-//                     className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex-shrink-0"
-//                     title="Stop Generation"
-//                   >
-//                     <X className="h-5 w-5" />
-//                   </button>
-//                 )}
-//               </div>
-
-//               {documentData && !hasResponse && (
-//                 <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-//                   <div className="flex items-center space-x-3">
-//                     <FileCheck className="h-5 w-5 text-green-600" />
-//                     <div className="flex-1 min-w-0">
-//                       <p className="text-sm font-medium text-gray-900 truncate">{documentData.originalName}</p>
-//                       <p className="text-xs text-gray-500">
-//                         {formatFileSize(documentData.size)} • {formatDate(documentData.uploadedAt)}
-//                       </p>
-//                     </div>
-//                     {batchUploads.find(upload => upload.fileId === fileId) && (
-//                       <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-//                         batchUploads.find(upload => upload.fileId === fileId).status === 'processed'
-//                           ? 'bg-green-100 text-green-800'
-//                           : batchUploads.find(upload => upload.fileId === fileId).status === 'processing' || batchUploads.find(upload => upload.fileId === fileId).status === 'batch_processing'
-//                           ? 'bg-blue-100 text-blue-800'
-//                           : 'bg-red-100 text-red-800'
-//                       }`}>
-//                         {batchUploads.find(upload => upload.fileId === fileId).status.charAt(0).toUpperCase() + batchUploads.find(upload => upload.fileId === fileId).status.slice(1)}
-//                       </div>
-//                     )}
-//                   </div>
-//                 </div>
-//               )}
-
-//               {isSecretPromptSelected && (
-//                 <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded-lg">
-//                   <div className="flex items-center space-x-2 text-sm text-blue-800">
-//                     <Bot className="h-4 w-4" />
-//                     <span>Using analysis prompt: <strong>{activeDropdown}</strong></span>
-//                     <button
-//                       type="button"
-//                       onClick={() => {
-//                         setIsSecretPromptSelected(false);
-//                         setActiveDropdown('Custom Query');
-//                         setSelectedSecretId(null);
-//                       }}
-//                       className="ml-auto text-blue-600 hover:text-blue-800"
-//                     >
-//                       <X className="h-4 w-4" />
-//                     </button>
-//                   </div>
-//                 </div>
-//               )}
-//             </form>
-//           </div>
-//         </div>
-//       ) : (
-//         <>
-//           <div className="w-2/5 border-r border-gray-200 flex flex-col bg-white h-full">
-//             <div className="p-4 border-b border-black border-opacity-20">
-//               <div className="flex items-center justify-between mb-4">
-//                 <h2 className="text-lg font-semibold text-gray-900">Questions</h2>
-//                 <button
-//                   onClick={startNewChat}
-//                   className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
-//                 >
-//                   New Chat
-//                 </button>
-//               </div>
-//               <div className="relative mb-4">
-//                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-//                 <input
-//                   type="text"
-//                   placeholder="Search questions..."
-//                   value={searchQuery}
-//                   onChange={(e) => setSearchQuery(e.target.value)}
-//                   className="w-full pl-9 pr-3 py-2 bg-gray-100 rounded-lg text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-//                 />
-//               </div>
-//             </div>
-
-//             {uploadedDocuments.length > 0 && (
-//               <div className="px-4 py-3 border-b border-gray-200 bg-blue-50">
-//                 <h3 className="text-xs font-semibold text-gray-700 mb-2 flex items-center">
-//                   <FileText className="h-4 w-4 mr-1" />
-//                   Uploaded Documents ({uploadedDocuments.length})
-//                 </h3>
-//                 <div className="space-y-2 max-h-32 overflow-y-auto">
-//                   {uploadedDocuments.map((doc) => (
-//                     <div
-//                       key={doc.id}
-//                       onClick={() => {
-//                         if (doc.status === 'processed') {
-//                           setFileId(doc.id);
-//                           setDocumentData({
-//                             id: doc.id,
-//                             title: doc.fileName,
-//                             originalName: doc.fileName,
-//                             size: doc.fileSize,
-//                             type: 'unknown',
-//                             uploadedAt: doc.uploadedAt,
-//                             status: doc.status,
-//                           });
-//                         }
-//                       }}
-//                       className={`p-2 rounded-md cursor-pointer transition-colors ${
-//                         fileId === doc.id
-//                           ? 'bg-blue-100 border border-blue-300'
-//                           : 'bg-white border border-gray-200 hover:bg-gray-50'
-//                       } ${doc.status !== 'processed' ? 'cursor-wait' : ''}`}
-//                     >
-//                       <div className="flex items-center justify-between">
-//                         <div className="flex-1 min-w-0">
-//                           <p className="text-xs font-medium text-gray-900 truncate">{doc.fileName}</p>
-//                           <p className="text-xs text-gray-500">{formatFileSize(doc.fileSize)}</p>
-//                         </div>
-//                         <div className="flex items-center space-x-1 ml-2">
-//                           {(doc.status === 'uploading' || doc.status === 'batch_processing' || doc.status === 'processing') && (
-//                             <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-//                           )}
-//                           {(doc.status === 'uploading' || doc.status === 'batch_processing' || doc.status === 'processing') && (
-//                             <span className="text-xs font-bold text-blue-700">
-//                               {Math.round(doc.status === 'uploading' ? doc.uploadProgress : doc.processingProgress)}%
-//                             </span>
-//                           )}
-//                           <div className={`px-1.5 py-0.5 rounded text-xs font-medium ${
-//                             doc.status === 'processed'
-//                               ? 'bg-green-100 text-green-800'
-//                               : (doc.status === 'processing' || doc.status === 'batch_processing' || doc.status === 'uploading')
-//                               ? 'bg-blue-100 text-blue-800'
-//                               : 'bg-red-100 text-red-800'
-//                           }`}>
-//                             {doc.status.charAt(0).toUpperCase() + doc.status.slice(1)}
-//                           </div>
-//                         </div>
-//                       </div>
-//                     </div>
-//                   ))}
-//                 </div>
-//               </div>
-//             )}
-
-//             <div className="flex-1 overflow-y-auto px-4 py-2">
-//               <div className="space-y-2">
-//                 {messages
-//                   .filter(msg =>
-//                     (msg.display_text_left_panel || msg.question || '').toLowerCase().includes(searchQuery.toLowerCase())
-//                   )
-//                   .slice(0, showAllChats ? messages.length : displayLimit)
-//                   .map((msg, i) => (
-//                     <div
-//                       key={msg.id || i}
-//                       onClick={() => handleMessageClick(msg)}
-//                       className={`p-3 rounded-lg border cursor-pointer transition-all duration-200 hover:shadow-md ${
-//                         selectedMessageId === msg.id
-//                           ? 'bg-[#21C1B6]/10 border-[#21C1B6]/30 shadow-sm'
-//                           : 'bg-white border-[#21C1B6]/30 hover:bg-gray-50'
-//                       }`}
-//                     >
-//                       <div className="flex items-start justify-between">
-//                         <div className="flex-1 min-w-0">
-//                           <p className="text-sm font-medium text-gray-900 mb-1 line-clamp-2">
-//                             {highlightText(msg.display_text_left_panel || msg.question, searchQuery)}
-//                           </p>
-//                           <div className="flex items-center space-x-2 text-xs text-gray-500">
-//                             <span>{formatDate(msg.timestamp || msg.created_at)}</span>
-//                             {msg.session_id && (
-//                               <>
-//                                 <span>•</span>
-//                                 <span className="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded">
-//                                   {msg.session_id.split('-')[1]?.substring(0, 8) || 'N/A'}
-//                                 </span>
-//                               </>
-//                             )}
-//                           </div>
-//                         </div>
-//                         {selectedMessageId === msg.id && (
-//                           <ChevronRight className="h-4 w-4 text-blue-600 flex-shrink-0 ml-2" />
-//                         )}
-//                       </div>
-//                     </div>
-//                   ))}
-
-//                 {messages.length > displayLimit && !showAllChats && (
-//                   <div className="text-center py-4">
-//                     <button
-//                       onClick={() => setShowAllChats(true)}
-//                       className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-//                     >
-//                       See All ({messages.length - displayLimit} more)
-//                     </button>
-//                   </div>
-//                 )}
-
-//                 {isLoading && (
-//                   <div className="p-3 rounded-lg border bg-blue-50 border-blue-200">
-//                     <div className="flex items-center space-x-2">
-//                       <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-//                       <span className="text-sm text-blue-800">Processing...</span>
-//                     </div>
-//                   </div>
-//                 )}
-
-//                 {messages.length === 0 && !isLoading && (
-//                   <div className="text-center py-8">
-//                     <MessageSquare className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-//                     <p className="text-gray-500 text-sm">No questions yet</p>
-//                     <p className="text-gray-400 text-xs">Start by asking a question</p>
-//                   </div>
-//                 )}
-//               </div>
-//             </div>
-
-//             <div className="border-t border-gray-200 p-4 bg-white flex-shrink-0">
-//               <form onSubmit={handleSend} className="mx-auto">
-//                 <div className="flex items-center space-x-3 bg-gray-50 rounded-xl border border-[#21C1B6]/30 px-4 py-3 focus-within:border-[#21C1B6] focus-within:bg-white focus-within:shadow-sm">
-//                   <button
-//                     type="button"
-//                     onClick={() => fileInputRef.current?.click()}
-//                     disabled={isUploading}
-//                     className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
-//                     title="Upload Document"
-//                   >
-//                     {isUploading ? (
-//                       <Loader2 className="h-4 w-4 animate-spin" />
-//                     ) : (
-//                       <Paperclip className="h-4 w-4" />
-//                     )}
-//                   </button>
-
-//                   <input
-//                     ref={fileInputRef}
-//                     type="file"
-//                     className="hidden"
-//                     accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.tiff"
-//                     onChange={handleFileUpload}
-//                     disabled={isUploading}
-//                     multiple
-//                   />
-
-//                   <div className="relative flex-shrink-0" ref={dropdownRef}>
-//                     <button
-//                       type="button"
-//                       onClick={() => setShowDropdown(!showDropdown)}
-//                       disabled={!fileId || batchUploads.find(upload => upload.fileId === fileId)?.status !== 'processed' || isLoading || isGeneratingInsights || isLoadingSecrets}
-//                       className="flex items-center space-x-2 px-2.5 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-//                     >
-//                       <BookOpen className="h-3.5 w-3.5" />
-//                       <span>{isLoadingSecrets ? 'Loading...' : activeDropdown}</span>
-//                       <ChevronDown className="h-3.5 w-3.5" />
-//                     </button>
-
-//                     {showDropdown && !isLoadingSecrets && (
-//                       <div className="absolute bottom-full left-0 mb-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-20 max-h-60 overflow-y-auto">
-//                         {secrets.length > 0 ? (
-//                           secrets.map((secret) => (
-//                             <button
-//                               key={secret.id}
-//                               type="button"
-//                               onClick={() => handleDropdownSelect(secret.name, secret.id, secret.llm_name)}
-//                               className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg"
-//                             >
-//                               {secret.name}
-//                             </button>
-//                           ))
-//                         ) : (
-//                           <div className="px-4 py-2.5 text-sm text-gray-500">
-//                             No analysis prompts available
-//                           </div>
-//                         )}
-//                       </div>
-//                     )}
-//                   </div>
-
-//                   <input
-//                     type="text"
-//                     value={chatInput}
-//                     onChange={handleChatInputChange}
-//                     placeholder={
-//                       isSecretPromptSelected
-//                         ? `Add details for ${activeDropdown}...`
-//                         : fileId
-//                           ? "Ask a question..."
-//                           : "Upload a document first"
-//                     }
-//                     className="flex-1 bg-transparent border-none outline-none text-gray-900 placeholder-gray-500 text-sm font-medium py-1 min-w-0 analysis-page-user-input"
-//                     disabled={isLoading || isGeneratingInsights || !fileId || batchUploads.find(upload => upload.fileId === fileId)?.status !== 'processed'}
-//                   />
-
-//                   {!isLoading && !isGeneratingInsights && (
-//                     <button
-//                       type="submit"
-//                       disabled={
-//                         (!chatInput.trim() && !isSecretPromptSelected) ||
-//                         !fileId ||
-//                         batchUploads.find(upload => upload.fileId === fileId)?.status !== 'processed'
-//                       }
-//                       className="p-1.5 bg-[#21C1B6] hover:bg-[#1AA49B] disabled:bg-gray-300 text-white rounded-lg transition-colors flex-shrink-0"
-//                       title="Send Message"
-//                     >
-//                       <Send className="h-4 w-4" />
-//                     </button>
-//                   )}
-
-//                   {(isLoading || isGeneratingInsights) && (
-//                     <button
-//                       type="button"
-//                       onClick={handleStop}
-//                       className="p-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex-shrink-0"
-//                       title="Stop Generation"
-//                     >
-//                       <X className="h-4 w-4" />
-//                     </button>
-//                   )}
-//                 </div>
-
-//                 {documentData && (
-//                   <div className="mt-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
-//                     <div className="flex items-center space-x-2">
-//                       <FileCheck className="h-4 w-4 text-green-600" />
-//                       <div className="flex-1 min-w-0">
-//                         <p className="text-xs font-medium text-gray-900 truncate">{documentData.originalName}</p>
-//                         <p className="text-xs text-gray-500">
-//                           {formatFileSize(documentData.size)}
-//                         </p>
-//                       </div>
-//                       {batchUploads.find(upload => upload.fileId === fileId) && (
-//                         <div className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-//                           batchUploads.find(upload => upload.fileId === fileId).status === 'processed'
-//                             ? 'bg-green-100 text-green-800'
-//                             : batchUploads.find(upload => upload.fileId === fileId).status === 'processing' || batchUploads.find(upload => upload.fileId === fileId).status === 'batch_processing'
-//                             ? 'bg-blue-100 text-blue-800'
-//                             : 'bg-red-100 text-red-800'
-//                         }`}>
-//                           {batchUploads.find(upload => upload.fileId === fileId).status.charAt(0).toUpperCase() + batchUploads.find(upload => upload.fileId === fileId).status.slice(1)}
-//                         </div>
-//                       )}
-//                     </div>
-//                   </div>
-//                 )}
-
-//                 {isSecretPromptSelected && (
-//                   <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
-//                     <div className="flex items-center space-x-2 text-xs text-blue-800">
-//                       <Bot className="h-3.5 w-3.5" />
-//                       <span>Using: <strong>{activeDropdown}</strong></span>
-//                       <button
-//                         type="button"
-//                         onClick={() => {
-//                           setIsSecretPromptSelected(false);
-//                           setActiveDropdown('Custom Query');
-//                           setSelectedSecretId(null);
-//                         }}
-//                         className="ml-auto text-blue-600 hover:text-blue-800"
-//                       >
-//                         <X className="h-3.5 w-3.5" />
-//                       </button>
-//                     </div>
-//                   </div>
-//                 )}
-//               </form>
-//             </div>
-//           </div>
-
-//           <div className="w-3/5 flex flex-col h-full bg-gray-50">
-//             <div className="flex-1 overflow-y-auto" ref={responseRef}>
-//               {selectedMessageId && (currentResponse || animatedResponseContent) ? (
-//                 <div className="px-6 py-6">
-//                   <div className="max-w-none">
-//                     <div className="mb-6 pb-4 border-b border-gray-200 bg-white rounded-lg p-4 shadow-sm">
-//                       <div className="flex items-center justify-between mb-3">
-//                         <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-//                           <Bot className="h-5 w-5 mr-2 text-blue-600" />
-//                           AI Response
-//                         </h2>
-//                         <div className="flex items-center space-x-2 text-sm text-gray-500">
-//                           <button
-//                             onClick={handleCopyResponse}
-//                             className="flex items-center px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
-//                             title="Copy AI Response"
-//                           >
-//                             <Copy className="h-4 w-4 mr-1" />
-//                             Copy
-//                           </button>
-//                           <DownloadPdf markdownOutputRef={markdownOutputRef} />
-//                           {messages.find(msg => msg.id === selectedMessageId)?.timestamp && (
-//                             <span>{formatDate(messages.find(msg => msg.id === selectedMessageId).timestamp)}</span>
-//                           )}
-//                           {messages.find(msg => msg.id === selectedMessageId)?.session_id && (
-//                             <>
-//                               <span>•</span>
-//                               <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
-//                                 {messages.find(msg => msg.id === selectedMessageId).session_id.split('-')[1]?.substring(0, 6) || 'N/A'}
-//                               </span>
-//                             </>
-//                           )}
-//                         </div>
-//                       </div>
-
-//                       <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-l-4 border-blue-500">
-//                         <p className="text-sm font-medium text-blue-900 mb-1 flex items-center">
-//                           <MessageSquare className="h-4 w-4 mr-1" />
-//                           Question:
-//                         </p>
-//                         <p className="text-sm text-blue-800 leading-relaxed">
-//                           {messages.find(msg => msg.id === selectedMessageId)?.question || 'No question available'}
-//                         </p>
-//                       </div>
-
-//                       {isAnimatingResponse && (
-//                         <div className="mt-3 flex justify-end">
-//                           <button
-//                             onClick={() => showResponseImmediately(currentResponse)}
-//                             className="text-xs text-blue-600 hover:text-blue-800 flex items-center space-x-1"
-//                           >
-//                             <span>Skip animation</span>
-//                             <ArrowRight className="h-3 w-3" />
-//                           </button>
-//                         </div>
-//                       )}
-//                     </div>
-
-//                     <div className="bg-white rounded-lg shadow-sm p-6">
-//                       <div className="prose prose-gray prose-lg max-w-none" ref={markdownOutputRef}>
-//                         <ReactMarkdown
-//                           remarkPlugins={[remarkGfm]}
-//                           rehypePlugins={[rehypeRaw, rehypeSanitize]}
-//                           components={markdownComponents}
-//                         >
-//                           {animatedResponseContent || currentResponse || ''}
-//                         </ReactMarkdown>
-//                         {isAnimatingResponse && (
-//                           <span className="inline-flex items-center ml-1">
-//                             <span className="inline-block w-2 h-5 bg-blue-600 animate-pulse"></span>
-//                           </span>
-//                         )}
-//                       </div>
-//                     </div>
-//                   </div>
-//                 </div>
-//               ) : (
-//                 <div className="flex items-center justify-center h-full">
-//                   <div className="text-center max-w-md px-6">
-//                     <div className="bg-white rounded-full p-6 inline-block mb-6 shadow-lg">
-//                       <MessageSquare className="h-16 w-16 text-blue-500" />
-//                     </div>
-//                     <h3 className="text-2xl font-semibold mb-4 text-gray-900">Select a Question</h3>
-//                     <p className="text-gray-600 text-lg leading-relaxed">
-//                       Click on any question from the left panel to view the AI response here.
-//                     </p>
-//                   </div>
-//                 </div>
-//               )}
-//             </div>
-//           </div>
-//         </>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default AnalysisPage;
-
-
-
-
-
 import '../styles/AnalysisPage.css';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import { useSidebar } from '../context/SidebarContext';
 import DownloadPdf from '../components/DownloadPdf/DownloadPdf';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
-import rehypeSanitize from 'rehype-sanitize'; // Re-added rehypeSanitize
-import ApiService from '../services/api';
+import rehypeSanitize from 'rehype-sanitize';
 import {
-  Search, Send, FileText, Layers, Trash2, RotateCcw,
+  Search, Send, FileText, Trash2, RotateCcw,
   ArrowRight, ChevronRight, AlertTriangle, Clock, Loader2,
   Upload, Download, AlertCircle, CheckCircle, X, Eye, Quote, BookOpen, Copy,
   ChevronDown, Paperclip, MessageSquare, FileCheck, Bot
@@ -9173,7 +1847,7 @@ const AnalysisPage = () => {
   const { setIsSidebarHidden, setIsSidebarCollapsed } = useSidebar();
  
   // State Management
-  const [activeDropdown, setActiveDropdown] = useState('Summary');
+  const [activeDropdown, setActiveDropdown] = useState('Custom Query');
   const [isLoading, setIsLoading] = useState(false);
   const [isGeneratingInsights, setIsGeneratingInsights] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -9188,6 +1862,7 @@ const AnalysisPage = () => {
   const [fileId, setFileId] = useState(paramFileId || null);
   const [sessionId, setSessionId] = useState(paramSessionId || null);
   const [processingStatus, setProcessingStatus] = useState(null);
+  const [progressPercentage, setProgressPercentage] = useState(0);
   const [currentResponse, setCurrentResponse] = useState('');
   const [animatedResponseContent, setAnimatedResponseContent] = useState('');
   const [isAnimatingResponse, setIsAnimatingResponse] = useState(false);
@@ -9203,19 +1878,25 @@ const AnalysisPage = () => {
   const [secrets, setSecrets] = useState([]);
   const [isLoadingSecrets, setIsLoadingSecrets] = useState(false);
   const [selectedSecretId, setSelectedSecretId] = useState(null);
-  const [selectedLlmName, setSelectedLlmName] = useState(null); // New state for LLM name
+  const [selectedLlmName, setSelectedLlmName] = useState(null);
  
   // Batch upload state
   const [batchUploads, setBatchUploads] = useState([]);
   const [uploadedDocuments, setUploadedDocuments] = useState([]);
+  const [overallUploadProgress, setOverallUploadProgress] = useState(0);
+  const [overallBatchProcessingProgress, setOverallBatchProcessingProgress] = useState(0);
+  const [activePollingFiles, setActivePollingFiles] = useState(new Set());
  
   // Refs
   const fileInputRef = useRef(null);
   const dropdownRef = useRef(null);
   const responseRef = useRef(null);
-  const markdownOutputRef = useRef(null); // New ref for markdown output
+  const markdownOutputRef = useRef(null);
   const pollingIntervalRef = useRef(null);
   const animationFrameRef = useRef(null);
+  const uploadIntervalRef = useRef(null);
+  const batchPollingIntervalsRef = useRef({});
+  const simulatedProgressIntervalsRef = useRef({});
 
   // API Configuration
   const API_BASE_URL = 'https://gateway-service-110685455967.asia-south1.run.app';
@@ -9290,7 +1971,7 @@ const AnalysisPage = () => {
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const response = await fetch(`${API_BASE_URL}/files/secrets?fetch=false`, {  // Changed to fetch=false
+      const response = await fetch(`${API_BASE_URL}/files/secrets?fetch=false`, {
         method: 'GET',
         headers,
       });
@@ -9306,7 +1987,7 @@ const AnalysisPage = () => {
       if (secretsData && secretsData.length > 0) {
         setActiveDropdown(secretsData[0].name);
         setSelectedSecretId(secretsData[0].id);
-        setSelectedLlmName(secretsData[0].llm_name); // Set initial LLM name
+        setSelectedLlmName(secretsData[0].llm_name);
       }
     } catch (error) {
       console.error('Error fetching secrets:', error);
@@ -9316,9 +1997,386 @@ const AnalysisPage = () => {
     }
   };
 
+  // Enhanced processing status function with better progress tracking
+  const getProcessingStatus = async (file_id) => {
+    try {
+      const token = getAuthToken();
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const response = await fetch(`${API_BASE_URL}/files/status/${file_id}`, {
+        method: 'GET',
+        headers,
+      });
+
+      if (!response.ok) {
+        console.error(`[getProcessingStatus] Status check failed for ${file_id}: ${response.status}`);
+        return null;
+      }
+
+      const data = await response.json();
+      console.log(`[getProcessingStatus] File ${file_id} status:`, data.status, 'progress:', data.processing_progress);
+
+      // Get current progress values to prevent regression
+      const currentProgress = file_id === fileId ? progressPercentage : 0;
+      const newProgress = data.processing_progress || 0;
+
+      // Only update progress if it's higher than current or if it's a reset state (0)
+      const shouldUpdateProgress = newProgress > currentProgress || newProgress === 0;
+
+      // Update processing status for the main document
+      if (file_id === fileId) {
+        setProcessingStatus(data);
+        if (shouldUpdateProgress) {
+          setProgressPercentage(newProgress);
+        }
+      }
+
+      // Update uploaded documents with real-time progress
+      setUploadedDocuments(prev => prev.map(doc => {
+        if (doc.id === file_id) {
+          const docCurrentProgress = doc.processingProgress || 0;
+          const docNewProgress = data.processing_progress || 0;
+          const docShouldUpdate = docNewProgress > docCurrentProgress || docNewProgress === 0;
+          return {
+            ...doc,
+            status: data.status,
+            processingProgress: docShouldUpdate ? docNewProgress : docCurrentProgress
+          };
+        }
+        return doc;
+      }));
+
+      // Update batch uploads with real-time progress
+      setBatchUploads(prev => prev.map(upload => {
+        if (upload.fileId === file_id) {
+          const uploadCurrentProgress = upload.processingProgress || 0;
+          const uploadNewProgress = data.processing_progress || 0;
+          const uploadShouldUpdate = uploadNewProgress > uploadCurrentProgress || uploadNewProgress === 0;
+          return {
+            ...upload,
+            status: data.status,
+            processingProgress: uploadShouldUpdate ? uploadNewProgress : uploadCurrentProgress
+          };
+        }
+        return upload;
+      }));
+ 
+      // Handle completion or error
+      if (data.status === 'processed') {
+        console.log(`[getProcessingStatus] File ${file_id} completed processing`);
+
+        // Start smooth animation to 100% instead of jumping directly
+        animateToCompletion(file_id);
+
+        // Stop polling for this specific file
+        if (batchPollingIntervalsRef.current[file_id]) {
+          clearInterval(batchPollingIntervalsRef.current[file_id]);
+          delete batchPollingIntervalsRef.current[file_id];
+          setActivePollingFiles(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(file_id);
+            return newSet;
+          });
+        }
+
+        // If this is the main file, also clear the main polling interval
+        if (file_id === fileId && pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+
+        setSuccess('Document processing completed!');
+
+      } else if (data.status === 'error' || data.status === 'failed') {
+        console.error(`[getProcessingStatus] File ${file_id} processing failed`);
+        setError(`Document processing failed for ${file_id}`);
+       
+        // Clear simulated progress on error
+        if (simulatedProgressIntervalsRef.current[file_id]) {
+          clearInterval(simulatedProgressIntervalsRef.current[file_id]);
+          delete simulatedProgressIntervalsRef.current[file_id];
+        }
+
+        // Stop polling for this file
+        if (batchPollingIntervalsRef.current[file_id]) {
+          clearInterval(batchPollingIntervalsRef.current[file_id]);
+          delete batchPollingIntervalsRef.current[file_id];
+          setActivePollingFiles(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(file_id);
+            return newSet;
+          });
+        }
+
+        if (file_id === fileId && pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+      }
+     
+      return data;
+    } catch (error) {
+      console.error(`[getProcessingStatus] Error getting status for ${file_id}:`, error);
+      return null;
+    }
+  };
+
+  // Start simulated progress for a file
+  const startSimulatedProgress = (file_id) => {
+    console.log(`[startSimulatedProgress] Starting simulated progress for file: ${file_id}`);
+
+    // Clear existing simulated progress for this file
+    if (simulatedProgressIntervalsRef.current[file_id]) {
+      clearInterval(simulatedProgressIntervalsRef.current[file_id]);
+      delete simulatedProgressIntervalsRef.current[file_id];
+    }
+
+    // Get current progress from state to start from there instead of 0
+    let currentProgress = 0;
+    if (file_id === fileId) {
+      currentProgress = progressPercentage || 0;
+    } else {
+      // For batch files, get current progress from uploadedDocuments or batchUploads
+      const doc = uploadedDocuments.find(d => d.id === file_id);
+      const upload = batchUploads.find(u => u.fileId === file_id);
+      currentProgress = doc?.processingProgress || upload?.processingProgress || 0;
+    }
+
+    console.log(`[startSimulatedProgress] Starting from current progress: ${currentProgress}% for file: ${file_id}`);
+
+    const progressInterval = 200; // Update every 200ms for smooth animation
+    const totalDuration = 30000; // 30 seconds total for processing
+    const progressIncrement = 100 / (totalDuration / progressInterval);
+
+    const intervalId = setInterval(() => {
+      currentProgress = Math.min(currentProgress + progressIncrement, 95); // Cap at 95% until actual completion
+
+      // Update progress state
+      if (file_id === fileId) {
+        setProgressPercentage(currentProgress);
+        setProcessingStatus(prev => prev ? { ...prev, processing_progress: currentProgress } : { status: 'processing', processing_progress: currentProgress });
+      }
+
+      // Update uploaded documents
+      setUploadedDocuments(prev => prev.map(doc =>
+        doc.id === file_id ? { ...doc, processingProgress: currentProgress } : doc
+      ));
+
+      // Update batch uploads
+      setBatchUploads(prev => prev.map(upload =>
+        upload.fileId === file_id ? { ...upload, processingProgress: currentProgress } : upload
+      ));
+
+      // Stop at 95% - actual completion will be handled by real API response
+      if (currentProgress >= 95) {
+        clearInterval(intervalId);
+        delete simulatedProgressIntervalsRef.current[file_id];
+      }
+    }, progressInterval);
+
+    simulatedProgressIntervalsRef.current[file_id] = intervalId;
+  };
+
+  // Animate progress from current value to 100% smoothly
+  const animateToCompletion = (file_id) => {
+    console.log(`[animateToCompletion] Starting completion animation for file: ${file_id}`);
+
+    // Clear any existing simulated progress
+    if (simulatedProgressIntervalsRef.current[file_id]) {
+      clearInterval(simulatedProgressIntervalsRef.current[file_id]);
+      delete simulatedProgressIntervalsRef.current[file_id];
+    }
+
+    // Get current progress (should be around 95%)
+    let currentProgress = 95;
+    if (file_id === fileId) {
+      currentProgress = progressPercentage || 95;
+    } else {
+      const doc = uploadedDocuments.find(d => d.id === file_id);
+      const upload = batchUploads.find(u => u.fileId === file_id);
+      currentProgress = doc?.processingProgress || upload?.processingProgress || 95;
+    }
+
+    const targetProgress = 100;
+    const animationDuration = 2000; // 2 seconds for smooth completion animation
+    const steps = 20; // Number of animation steps
+    const progressIncrement = (targetProgress - currentProgress) / steps;
+    const stepDuration = animationDuration / steps;
+
+    let step = 0;
+    const animationInterval = setInterval(() => {
+      step++;
+      const newProgress = Math.min(currentProgress + (progressIncrement * step), 100);
+
+      // Update progress state
+      if (file_id === fileId) {
+        setProgressPercentage(newProgress);
+        setProcessingStatus(prev => prev ? { ...prev, processing_progress: newProgress } : { status: 'processing', processing_progress: newProgress });
+      }
+
+      // Update uploaded documents
+      setUploadedDocuments(prev => prev.map(doc =>
+        doc.id === file_id ? { ...doc, processingProgress: newProgress } : doc
+      ));
+
+      // Update batch uploads
+      setBatchUploads(prev => prev.map(upload =>
+        upload.fileId === file_id ? { ...upload, processingProgress: newProgress } : upload
+      ));
+
+      if (step >= steps) {
+        clearInterval(animationInterval);
+        // Ensure final state is set to 100% and processed
+        if (file_id === fileId) {
+          setProgressPercentage(100);
+          setProcessingStatus(prev => prev ? { ...prev, status: 'processed', processing_progress: 100 } : { status: 'processed', processing_progress: 100 });
+          setDocumentData(prev => prev ? {
+            ...prev,
+            status: 'processed',
+            processingProgress: 100,
+          } : null);
+        }
+
+        // Update final states for all relevant arrays
+        setUploadedDocuments(prev => prev.map(doc =>
+          doc.id === file_id ? { ...doc, status: 'processed', processingProgress: 100 } : doc
+        ));
+
+        setBatchUploads(prev => prev.map(upload =>
+          upload.fileId === file_id ? { ...upload, status: 'processed', processingProgress: 100 } : upload
+        ));
+
+        console.log(`[animateToCompletion] Animation completed for file: ${file_id}`);
+      }
+    }, stepDuration);
+
+    simulatedProgressIntervalsRef.current[file_id] = animationInterval;
+  };
+
+  // Start polling for a single file with simulated progress
+  const startProcessingStatusPolling = (file_id) => {
+    console.log(`[startProcessingStatusPolling] Starting polling for file: ${file_id}`);
+
+    // Clear existing interval for this file if any
+    if (pollingIntervalRef.current && file_id === fileId) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+
+    // Start simulated progress immediately
+    startSimulatedProgress(file_id);
+
+    let pollCount = 0;
+    const maxPolls = 300;
+    const pollInterval = 1000;
+
+    const intervalId = setInterval(async () => {
+      pollCount++;
+      const status = await getProcessingStatus(file_id);
+
+      if (status && (status.status === 'processed' || status.status === 'error' || status.status === 'failed')) {
+        // Clear simulated progress when real status is received
+        if (simulatedProgressIntervalsRef.current[file_id]) {
+          clearInterval(simulatedProgressIntervalsRef.current[file_id]);
+          delete simulatedProgressIntervalsRef.current[file_id];
+        }
+
+        clearInterval(intervalId);
+        if (file_id === fileId) {
+          pollingIntervalRef.current = null;
+        }
+      } else if (pollCount >= maxPolls) {
+        console.warn(`[startProcessingStatusPolling] Polling timeout for ${file_id}`);
+        // Clear simulated progress on timeout
+        if (simulatedProgressIntervalsRef.current[file_id]) {
+          clearInterval(simulatedProgressIntervalsRef.current[file_id]);
+          delete simulatedProgressIntervalsRef.current[file_id];
+        }
+
+        clearInterval(intervalId);
+        if (file_id === fileId) {
+          pollingIntervalRef.current = null;
+        }
+        setError('Document processing timeout.');
+      }
+    }, pollInterval);
+
+    if (file_id === fileId) {
+      pollingIntervalRef.current = intervalId;
+    }
+  };
+
+  // Start polling for multiple batch files with simulated progress
+  const startBatchProcessingPolling = (fileIds) => {
+    console.log(`[startBatchProcessingPolling] Starting polling for ${fileIds.length} files:`, fileIds);
+
+    fileIds.forEach(file_id => {
+      // Skip if already polling this file
+      if (batchPollingIntervalsRef.current[file_id]) {
+        console.log(`[startBatchProcessingPolling] Already polling ${file_id}, skipping`);
+        return;
+      }
+
+      // Add to active polling set
+      setActivePollingFiles(prev => new Set([...prev, file_id]));
+
+      // Start simulated progress for this file
+      startSimulatedProgress(file_id);
+
+      let pollCount = 0;
+      const maxPolls = 300;
+      const pollInterval = 1000;
+
+      const intervalId = setInterval(async () => {
+        pollCount++;
+        console.log(`[Batch Poll] File ${file_id} - Poll count: ${pollCount}`);
+
+        const status = await getProcessingStatus(file_id);
+
+        if (status && (status.status === 'processed' || status.status === 'error' || status.status === 'failed')) {
+          console.log(`[Batch Poll] File ${file_id} finished with status: ${status.status}`);
+
+          // Clear simulated progress when real status is received
+          if (simulatedProgressIntervalsRef.current[file_id]) {
+            clearInterval(simulatedProgressIntervalsRef.current[file_id]);
+            delete simulatedProgressIntervalsRef.current[file_id];
+          }
+
+          clearInterval(intervalId);
+          delete batchPollingIntervalsRef.current[file_id];
+          setActivePollingFiles(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(file_id);
+            return newSet;
+          });
+        } else if (pollCount >= maxPolls) {
+          console.warn(`[Batch Poll] Timeout for file ${file_id}`);
+
+          // Clear simulated progress on timeout
+          if (simulatedProgressIntervalsRef.current[file_id]) {
+            clearInterval(simulatedProgressIntervalsRef.current[file_id]);
+            delete simulatedProgressIntervalsRef.current[file_id];
+          }
+
+          clearInterval(intervalId);
+          delete batchPollingIntervalsRef.current[file_id];
+          setActivePollingFiles(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(file_id);
+            return newSet;
+          });
+          setError(`Processing timeout for file ${file_id}`);
+        }
+      }, pollInterval);
+
+      batchPollingIntervalsRef.current[file_id] = intervalId;
+    });
+  };
+
   // Batch file upload
   const batchUploadDocuments = async (files, secretId = null, llmName = null) => {
-    console.log('Starting batch upload for', files.length, 'files', secretId ? `with secretId: ${secretId}` : '', llmName ? `and LLM: ${llmName}` : '');
+    console.log('[batchUploadDocuments] Starting batch upload for', files.length, 'files');
     setIsUploading(true);
     setError(null);
    
@@ -9330,7 +2388,8 @@ const AnalysisPage = () => {
       progress: 0,
       status: 'pending',
       fileId: null,
-      error: null
+      error: null,
+      processingProgress: 0
     }));
    
     setBatchUploads(initialBatchUploads);
@@ -9343,13 +2402,13 @@ const AnalysisPage = () => {
       });
       if (secretId) {
         formData.append('secret_id', secretId);
-        formData.append('trigger_initial_analysis_with_secret', 'true'); // New flag
+        formData.append('trigger_initial_analysis_with_secret', 'true');
       }
       if (llmName) {
         formData.append('llm_name', llmName);
       }
 
-      setBatchUploads(prev => prev.map(upload => ({ ...upload, status: 'uploading', progress: 10 })));
+      setBatchUploads(prev => prev.map(upload => ({ ...upload, status: 'uploading', progress: 0 })));
 
       const token = getAuthToken();
       const headers = {};
@@ -9367,13 +2426,16 @@ const AnalysisPage = () => {
       }
 
       const data = await response.json();
-      console.log('Batch upload response:', data);
-
+      console.log('[batchUploadDocuments] Upload response:', data);
+ 
       if (data.uploaded_files && Array.isArray(data.uploaded_files)) {
+        const uploadedFileIds = [];
+       
         data.uploaded_files.forEach((uploadedFile, index) => {
           const matchingUpload = initialBatchUploads[index];
          
           if (uploadedFile.error) {
+            console.error(`[batchUploadDocuments] Upload failed for ${matchingUpload.fileName}:`, uploadedFile.error);
             setBatchUploads(prev => prev.map(upload =>
               upload.id === matchingUpload.id
                 ? { ...upload, status: 'failed', error: uploadedFile.error, progress: 0 }
@@ -9381,10 +2443,17 @@ const AnalysisPage = () => {
             ));
           } else {
             const fileId = uploadedFile.file_id;
+            console.log(`[batchUploadDocuments] Successfully uploaded ${matchingUpload.fileName} with ID: ${fileId}`);
            
             setBatchUploads(prev => prev.map(upload =>
               upload.id === matchingUpload.id
-                ? { ...upload, status: 'uploaded', fileId, progress: 100 }
+                ? {
+                    ...upload,
+                    status: 'batch_processing',
+                    fileId,
+                    progress: 100,
+                    processingProgress: 0
+                  }
                 : upload
             ));
 
@@ -9394,9 +2463,13 @@ const AnalysisPage = () => {
               fileSize: matchingUpload.fileSize,
               uploadedAt: new Date().toISOString(),
               status: 'batch_processing',
-              operationName: uploadedFile.operation_name
+              operationName: uploadedFile.operation_name,
+              processingProgress: 0
             }]);
 
+            uploadedFileIds.push(fileId);
+
+            // Set first file as the active document
             if (index === 0) {
               setFileId(fileId);
               setDocumentData({
@@ -9406,26 +2479,31 @@ const AnalysisPage = () => {
                 size: matchingUpload.fileSize,
                 type: matchingUpload.file.type,
                 uploadedAt: new Date().toISOString(),
-                status: 'batch_processing'
+                status: 'batch_processing',
+                processingProgress: 0
               });
-              startProcessingStatusPolling(fileId);
             }
           }
         });
+
+        // Start polling for all uploaded files
+        if (uploadedFileIds.length > 0) {
+          console.log(`[batchUploadDocuments] Starting batch polling for ${uploadedFileIds.length} files`);
+          startBatchProcessingPolling(uploadedFileIds);
+        }
 
         const successCount = data.uploaded_files.filter(f => !f.error).length;
         const failCount = data.uploaded_files.filter(f => f.error).length;
 
         if (successCount > 0) {
-          setSuccess(`${successCount} document(s) uploaded successfully!`);
+          setSuccess(`${successCount} document(s) uploaded successfully! Processing...`);
         }
         if (failCount > 0) {
           setError(`${failCount} document(s) failed to upload.`);
         }
       }
-
     } catch (error) {
-      console.error('Batch upload error:', error);
+      console.error('[batchUploadDocuments] Batch upload error:', error);
       setError(`Batch upload failed: ${error.message}`);
       setBatchUploads(prev => prev.map(upload => ({
         ...upload,
@@ -9437,89 +2515,12 @@ const AnalysisPage = () => {
     }
   };
 
-  // Processing status polling
-  const getProcessingStatus = async (file_id) => {
-    try {
-      const token = getAuthToken();
-      const headers = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
+  const LARGE_RESPONSE_THRESHOLD = 5000;
 
-      const response = await fetch(`${API_BASE_URL}/files/status/${file_id}`, {
-        method: 'GET',
-        headers,
-      });
-
-      if (!response.ok) {
-        console.error(`Status check failed with status: ${response.status}`);
-        return null;
-      }
-
-      const data = await response.json();
-      console.log('Processing status:', data);
-     
-      setProcessingStatus(data);
-     
-      setUploadedDocuments(prev => prev.map(doc =>
-        doc.id === file_id ? { ...doc, status: data.status } : doc
-      ));
-     
-      if (data.status === 'processed') {
-        setDocumentData(prev => ({
-          ...prev,
-          status: 'processed',
-        }));
-       
-        if (pollingIntervalRef.current) {
-          clearInterval(pollingIntervalRef.current);
-          pollingIntervalRef.current = null;
-        }
-       
-        setSuccess('Document processing completed!');
-      } else if (data.status === 'error') {
-        setError('Document processing failed.');
-       
-        if (pollingIntervalRef.current) {
-          clearInterval(pollingIntervalRef.current);
-          pollingIntervalRef.current = null;
-        }
-      }
-     
-      return data;
-    } catch (error) {
-      console.error('Error getting processing status:', error);
-      return null;
-    }
-  };
-
-  const startProcessingStatusPolling = (file_id) => {
-    if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current);
-    }
-
-    let pollCount = 0;
-    const maxPolls = 150;
-
-    pollingIntervalRef.current = setInterval(async () => {
-      pollCount++;
-      const status = await getProcessingStatus(file_id);
-     
-      if (status && (status.status === 'processed' || status.status === 'error')) {
-        clearInterval(pollingIntervalRef.current);
-        pollingIntervalRef.current = null;
-      } else if (pollCount >= maxPolls) {
-        clearInterval(pollingIntervalRef.current);
-        pollingIntervalRef.current = null;
-        setError('Document processing timeout.');
-      }
-    }, 2000);
-  };
-
-  const LARGE_RESPONSE_THRESHOLD = 5000; // Increased threshold for debugging large responses
-
-  // ✅ FASTER Animation with requestAnimationFrame and chunk-based rendering
+  // Animation with requestAnimationFrame
   const animateResponse = (text) => {
     console.log('[animateResponse] Starting animation for text length:', text.length);
-    // Cancel any existing animation
+   
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
     }
@@ -9529,8 +2530,8 @@ const AnalysisPage = () => {
     setShowSplitView(true);
    
     let currentIndex = 0;
-    const chunkSize = 50; // Increased chunk size for faster display
-    const delayMs = 5; // Further reduced delay for faster rendering
+    const chunkSize = 50;
+    const delayMs = 5;
    
     const animate = () => {
       if (currentIndex < text.length) {
@@ -9538,12 +2539,10 @@ const AnalysisPage = () => {
         setAnimatedResponseContent(prev => prev + nextChunk);
         currentIndex += chunkSize;
        
-        // Auto-scroll to bottom, but debounce or limit frequency if needed for extreme performance
         if (responseRef.current) {
           responseRef.current.scrollTop = responseRef.current.scrollHeight;
         }
        
-        // Schedule next frame
         setTimeout(() => {
           animationFrameRef.current = requestAnimationFrame(animate);
         }, delayMs);
@@ -9556,23 +2555,27 @@ const AnalysisPage = () => {
     animationFrameRef.current = requestAnimationFrame(animate);
   };
 
-  // Option to skip animation and show immediately
+  // Show response immediately
   const showResponseImmediately = (text) => {
     console.log('[showResponseImmediately] Displaying text immediately for text length:', text.length);
+   
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
       animationFrameRef.current = null;
     }
+   
     setAnimatedResponseContent(text);
     setIsAnimatingResponse(false);
     setShowSplitView(true);
    
-    if (responseRef.current) {
-      responseRef.current.scrollTop = responseRef.current.scrollHeight;
-    }
+    setTimeout(() => {
+      if (responseRef.current) {
+        responseRef.current.scrollTop = responseRef.current.scrollHeight;
+      }
+    }, 0);
   };
 
-  // Chat with document (custom queries)
+  // Chat with document
   const chatWithDocument = async (file_id, question, currentSessionId, llm_name = null) => {
     try {
       setIsLoading(true);
@@ -9677,7 +2680,7 @@ const AnalysisPage = () => {
         return false;
       }
       if (file.size > maxSize) {
-        setError(`File "${file.name}" is too large (max 100MB).`);
+        setError(`File "${file.name}" is too large (max 300MB).`);
         return false;
       }
       return true;
@@ -9688,7 +2691,7 @@ const AnalysisPage = () => {
       return;
     }
  
-     try {
+    try {
       await batchUploadDocuments(validFiles, selectedSecretId, selectedLlmName);
     } catch (error) {
       console.error('Upload error:', error);
@@ -9701,7 +2704,7 @@ const AnalysisPage = () => {
     console.log('[handleDropdownSelect] Selected:', secretName, secretId, 'LLM:', llmName);
     setActiveDropdown(secretName);
     setSelectedSecretId(secretId);
-    setSelectedLlmName(llmName); // Set the LLM name
+    setSelectedLlmName(llmName);
     setIsSecretPromptSelected(true);
     setChatInput('');
     setShowDropdown(false);
@@ -9711,7 +2714,6 @@ const AnalysisPage = () => {
     setChatInput(e.target.value);
   };
 
-  // ✅ UPDATED handleSend function
   const handleSend = async (e) => {
     e.preventDefault();
 
@@ -9726,7 +2728,6 @@ const AnalysisPage = () => {
       return;
     }
 
-    // ✅ CASE 1: User selected a secret dropdown (use secret's LLM model)
     if (isSecretPromptSelected) {
       if (!selectedSecretId) {
         setError('Please select an analysis type.');
@@ -9735,11 +2736,6 @@ const AnalysisPage = () => {
 
       const selectedSecret = secrets.find(s => s.id === selectedSecretId);
       const promptLabel = selectedSecret?.name || 'Secret Prompt';
-
-      if (!fileId) {
-        setError('Document ID is missing for secret prompt. Please upload a document.');
-        return;
-      }
 
       try {
         setIsGeneratingInsights(true);
@@ -9757,12 +2753,12 @@ const AnalysisPage = () => {
           method: 'POST',
           body: JSON.stringify({
             file_id: fileId,
-            secret_id: selectedSecretId,  // Send ID, not content
+            secret_id: selectedSecretId,
             used_secret_prompt: true,
             prompt_label: promptLabel,
             session_id: sessionId,
-            llm_name: selectedLlmName,  // Send LLM name to switch provider
-            additional_input: chatInput.trim() || ''  // Optional additional details
+            llm_name: selectedLlmName,
+            additional_input: chatInput.trim() || ''
           }),
         });
 
@@ -9775,13 +2771,13 @@ const AnalysisPage = () => {
           id: Date.now(),
           file_id: fileId,
           session_id: newSessionId,
-          question: promptLabel, // Display the label in the chat history
+          question: promptLabel,
           answer: response,
           display_text_left_panel: `Analysis: ${promptLabel}`,
           timestamp: new Date().toISOString(),
           used_chunk_ids: data.used_chunk_ids || [],
           confidence: data.confidence || 0.8,
-          type: 'chat', // Changed type to 'chat' as per instructions
+          type: 'chat',
           used_secret_prompt: true,
           prompt_label: promptLabel
         };
@@ -9799,7 +2795,6 @@ const AnalysisPage = () => {
         setHasResponse(true);
         setSuccess('Analysis completed successfully!');
        
-        // Reset secret selection after successful execution
         setIsSecretPromptSelected(false);
         setActiveDropdown('Custom Query');
 
@@ -9809,9 +2804,7 @@ const AnalysisPage = () => {
       } finally {
         setIsGeneratingInsights(false);
       }
-    }
-    // ✅ CASE 2: User typed custom query (use default Gemini)
-    else {
+    } else {
       if (!chatInput.trim()) {
         setError('Please enter a question.');
         return;
@@ -9828,7 +2821,7 @@ const AnalysisPage = () => {
   const handleMessageClick = (message) => {
     setSelectedMessageId(message.id);
     setCurrentResponse(message.answer);
-    showResponseImmediately(message.answer); // Show immediately without animation for historical messages
+    showResponseImmediately(message.answer);
   };
 
   const clearAllChatData = () => {
@@ -9837,9 +2830,26 @@ const AnalysisPage = () => {
       pollingIntervalRef.current = null;
     }
 
+    Object.keys(batchPollingIntervalsRef.current).forEach(fileId => {
+      clearInterval(batchPollingIntervalsRef.current[fileId]);
+    });
+    batchPollingIntervalsRef.current = {};
+    setActivePollingFiles(new Set());
+
+    // Clear all simulated progress intervals
+    Object.keys(simulatedProgressIntervalsRef.current).forEach(fileId => {
+      clearInterval(simulatedProgressIntervalsRef.current[fileId]);
+    });
+    simulatedProgressIntervalsRef.current = {};
+
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
       animationFrameRef.current = null;
+    }
+
+    if (uploadIntervalRef.current) {
+      clearInterval(uploadIntervalRef.current);
+      uploadIntervalRef.current = null;
     }
 
     setMessages([]);
@@ -9849,6 +2859,7 @@ const AnalysisPage = () => {
     setHasResponse(false);
     setChatInput('');
     setProcessingStatus(null);
+    setProgressPercentage(0);
     setError(null);
     setAnimatedResponseContent('');
     setIsAnimatingResponse(false);
@@ -9858,11 +2869,10 @@ const AnalysisPage = () => {
     setIsSecretPromptSelected(false);
     setSelectedMessageId(null);
     setActiveDropdown('Custom Query');
-   
-    // Generate a new session ID for a new chat, but don't clear localStorage here
+
     const newSessionId = `session-${Date.now()}`;
     setSessionId(newSessionId);
-   
+
     setSuccess('New chat session started!');
   };
 
@@ -9886,11 +2896,29 @@ const AnalysisPage = () => {
     }
   };
 
+  // Function to map backend status to user-friendly display text
+  const getStatusDisplayText = (status, progress = 0) => {
+    switch (status) {
+      case 'queued':
+        return 'Queued...';
+      case 'processing':
+        return progress < 50 ? 'Processing...' : progress < 90 ? 'Analyzing...' : 'Finalizing...';
+      case 'batch_processing':
+        return progress < 30 ? 'Batch Processing...' : progress < 70 ? 'Processing Documents...' : progress < 95 ? 'Analyzing Batch...' : 'Completing...';
+      case 'processed':
+        return progress >= 100 ? 'Done' : 'Processing...';
+      case 'error':
+      case 'failed':
+        return 'Failed';
+      default:
+        return status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Unknown';
+    }
+  };
+
   const handleCopyResponse = async () => {
     try {
       const textToCopy = animatedResponseContent || currentResponse;
       if (textToCopy) {
-        // Create a temporary div to extract plain text from HTML
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = textToCopy;
         await navigator.clipboard.writeText(tempDiv.innerText);
@@ -9903,7 +2931,6 @@ const AnalysisPage = () => {
       setError('Failed to copy response.');
     }
   };
-
 
   const highlightText = (text, query) => {
     if (!query || !text) return text;
@@ -9928,6 +2955,16 @@ const AnalysisPage = () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
+      if (uploadIntervalRef.current) {
+        clearInterval(uploadIntervalRef.current);
+      }
+      Object.keys(batchPollingIntervalsRef.current).forEach(fileId => {
+        clearInterval(batchPollingIntervalsRef.current[fileId]);
+      });
+      // Clear all simulated progress intervals
+      Object.keys(simulatedProgressIntervalsRef.current).forEach(fileId => {
+        clearInterval(simulatedProgressIntervalsRef.current[fileId]);
+      });
     };
   }, []);
 
@@ -9958,7 +2995,9 @@ const AnalysisPage = () => {
 
   // Persist other states to localStorage
   useEffect(() => {
-    localStorage.setItem('messages', JSON.stringify(messages));
+    if (messages.length > 0) {
+      localStorage.setItem('messages', JSON.stringify(messages));
+    }
   }, [messages]);
 
   useEffect(() => {
@@ -10052,10 +3091,15 @@ const AnalysisPage = () => {
       }
     };
 
-    // 1. Load from localStorage first
+    // Load from localStorage first
     try {
       const savedMessages = localStorage.getItem('messages');
-      if (savedMessages) setMessages(JSON.parse(savedMessages));
+      if (savedMessages) {
+        const parsed = JSON.parse(savedMessages);
+        if (Array.isArray(parsed)) {
+          setMessages(parsed);
+        }
+      }
 
       const savedSessionId = localStorage.getItem('sessionId');
       if (savedSessionId) {
@@ -10088,23 +3132,29 @@ const AnalysisPage = () => {
       }
 
       const savedDocumentData = localStorage.getItem('documentData');
-      if (savedDocumentData) setDocumentData(JSON.parse(savedDocumentData));
+      if (savedDocumentData) {
+        const parsed = JSON.parse(savedDocumentData);
+        setDocumentData(parsed);
+      }
 
       const savedFileId = localStorage.getItem('fileId');
       if (savedFileId) setFileId(savedFileId);
 
       const savedProcessingStatus = localStorage.getItem('processingStatus');
-      if (savedProcessingStatus) setProcessingStatus(JSON.parse(savedProcessingStatus));
+      if (savedProcessingStatus) {
+        const parsed = JSON.parse(savedProcessingStatus);
+        setProcessingStatus(parsed);
+      }
 
     } catch (error) {
       console.error('[AnalysisPage] Error restoring from localStorage:', error);
-      if (!sessionId) { // Ensure a session ID is always set
+      if (!sessionId) {
         const newSessionId = `session-${Date.now()}`;
         setSessionId(newSessionId);
       }
     }
 
-    // 2. Apply navigation overrides
+    // Apply navigation overrides
     if (location.state?.newChat) {
       clearAllChatData();
       window.history.replaceState({}, document.title);
@@ -10143,15 +3193,142 @@ const AnalysisPage = () => {
   }, [hasResponse, showSplitView, setIsSidebarHidden, setIsSidebarCollapsed]);
 
   useEffect(() => {
-    localStorage.setItem('messages', JSON.stringify(messages));
-  }, [messages]);
-
-  useEffect(() => {
     if (success) {
       const timer = setTimeout(() => setSuccess(null), 5000);
       return () => clearTimeout(timer);
     }
   }, [success]);
+
+  // Simulate upload progress
+  useEffect(() => {
+    if (uploadIntervalRef.current) {
+      clearInterval(uploadIntervalRef.current);
+    }
+
+    const uploadingFiles = batchUploads.filter(upload => upload.status === 'uploading');
+   
+    if (uploadingFiles.length > 0) {
+      uploadIntervalRef.current = setInterval(() => {
+        setBatchUploads(prev => prev.map(upload => {
+          if (upload.status === 'uploading' && upload.progress < 100) {
+            const newProgress = Math.min(upload.progress + 2, 100);
+            return { ...upload, progress: newProgress };
+          }
+          return upload;
+        }));
+      }, 200);
+    }
+
+    return () => {
+      if (uploadIntervalRef.current) {
+        clearInterval(uploadIntervalRef.current);
+        uploadIntervalRef.current = null;
+      }
+    };
+  }, [batchUploads.filter(u => u.status === 'uploading').length]);
+
+  // Calculate overall upload progress
+  useEffect(() => {
+    if (batchUploads.length > 0) {
+      const uploadingFiles = batchUploads.filter(upload => upload.status === 'uploading');
+      if (uploadingFiles.length > 0) {
+        const totalUploadProgress = uploadingFiles.reduce((sum, upload) => sum + (upload.progress || 0), 0);
+        setOverallUploadProgress(totalUploadProgress / uploadingFiles.length);
+      } else {
+        setOverallUploadProgress(100);
+      }
+    } else {
+      setOverallUploadProgress(0);
+    }
+  }, [batchUploads]);
+
+  // Calculate overall batch processing progress with real-time updates
+  useEffect(() => {
+    if (batchUploads.length > 0) {
+      const processingFiles = batchUploads.filter(
+        (upload) => upload.status === 'processing' || upload.status === 'batch_processing'
+      );
+     
+      if (processingFiles.length > 0) {
+        const totalProcessingProgress = processingFiles.reduce(
+          (sum, upload) => sum + (upload.processingProgress || 0),
+          0
+        );
+        const avgProgress = totalProcessingProgress / processingFiles.length;
+        setOverallBatchProcessingProgress(avgProgress);
+        console.log(`[Overall Progress] ${processingFiles.length} files processing, avg: ${avgProgress.toFixed(1)}%`);
+      } else {
+        const nonProcessedFiles = batchUploads.filter(
+          upload => upload.status !== 'processed' && upload.status !== 'failed'
+        );
+        if (nonProcessedFiles.length > 0) {
+          setOverallBatchProcessingProgress(0);
+        } else {
+          setOverallBatchProcessingProgress(100);
+        }
+      }
+    } else {
+      setOverallBatchProcessingProgress(0);
+    }
+  }, [batchUploads]);
+
+  // Derived state for main progress bar display with real-time updates
+  const currentProgressBarPercentage = useMemo(() => {
+    if (isUploading && overallUploadProgress < 100) {
+      return overallUploadProgress;
+    }
+
+    const hasProcessingFiles = batchUploads.some(
+      upload => upload.status === 'processing' || upload.status === 'batch_processing'
+    );
+
+    if (hasProcessingFiles) {
+      return overallBatchProcessingProgress;
+    }
+
+    if (documentData && (processingStatus?.status === 'processing' || processingStatus?.status === 'batch_processing')) {
+      return progressPercentage;
+    }
+
+    // Show 100% when processing is complete
+    if (documentData && processingStatus?.status === 'processed') {
+      return 100;
+    }
+
+    return 0;
+  }, [isUploading, overallUploadProgress, batchUploads, overallBatchProcessingProgress, documentData, processingStatus, progressPercentage]);
+
+  const currentProgressBarText = useMemo(() => {
+    if (isUploading && overallUploadProgress < 100) {
+      return `Uploading Documents... (${Math.round(overallUploadProgress)}%)`;
+    }
+
+    const processingCount = batchUploads.filter(
+      upload => upload.status === 'processing' || upload.status === 'batch_processing'
+    ).length;
+
+    if (processingCount > 0) {
+      return `Processing ${processingCount} document${processingCount > 1 ? 's' : ''}... (${Math.round(overallBatchProcessingProgress)}%)`;
+    }
+
+    if (documentData && (processingStatus?.status === 'processing' || processingStatus?.status === 'batch_processing')) {
+      return `${processingStatus?.status === 'batch_processing' ? 'Batch Processing...' : 'Processing document...'} (${Math.round(progressPercentage)}%)`;
+    }
+
+    // Show "Done" only when progress is exactly 100% (after animation completes)
+    if (documentData && processingStatus?.status === 'processed' && progressPercentage >= 100) {
+      return 'Done';
+    }
+
+    return '';
+  }, [isUploading, overallUploadProgress, batchUploads, overallBatchProcessingProgress, documentData, processingStatus, progressPercentage]);
+
+  const showMainProgressBar = useMemo(() => {
+    return (isUploading && overallUploadProgress < 100) ||
+            (batchUploads.some(upload => upload.status === 'processing' || upload.status === 'batch_processing')) ||
+            (documentData && (processingStatus?.status === 'processing' || processingStatus?.status === 'batch_processing')) ||
+            (documentData && processingStatus?.status === 'processed' && progressPercentage < 100);
+  }, [isUploading, overallUploadProgress, batchUploads, processingStatus, documentData, progressPercentage]);
 
   useEffect(() => {
     if (error) {
@@ -10160,9 +3337,8 @@ const AnalysisPage = () => {
     }
   }, [error]);
 
-  // ✅ Enhanced Markdown Components for all LLM formats (OpenAI, Anthropic, Gemini)
+  // Enhanced Markdown Components
   const markdownComponents = {
-    // Headings
     h1: ({node, ...props}) => (
       <h1 className="text-3xl font-bold mb-6 mt-8 text-gray-900 border-b-2 border-gray-300 pb-3 analysis-page-ai-response" {...props} />
     ),
@@ -10181,21 +3357,15 @@ const AnalysisPage = () => {
     h6: ({node, ...props}) => (
       <h6 className="text-sm font-semibold mb-2 mt-3 text-gray-700 analysis-page-ai-response" {...props} />
     ),
-   
-    // Paragraphs
     p: ({node, ...props}) => (
       <p className="mb-4 leading-relaxed text-gray-800 text-[15px] analysis-page-ai-response" {...props} />
     ),
-   
-    // Text formatting
     strong: ({node, ...props}) => (
       <strong className="font-bold text-gray-900" {...props} />
     ),
     em: ({node, ...props}) => (
       <em className="italic text-gray-800" {...props} />
     ),
-   
-    // Lists
     ul: ({node, ...props}) => (
       <ul className="list-disc pl-6 mb-4 space-y-2 text-gray-800" {...props} />
     ),
@@ -10205,23 +3375,17 @@ const AnalysisPage = () => {
     li: ({node, ...props}) => (
       <li className="leading-relaxed text-gray-800 analysis-page-ai-response" {...props} />
     ),
-   
-    // Links
     a: ({node, ...props}) => (
       <a
-        className="text-blue-600 hover:text-blue-800 underline font-medium transition-colors"
+        className="text-[#21C1B6] hover:text-[#1AA49B] underline font-medium transition-colors"
         target="_blank"
         rel="noopener noreferrer"
         {...props}
       />
     ),
-   
-    // Blockquotes
     blockquote: ({node, ...props}) => (
-      <blockquote className="border-l-4 border-blue-500 pl-4 py-2 my-4 bg-blue-50 text-gray-700 italic rounded-r analysis-page-ai-response" {...props} />
+      <blockquote className="border-l-4 border-[#21C1B6] pl-4 py-2 my-4 bg-[#E0F7F6] text-gray-700 italic rounded-r analysis-page-ai-response" {...props} />
     ),
-   
-    // Code
     code: ({node, inline, className, children, ...props}) => {
       const match = /language-(\w+)/.exec(className || '');
       const language = match ? match[1] : '';
@@ -10252,13 +3416,9 @@ const AnalysisPage = () => {
         </div>
       );
     },
-   
-    // Pre (for code blocks without language)
     pre: ({node, ...props}) => (
       <pre className="bg-gray-900 text-gray-100 p-4 rounded my-4 overflow-x-auto" {...props} />
     ),
-   
-    // Tables
     table: ({node, ...props}) => (
       <div className="overflow-x-auto my-6 rounded-lg border border-gray-300">
         <table className="min-w-full divide-y divide-gray-300" {...props} />
@@ -10279,13 +3439,9 @@ const AnalysisPage = () => {
     td: ({node, ...props}) => (
       <td className="px-4 py-3 text-sm text-gray-800 border-b border-gray-200" {...props} />
     ),
-   
-    // Horizontal rule
     hr: ({node, ...props}) => (
       <hr className="my-6 border-t-2 border-gray-300" {...props} />
     ),
-   
-    // Images
     img: ({node, ...props}) => (
       <img className="max-w-full h-auto rounded-lg shadow-md my-4" alt="" {...props} />
     ),
@@ -10321,81 +3477,9 @@ const AnalysisPage = () => {
         </div>
       )}
 
-      {/* Batch Upload Progress Panel */}
-      {(isUploading || batchUploads.length > 0) && (
-        <div className="fixed top-20 right-4 z-40 max-w-md w-full bg-white rounded-lg shadow-xl border border-gray-200 max-h-96 overflow-hidden flex flex-col">
-          <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-gray-50">
-            <div className="flex items-center space-x-2">
-              <Upload className="h-5 w-5 text-blue-600" />
-              <h3 className="font-semibold text-gray-900">
-                Uploading {batchUploads.length} file{batchUploads.length > 1 ? 's' : ''}
-              </h3>
-            </div>
-            {!isUploading && (
-              <button
-                onClick={() => setBatchUploads([])}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-         
-          <div className="overflow-y-auto flex-1 p-4">
-            <div className="space-y-3">
-              {batchUploads.map((upload) => (
-                <div key={upload.id} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{upload.fileName}</p>
-                      <p className="text-xs text-gray-500">{formatFileSize(upload.fileSize)}</p>
-                    </div>
-                    <div className="ml-2">
-                      {upload.status === 'uploaded' && (
-                        <CheckCircle className="h-5 w-5 text-green-500" />
-                      )}
-                      {upload.status === 'failed' && (
-                        <AlertCircle className="h-5 w-5 text-red-500" />
-                      )}
-                      {(upload.status === 'pending' || upload.status === 'uploading') && (
-                        <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />
-                      )}
-                    </div>
-                  </div>
-                 
-                  <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                    <div
-                      className={`h-2 rounded-full transition-all duration-300 ${
-                        upload.status === 'uploaded' ? 'bg-green-500' :
-                        upload.status === 'failed' ? 'bg-red-500' : 'bg-blue-600'
-                      }`}
-                      style={{ width: `${upload.progress}%` }}
-                    ></div>
-                  </div>
-                 
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs text-gray-600">
-                      {upload.status === 'uploaded' && '✓ Uploaded successfully'}
-                      {upload.status === 'failed' && `✗ ${upload.error || 'Upload failed'}`}
-                      {upload.status === 'uploading' && `${upload.progress}% uploaded`}
-                      {upload.status === 'pending' && 'Preparing...'}
-                    </p>
-                    {upload.fileId && (
-                      <span className="text-xs font-mono text-gray-400">
-                        ID: {upload.fileId.substring(0, 8)}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Conditional Rendering for Single Page vs Split View */}
+      {/* Conditional Rendering */}
       {!showSplitView ? (
-        // Single Page View: Only chat input area
+        // Single Page View
         <div className="flex flex-col items-center justify-center h-full w-full">
           <div className="text-center max-w-2xl px-6 mb-12">
             <h3 className="text-3xl font-bold mb-4 text-gray-900">Welcome to Smart Legal Insights</h3>
@@ -10404,8 +3488,48 @@ const AnalysisPage = () => {
             </p>
           </div>
           <div className="w-full max-w-4xl px-6">
-            <form onSubmit={handleSend} className="mx-auto">
-              <div className="flex items-center space-x-3 bg-gray-50 rounded-xl border border-gray-500 px-5 py-6 focus-within:border-blue-300 focus-within:bg-white focus-within:shadow-sm">
+            {showMainProgressBar && (
+              <div className="mt-3 text-center">
+                <div className="inline-flex items-center px-3 py-1.5 bg-[#E0F7F6] text-[#21C1B6] rounded-full text-sm">
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  {currentProgressBarText}
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                  <div
+                    className="bg-[#21C1B6] h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${currentProgressBarPercentage}%` }}
+                  ></div>
+                </div>
+              </div>
+            )}
+
+            {documentData && !hasResponse && (
+              <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="flex items-center space-x-3">
+                  <FileCheck className="h-5 w-5 text-green-600" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{documentData.originalName}</p>
+                    <p className="text-xs text-gray-500">
+                      {formatFileSize(documentData.size)} • {formatDate(documentData.uploadedAt)}
+                    </p>
+                  </div>
+                  {processingStatus && (
+                    <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      processingStatus.status === 'processed'
+                        ? 'bg-green-100 text-green-800'
+                        : processingStatus.status === 'processing' || processingStatus.status === 'batch_processing'
+                        ? 'bg-[#E0F7F6] text-[#21C1B6]'
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {getStatusDisplayText(processingStatus.status, progressPercentage)}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <form onSubmit={handleSend} className="mx-auto mt-4">
+              <div className="flex items-center space-x-3 bg-gray-50 rounded-xl px-5 py-6 focus-within:border-[#21C1B6] focus-within:bg-white focus-within:shadow-sm analysis-input-container">
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
@@ -10476,7 +3600,7 @@ const AnalysisPage = () => {
                         : "Upload a document to get started"
                   }
                   className="flex-1 bg-transparent border-none outline-none text-gray-900 placeholder-gray-500 text-[15px] font-medium py-2 min-w-0 analysis-page-user-input"
-                  disabled={isLoading || isGeneratingInsights || !fileId || processingStatus?.status !== 'processed'}
+                  disabled={isLoading || isGeneratingInsights || !fileId || (processingStatus?.status !== 'processed' && processingStatus?.status !== null)}
                 />
 
                 <button
@@ -10486,8 +3610,10 @@ const AnalysisPage = () => {
                     isGeneratingInsights ||
                     (!chatInput.trim() && !isSecretPromptSelected) ||
                     !fileId ||
-                    processingStatus?.status !== 'processed'
+                    (processingStatus && processingStatus.status !== 'processed')
                   }
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#1AA49B')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#21C1B6')}
                   className="p-2 bg-black hover:bg-gray-800 disabled:bg-gray-300 text-white rounded-lg transition-colors flex-shrink-0"
                   title="Send Message"
                 >
@@ -10499,46 +3625,9 @@ const AnalysisPage = () => {
                 </button>
               </div>
              
-              {documentData && (processingStatus?.status === 'processing' || processingStatus?.status === 'batch_processing') && (
-                <div className="mt-3 text-center">
-                  <div className="inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-sm">
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Processing document...
-                    {processingStatus.processing_progress && (
-                      <span className="ml-1">({Math.round(processingStatus.processing_progress)}%)</span>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {documentData && !hasResponse && (
-                <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                  <div className="flex items-center space-x-3">
-                    <FileCheck className="h-5 w-5 text-green-600" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{documentData.originalName}</p>
-                      <p className="text-xs text-gray-500">
-                        {formatFileSize(documentData.size)} • {formatDate(documentData.uploadedAt)}
-                      </p>
-                    </div>
-                    {processingStatus && (
-                      <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        processingStatus.status === 'processed'
-                          ? 'bg-green-100 text-green-800'
-                          : processingStatus.status === 'processing' || processingStatus.status === 'batch_processing'
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {processingStatus.status.charAt(0).toUpperCase() + processingStatus.status.slice(1)}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
               {isSecretPromptSelected && (
-                <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="flex items-center space-x-2 text-sm text-blue-800">
+                <div className="mt-3 p-2 bg-[#E0F7F6] border border-[#21C1B6] rounded-lg">
+                  <div className="flex items-center space-x-2 text-sm text-[#21C1B6]">
                     <Bot className="h-4 w-4" />
                     <span>Using analysis prompt: <strong>{activeDropdown}</strong></span>
                     <button
@@ -10548,7 +3637,7 @@ const AnalysisPage = () => {
                         setActiveDropdown('Custom Query');
                         setSelectedSecretId(null);
                       }}
-                      className="ml-auto text-blue-600 hover:text-blue-800"
+                      className="ml-auto text-[#21C1B6] hover:text-[#1AA49B]"
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -10559,9 +3648,9 @@ const AnalysisPage = () => {
           </div>
         </div>
       ) : (
-        // Split View: Left and Right Panels
+        // Split View
         <>
-          {/* Left Panel - Chat Messages List */}
+          {/* Left Panel */}
           <div className="w-2/5 border-r border-gray-200 flex flex-col bg-white h-full">
             <div className="p-4 border-b border-black border-opacity-20">
               <div className="flex items-center justify-between mb-4">
@@ -10580,14 +3669,14 @@ const AnalysisPage = () => {
                   placeholder="Search questions..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-gray-100 rounded-lg text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-9 pr-3 py-2 bg-gray-100 rounded-lg text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#21C1B6] focus:border-transparent"
                 />
               </div>
             </div>
            
             {/* Uploaded Documents Section */}
             {uploadedDocuments.length > 0 && (
-              <div className="px-4 py-3 border-b border-gray-200 bg-blue-50">
+              <div className="px-4 py-3 border-b border-gray-200 bg-[#E0F7F6]">
                 <h3 className="text-xs font-semibold text-gray-700 mb-2 flex items-center">
                   <FileText className="h-4 w-4 mr-1" />
                   Uploaded Documents ({uploadedDocuments.length})
@@ -10613,7 +3702,7 @@ const AnalysisPage = () => {
                       }}
                       className={`p-2 rounded-md cursor-pointer transition-colors ${
                         fileId === doc.id
-                          ? 'bg-blue-100 border border-blue-300'
+                          ? 'bg-[#E0F7F6] border border-[#21C1B6]'
                           : 'bg-white border border-gray-200 hover:bg-gray-50'
                       }`}
                     >
@@ -10621,15 +3710,23 @@ const AnalysisPage = () => {
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-medium text-gray-900 truncate">{doc.fileName}</p>
                           <p className="text-xs text-gray-500">{formatFileSize(doc.fileSize)}</p>
+                          {(doc.status === 'processing' || doc.status === 'batch_processing') && (
+                            <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                              <div
+                                className="bg-[#21C1B6] h-1.5 rounded-full transition-all duration-300"
+                                style={{ width: `${doc.processingProgress || 0}%` }}
+                              ></div>
+                            </div>
+                          )}
                         </div>
                         <div className={`ml-2 px-1.5 py-0.5 rounded text-xs font-medium ${
-                          doc.status === 'processed'
+                          doc.status === 'processed' && (doc.processingProgress || 0) >= 100
                             ? 'bg-green-100 text-green-800'
                             : doc.status === 'processing' || doc.status === 'batch_processing'
-                            ? 'bg-blue-100 text-blue-800'
+                            ? 'bg-[#E0F7F6] text-[#21C1B6]'
                             : 'bg-yellow-100 text-yellow-800'
                         }`}>
-                          {doc.status}
+                          {getStatusDisplayText(doc.status, doc.processingProgress || 0)}
                         </div>
                       </div>
                     </div>
@@ -10651,7 +3748,7 @@ const AnalysisPage = () => {
                       onClick={() => handleMessageClick(msg)}
                       className={`p-3 rounded-lg border cursor-pointer transition-all duration-200 hover:shadow-md ${
                         selectedMessageId === msg.id
-                          ? 'bg-blue-50 border-blue-200 shadow-sm'
+                          ? 'bg-[#E0F7F6] border-[#21C1B6] shadow-sm'
                           : 'bg-white border-gray-200 hover:bg-gray-50'
                       }`}
                     >
@@ -10673,7 +3770,7 @@ const AnalysisPage = () => {
                           </div>
                         </div>
                         {selectedMessageId === msg.id && (
-                          <ChevronRight className="h-4 w-4 text-blue-600 flex-shrink-0 ml-2" />
+                          <ChevronRight className="h-4 w-4 text-[#21C1B6] flex-shrink-0 ml-2" />
                         )}
                       </div>
                     </div>
@@ -10683,7 +3780,7 @@ const AnalysisPage = () => {
                   <div className="text-center py-4">
                     <button
                       onClick={() => setShowAllChats(true)}
-                      className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                      className="px-4 py-2 text-sm font-medium text-[#21C1B6] bg-[#E0F7F6] rounded-lg hover:bg-[#D0EBEA] transition-colors"
                     >
                       See All ({messages.length - displayLimit} more)
                     </button>
@@ -10691,27 +3788,44 @@ const AnalysisPage = () => {
                 )}
                
                 {isLoading && (
-                  <div className="p-3 rounded-lg border bg-blue-50 border-blue-200">
+                  <div className="p-3 rounded-lg border bg-[#E0F7F6] border-[#21C1B6]">
                     <div className="flex items-center space-x-2">
-                      <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-                      <span className="text-sm text-blue-800">Processing...</span>
+                      <Loader2 className="h-4 w-4 animate-spin text-[#21C1B6]" />
+                      <span className="text-sm text-[#21C1B6]">Processing...</span>
                     </div>
-                  </div>
-                )}
-               
-                {messages.length === 0 && !isLoading && (
-                  <div className="text-center py-8">
-                    <MessageSquare className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                    <p className="text-gray-500 text-sm">No questions yet</p>
-                    <p className="text-gray-400 text-xs">Start by asking a question</p>
                   </div>
                 )}
               </div>
             </div>
 
             <div className="border-t border-gray-200 p-4 bg-white flex-shrink-0">
-              <form onSubmit={handleSend} className="mx-auto">
-                <div className="flex items-center space-x-3 bg-gray-50 rounded-xl border border-gray-200 px-4 py-3 focus-within:border-blue-300 focus-within:bg-white focus-within:shadow-sm">
+              {documentData && (
+                <div className="mb-3 p-2 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="flex items-center space-x-2">
+                    <FileCheck className="h-4 w-4 text-green-600" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-gray-900 truncate">{documentData.originalName}</p>
+                      <p className="text-xs text-gray-500">
+                        {formatFileSize(documentData.size)}
+                      </p>
+                    </div>
+                    {processingStatus && (
+                      <div className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                        processingStatus.status === 'processed' && progressPercentage >= 100
+                          ? 'bg-green-100 text-green-800'
+                          : processingStatus.status === 'processing' || processingStatus.status === 'batch_processing'
+                          ? 'bg-[#E0F7F6] text-[#21C1B6]'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {getStatusDisplayText(processingStatus.status, progressPercentage)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <form onSubmit={handleSend}>
+                <div className="flex items-center space-x-2 bg-gray-50 rounded-xl px-3 py-2.5 focus-within:border-[#21C1B6] focus-within:bg-white focus-within:shadow-sm analysis-input-container">
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
@@ -10741,7 +3855,7 @@ const AnalysisPage = () => {
                       type="button"
                       onClick={() => setShowDropdown(!showDropdown)}
                       disabled={isLoading || isGeneratingInsights || isLoadingSecrets}
-                      className="flex items-center space-x-2 px-2.5py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex items-center space-x-1.5 px-2.5 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <BookOpen className="h-3.5 w-3.5" />
                       <span>{isLoadingSecrets ? 'Loading...' : activeDropdown}</span>
@@ -10782,7 +3896,7 @@ const AnalysisPage = () => {
                           : "Upload a document first"
                     }
                     className="flex-1 bg-transparent border-none outline-none text-gray-900 placeholder-gray-500 text-sm font-medium py-1 min-w-0 analysis-page-user-input"
-                    disabled={isLoading || isGeneratingInsights || !fileId || processingStatus?.status !== 'processed'}
+                    disabled={isLoading || isGeneratingInsights || !fileId || (processingStatus && processingStatus.status !== 'processed')}
                   />
 
                   <button
@@ -10792,8 +3906,10 @@ const AnalysisPage = () => {
                       isGeneratingInsights ||
                       (!chatInput.trim() && !isSecretPromptSelected) ||
                       !fileId ||
-                      processingStatus?.status !== 'processed'
+                      (processingStatus && processingStatus.status !== 'processed')
                     }
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#1AA49B')}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#21C1B6')}
                     className="p-1.5 bg-black hover:bg-gray-800 disabled:bg-gray-300 text-white rounded-lg transition-colors flex-shrink-0"
                     title="Send Message"
                   >
@@ -10805,46 +3921,9 @@ const AnalysisPage = () => {
                   </button>
                 </div>
                
-                {documentData && (processingStatus?.status === 'processing' || processingStatus?.status === 'batch_processing') && (
-                  <div className="mt-2 text-center">
-                    <div className="inline-flex items-center px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-xs">
-                      <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                      Processing document...
-                      {processingStatus.processing_progress && (
-                        <span className="ml-1">({Math.round(processingStatus.processing_progress)}%)</span>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {documentData && (
-                  <div className="mt-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
-                    <div className="flex items-center space-x-2">
-                      <FileCheck className="h-4 w-4 text-green-600" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-gray-900 truncate">{documentData.originalName}</p>
-                        <p className="text-xs text-gray-500">
-                          {formatFileSize(documentData.size)}
-                        </p>
-                      </div>
-                      {processingStatus && (
-                        <div className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                          processingStatus.status === 'processed'
-                            ? 'bg-green-100 text-green-800'
-                            : processingStatus.status === 'processing' || processingStatus.status === 'batch_processing'
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {(processingStatus.status ?? '').charAt(0).toUpperCase() + (processingStatus.status ?? '').slice(1)}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
                 {isSecretPromptSelected && (
-                  <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div className="flex items-center space-x-2 text-xs text-blue-800">
+                  <div className="mt-2 p-2 bg-[#E0F7F6] border border-[#21C1B6] rounded-lg">
+                    <div className="flex items-center space-x-2 text-xs text-[#21C1B6]">
                       <Bot className="h-3.5 w-3.5" />
                       <span>Using: <strong>{activeDropdown}</strong></span>
                       <button
@@ -10854,7 +3933,7 @@ const AnalysisPage = () => {
                           setActiveDropdown('Custom Query');
                           setSelectedSecretId(null);
                         }}
-                        className="ml-auto text-blue-600 hover:text-blue-800"
+                        className="ml-auto text-[#21C1B6] hover:text-[#1AA49B]"
                       >
                         <X className="h-3.5 w-3.5" />
                       </button>
@@ -10865,7 +3944,7 @@ const AnalysisPage = () => {
             </div>
           </div>
 
-          {/* Right Panel - Response Display */}
+          {/* Right Panel */}
           <div className="w-3/5 flex flex-col h-full bg-gray-50">
             <div className="flex-1 overflow-y-auto" ref={responseRef}>
               {selectedMessageId && (currentResponse || animatedResponseContent) ? (
@@ -10875,7 +3954,7 @@ const AnalysisPage = () => {
                     <div className="mb-6 pb-4 border-b border-gray-200 bg-white rounded-lg p-4 shadow-sm">
                       <div className="flex items-center justify-between mb-3">
                         <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-                          <Bot className="h-5 w-5 mr-2 text-blue-600" />
+                          <Bot className="h-5 w-5 mr-2 text-[#21C1B6]" />
                           AI Response
                         </h2>
                         <div className="flex items-center space-x-2 text-sm text-gray-500">
@@ -10903,12 +3982,12 @@ const AnalysisPage = () => {
                       </div>
                      
                       {/* Question Display */}
-                      <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-l-4 border-blue-500">
-                        <p className="text-sm font-medium text-blue-900 mb-1 flex items-center">
+                      <div className="p-3 bg-gradient-to-r from-[#E0F7F6] to-indigo-50 rounded-lg border-l-4 border-[#21C1B6]">
+                        <p className="text-sm font-medium text-[#21C1B6] mb-1 flex items-center">
                           <MessageSquare className="h-4 w-4 mr-1" />
                           Question:
                         </p>
-                        <p className="text-sm text-blue-800 leading-relaxed">
+                        <p className="text-sm text-[#21C1B6] leading-relaxed">
                           {messages.find(msg => msg.id === selectedMessageId)?.question || 'No question available'}
                         </p>
                       </div>
@@ -10918,7 +3997,7 @@ const AnalysisPage = () => {
                         <div className="mt-3 flex justify-end">
                           <button
                             onClick={() => showResponseImmediately(currentResponse)}
-                            className="text-xs text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+                            className="text-xs text-[#21C1B6] hover:text-[#1AA49B] flex items-center space-x-1"
                           >
                             <span>Skip animation</span>
                             <ArrowRight className="h-3 w-3" />
@@ -10927,12 +4006,12 @@ const AnalysisPage = () => {
                       )}
                     </div>
 
-                    {/* Response Content with Enhanced Markdown Rendering */}
+                    {/* Response Content */}
                     <div className="bg-white rounded-lg shadow-sm p-6">
                       <div className="prose prose-gray prose-lg max-w-none" ref={markdownOutputRef}>
                         <ReactMarkdown
                           remarkPlugins={[remarkGfm]}
-                          rehypePlugins={[rehypeRaw, rehypeSanitize]} // rehypeSanitize re-added
+                          rehypePlugins={[rehypeRaw, rehypeSanitize]}
                           components={markdownComponents}
                         >
                           {animatedResponseContent || currentResponse || ''}
@@ -10941,7 +4020,7 @@ const AnalysisPage = () => {
                         {/* Typing Indicator */}
                         {isAnimatingResponse && (
                           <span className="inline-flex items-center ml-1">
-                            <span className="inline-block w-2 h-5 bg-blue-600 animate-pulse"></span>
+                            <span className="inline-block w-2 h-5 bg-[#21C1B6] animate-pulse"></span>
                           </span>
                         )}
                       </div>
@@ -10950,14 +4029,9 @@ const AnalysisPage = () => {
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-full">
-                  <div className="text-center max-w-md px-6">
-                    <div className="bg-white rounded-full p-6 inline-block mb-6 shadow-lg">
-                      <MessageSquare className="h-16 w-16 text-blue-500" />
-                    </div>
-                    <h3 className="text-2xl font-semibold mb-4 text-gray-900">Select a Question</h3>
-                    <p className="text-gray-600 text-lg leading-relaxed">
-                      Click on any question from the left panel to view the AI response here.
-                    </p>
+                  <div className="text-center text-gray-400">
+                    <MessageSquare className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                    <p className="text-lg font-medium">Select a question to view the response</p>
                   </div>
                 </div>
               )}

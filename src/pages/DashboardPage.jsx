@@ -268,35 +268,134 @@
 
 
 
+// import React, { useState } from 'react';
+// import { Calendar, Lightbulb, FileEdit } from 'lucide-react';
+// import DashboardHeader from '../components/DashboardComponents/DashboardHeader';
+// // import DashboardHelpSection from '../components/DashboardComponents/DashboardHelpSection';
+// import DashboardInsights from '../components/DashboardComponents/DashboardInsights';
+// import DashboardCasesTable from '../components/DashboardComponents/DashboardCasesTable';
+
+// const DashboardPage = () => {
+//   const insights = [
+//     {
+//       icon: <Calendar className="w-5 h-5" />,
+//       title: "Upcoming Hearing",
+//       description: "For CRL/567/2024 has a hearing in less than 48 hours (DT-J HC). Prepare for hearing.",
+//       action: "Prepare for hearing",
+//       color: "#21C1B6"
+//     },
+//     {
+//       icon: <Lightbulb className="w-5 h-5" />,
+//       title: "AI Suggested Precedent",
+//       description: "For CIV/123/2023, AI recommends checking ABC v. XYZ similar arguments.",
+//       action: "View precedent",
+//       color: "#21C1B6"
+//     },
+//     {
+//       icon: <FileEdit className="w-5 h-5" />,
+//       title: "Drafting Enhancement",
+//       description: "Consider incorporating latest amendments for TAX/789/2022 draft based on recent circulars.",
+//       action: "Review Draft",
+//       color: "#21C1B6"
+//     }
+//   ];
+
+//   const cases = [
+//     {
+//       caseNo: "CRL/567/2024",
+//       court: "Delhi HC - Bench 3",
+//       type: "Criminal/Trial",
+//       client: "Raj Kumar Singh vs State",
+//       advocate: "A. Sharma",
+//       nextHearing: "12-Oct-2025",
+//       status: "Active",
+//       docs: "23"
+//     },
+//     {
+//       caseNo: "CIV/234/2024",
+//       court: "Bombay HC - Bench 1",
+//       type: "Civil/Appeal",
+//       client: "Tech Solutions Ltd vs ABC Corp",
+//       advocate: "P. Mehta",
+//       nextHearing: "15-Oct-2025",
+//       status: "Active",
+//       docs: "42"
+//     },
+//     {
+//       caseNo: "CON/789/2024",
+//       court: "Supreme Court - Bench 2",
+//       type: "Constitutional/Review",
+//       client: "Citizens Forum vs Union of India",
+//       advocate: "S. Verma",
+//       nextHearing: "18-Oct-2025",
+//       status: "Active",
+//       docs: "15"
+//     },
+//     {
+//       caseNo: "CIV/456/2024",
+//       court: "Karnataka HC - Bench",
+//       type: "Civil/Trial",
+//       client: "Priya Enterprises vs Bank Ltd",
+//       advocate: "R. Nair",
+//       nextHearing: "22-Oct-2025",
+//       status: "Pending",
+//       docs: "22"
+//     }
+//   ];
+
+//   return (
+//     <div className="flex flex-col h-full bg-white overflow-hidden">
+//       <div className="p-8">
+//         <DashboardHeader />
+//       </div>
+//       {/* <DashboardHelpSection /> */}
+//       <div className="flex-grow overflow-y-auto p-8 pt-0">
+//         <DashboardInsights insights={insights} />
+//         <DashboardCasesTable cases={cases} />
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default DashboardPage;
+
+
+
 import React, { useState } from 'react';
-import { Calendar, Lightbulb, FileEdit } from 'lucide-react';
+import { Calendar, Lightbulb, FileEdit, FolderOpen, Brain } from 'lucide-react';
+import { useNavigate } from 'react-router-dom'; // Add this import for navigation
 import DashboardHeader from '../components/DashboardComponents/DashboardHeader';
 // import DashboardHelpSection from '../components/DashboardComponents/DashboardHelpSection';
 import DashboardInsights from '../components/DashboardComponents/DashboardInsights';
 import DashboardCasesTable from '../components/DashboardComponents/DashboardCasesTable';
 
 const DashboardPage = () => {
+  const navigate = useNavigate();
+
   const insights = [
     {
-      icon: <Calendar className="w-5 h-5" />,
-      title: "Upcoming Hearing",
-      description: "For CRL/567/2024 has a hearing in less than 48 hours (DT-J HC). Prepare for hearing.",
-      action: "Prepare for hearing",
-      color: "#21C1B6"
+      icon: <FolderOpen className="w-5 h-5" />,
+      title: "Case Management",
+      description: "Organize and manage your case documents efficiently. Access all case files, evidence, and documentation in one place.",
+      action: "Manage Cases",
+      color: "#21C1B6",
+      onClick: () => navigate('/documents') // Navigate to projects page
     },
     {
-      icon: <Lightbulb className="w-5 h-5" />,
-      title: "AI Suggested Precedent",
-      description: "For CIV/123/2023, AI recommends checking ABC v. XYZ similar arguments.",
-      action: "View precedent",
-      color: "#21C1B6"
+      icon: <Brain className="w-5 h-5" />,
+      title: "Document Analysis ",
+      description: "AI-powered legal analysis ready for your cases. Get intelligent insights and recommendations for better case preparation.",
+      action: "View Analysis",
+      color: "#21C1B6",
+      onClick: () => navigate('/analysis') // Navigate to analysis page
     },
     {
       icon: <FileEdit className="w-5 h-5" />,
       title: "Drafting Enhancement",
       description: "Consider incorporating latest amendments for TAX/789/2022 draft based on recent circulars.",
       action: "Review Draft",
-      color: "#21C1B6"
+      color: "#21C1B6",
+      onClick: () => {} // Keep as is - no navigation
     }
   ];
 
