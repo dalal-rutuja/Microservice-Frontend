@@ -3837,570 +3837,1146 @@
 // export default FolderContent;
 
 
+// import React, { useState, useEffect, useContext, useCallback, useRef } from "react";
+// import documentApi from "../../services/documentApi";
+// import { FileManagerContext } from "../../context/FileManagerContext";
+// import DocumentCard from "./DocumentCard";
+
+// const FolderContent = ({ onDocumentClick }) => {
+//   const {
+//     selectedFolder,
+//     documents,
+//     setDocuments,
+//     setChatSessions,
+//     setSelectedChatSessionId,
+//     loading: contextLoading,
+//     error: contextError,
+//     setError: setContextError,
+//   } = useContext(FileManagerContext);
+//   const [loading, setLoading] = useState(false);
+//   const [error, setError] = useState(null);
+//   const [processingStatus, setProcessingStatus] = useState(null);
+//   const [summaryLoading, setSummaryLoading] = useState(false);
+//   const [summaryError, setSummaryError] = useState(null);
+//   const [uploading, setUploading] = useState(false);
+//   const [processingDocuments, setProcessingDocuments] = useState(new Map());
+//   const [selectedDocument, setSelectedDocument] = useState(null);
+//   const [showDocumentModal, setShowDocumentModal] = useState(false);
+//   const [documentContent, setDocumentContent] = useState("");
+//   const [loadingContent, setLoadingContent] = useState(false);
+//   // Cache for document contents to avoid refetching
+//   const documentContentCache = useRef(new Map());
+//   // Track if folder data has been fetched
+//   const fetchedFolders = useRef(new Set());
+//   const statusIntervalRef = useRef(null);
+//   const pollingActiveRef = useRef(false);
+
+//   const getAuthToken = () => {
+//     return localStorage.getItem("token") || localStorage.getItem("authToken");
+//   };
+
+//   const getAuthHeaders = () => {
+//     const token = getAuthToken();
+//     return {
+//       ...(token && { Authorization: `Bearer ${token}` }),
+//     };
+//   };
+
+//   const fetchFolderContent = useCallback(async (forceRefresh = false) => {
+//     if (!selectedFolder) {
+//       setDocuments([]);
+//       fetchedFolders.current.clear();
+//       return;
+//     }
+//     if (!forceRefresh && fetchedFolders.current.has(selectedFolder) && documents.length > 0) {
+//       console.log('📋 Using cached data for folder:', selectedFolder, 'Documents:', documents.length);
+//       return;
+//     }
+//     setLoading(true);
+//     setError(null);
+//     try {
+//       const data = await documentApi.getDocumentsInFolder(selectedFolder);
+//       console.log('📁 Raw API response for folder:', selectedFolder, data);
+//       let filesList = [];
+//       if (Array.isArray(data)) {
+//         filesList = data;
+//       } else if (data.files && Array.isArray(data.files)) {
+//         filesList = data.files;
+//       } else if (data.documents && Array.isArray(data.documents)) {
+//         filesList = data.documents;
+//       } else if (data.data && Array.isArray(data.data)) {
+//         filesList = data.data;
+//       }
+//       console.log('📋 Files list extracted:', filesList.length, 'files');
+//       const normalizedFiles = filesList.map(file => {
+//         const normalized = {
+//           id: file.id || file._id,
+//           name: file.name || file.originalname || file.filename || file.original_name || "Unnamed Document",
+//           originalname: file.originalname || file.name || file.filename || file.original_name,
+//           size: file.size || file.fileSize || 0,
+//           created_at: file.created_at || file.createdAt || file.uploadedAt || new Date().toISOString(),
+//           status: file.status || file.processing_status || "unknown",
+//           mimetype: file.mimetype || file.mimeType || file.type,
+//           path: file.path || file.filePath
+//         };
+//         console.log('📄 Normalized file:', normalized);
+//         return normalized;
+//       });
+//       console.log('✅ Total normalized files:', normalizedFiles.length);
+//       if (normalizedFiles.length === 0) {
+//         console.warn('⚠️ No files found in folder:', selectedFolder);
+//       }
+//       setDocuments(normalizedFiles);
+//       if (normalizedFiles.length >= 0) {
+//         fetchedFolders.current.add(selectedFolder);
+//       }
+//     } catch (err) {
+//       setError("Failed to fetch folder content.");
+//       console.error('❌ Error fetching folder content:', err);
+//       console.error('❌ Error details:', err.response?.data || err.message);
+//       setDocuments([]);
+//     } finally {
+//       setLoading(false);
+//     }
+//   }, [selectedFolder, setDocuments, documents.length]);
+
+//   const fetchFolderProcessingStatus = useCallback(async () => {
+//     if (!selectedFolder) return;
+//     try {
+//       const statusData = await documentApi.getFolderProcessingStatus(selectedFolder);
+//       setProcessingStatus(statusData);
+//       if (statusData.processingStatus?.processing > 0 || statusData.processingStatus?.queued > 0) {
+//         setTimeout(fetchFolderProcessingStatus, 5000);
+//       }
+//     } catch (err) {
+//       console.error('Error fetching folder processing status:', err);
+//     }
+//   }, [selectedFolder]);
+
+//   useEffect(() => {
+//     console.log('🔄 Effect triggered - Selected Folder:', selectedFolder, 'Current Documents:', documents.length);
+//     fetchFolderContent();
+//     fetchFolderProcessingStatus();
+//     if (setChatSessions) setChatSessions([]);
+//     if (setSelectedChatSessionId) setSelectedChatSessionId(null);
+//   }, [selectedFolder]);
+
+//   useEffect(() => {
+//     return () => {
+//       if (statusIntervalRef.current) {
+//         clearInterval(statusIntervalRef.current);
+//         statusIntervalRef.current = null;
+//       }
+//       pollingActiveRef.current = false;
+//     };
+//   }, []);
+
+//   const checkProcessingStatus = async (documentId) => {
+//     try {
+//       const response = await fetch(
+//         `https://gateway-service-110685455967.asia-south1.run.app/docs/status/${documentId}`,
+//         {
+//           method: "GET",
+//           headers: {
+//             "Content-Type": "application/json",
+//             ...getAuthHeaders(),
+//           },
+//         }
+//       );
+//       if (!response.ok) {
+//         if (response.status === 401) {
+//           throw new Error("Unauthorized - Please login again");
+//         }
+//         throw new Error("Failed to fetch status");
+//       }
+//       const statusData = await response.json();
+//       return statusData;
+//     } catch (err) {
+//       console.error("Status check error:", err);
+//       return null;
+//     }
+//   };
+
+//   const startStatusPolling = (documentInfoArray) => {
+//     if (statusIntervalRef.current) {
+//       clearInterval(statusIntervalRef.current);
+//       statusIntervalRef.current = null;
+//     }
+//     pollingActiveRef.current = true;
+//     const trackingMap = new Map();
+//     documentInfoArray.forEach(({ id, name }) => {
+//       trackingMap.set(id, {
+//         name: name,
+//         status: "pending",
+//         progress: 0,
+//         message: "Initializing...",
+//       });
+//     });
+//     setProcessingDocuments(trackingMap);
+//     const pollStatus = async () => {
+//       if (!pollingActiveRef.current) {
+//         return;
+//       }
+//       const currentDocIds = Array.from(trackingMap.keys());
+//       if (currentDocIds.length === 0) {
+//         if (statusIntervalRef.current) {
+//           clearInterval(statusIntervalRef.current);
+//           statusIntervalRef.current = null;
+//         }
+//         pollingActiveRef.current = false;
+//         return;
+//       }
+//       const statusPromises = currentDocIds.map((id) => checkProcessingStatus(id));
+//       const statuses = await Promise.all(statusPromises);
+//       const updatedMap = new Map();
+//       let allCompleted = true;
+//       statuses.forEach((statusData, index) => {
+//         const docId = currentDocIds[index];
+//         const docInfo = trackingMap.get(docId);
+//         if (statusData) {
+//           const status = (statusData.status || "unknown").toLowerCase();
+//           const progress = statusData.processing_progress || statusData.progress || 0;
+//           const message = statusData.message || "";
+//           if (status === "completed" || status === "processed" || status === "ready" || status === "success") {
+//             console.log(`✓ Document ${docInfo.name} is ${status}`);
+//           } else if (status === "processing" || status === "pending" || status === "queued") {
+//             allCompleted = false;
+//             updatedMap.set(docId, {
+//               name: docInfo.name,
+//               status: status,
+//               progress: progress,
+//               message: message || "Processing...",
+//             });
+//           } else if (status === "failed" || status === "error") {
+//             allCompleted = false;
+//             updatedMap.set(docId, {
+//               name: docInfo.name,
+//               status: "failed",
+//               progress: 0,
+//               message: statusData.error || message || "Processing failed",
+//             });
+//           } else {
+//             allCompleted = false;
+//             updatedMap.set(docId, {
+//               name: docInfo.name,
+//               status: status,
+//               progress: progress,
+//               message: message || "Processing...",
+//             });
+//           }
+//         } else {
+//           allCompleted = false;
+//           updatedMap.set(docId, {
+//             name: docInfo.name,
+//             status: "unknown",
+//             progress: 0,
+//             message: "Unable to fetch status",
+//           });
+//         }
+//       });
+//       setProcessingDocuments(updatedMap);
+//       if (allCompleted || updatedMap.size === 0) {
+//         console.log("✓ All documents processed. Refreshing folder content.");
+//         if (statusIntervalRef.current) {
+//           clearInterval(statusIntervalRef.current);
+//           statusIntervalRef.current = null;
+//         }
+//         pollingActiveRef.current = false;
+//         await fetchFolderContent(true);
+//       }
+//     };
+//     pollStatus();
+//     statusIntervalRef.current = setInterval(pollStatus, 3000);
+//   };
+
+//   const handleUploadDocuments = async (files) => {
+//     if (!files || files.length === 0) {
+//       alert("Please select at least one file to upload.");
+//       return;
+//     }
+//     if (!selectedFolder) {
+//       alert("Please select a folder first.");
+//       return;
+//     }
+//     setUploading(true);
+//     setError(null);
+//     try {
+//       console.log('📤 Uploading files:', files.map(f => f.name));
+//       const result = await documentApi.uploadDocuments(selectedFolder, files);
+//       console.log('📥 Upload result:', result);
+//       if (result.success) {
+//         const uploadedDocs = result.documents || result.files || [];
+//         const newDocuments = uploadedDocs.map(doc => {
+//           const fileName = doc.originalname || doc.name || doc.filename || doc.original_name || "Unnamed Document";
+//           console.log(`📄 Processing uploaded file: ${fileName}`, doc);
+//           return {
+//             id: doc.id || doc._id,
+//             name: fileName,
+//             originalname: fileName,
+//             size: doc.size || doc.fileSize || 0,
+//             created_at: doc.created_at || doc.createdAt || new Date().toISOString(),
+//             status: doc.status || "pending",
+//             mimetype: doc.mimetype || doc.mimeType,
+//             path: doc.path || doc.filePath
+//           };
+//         });
+//         console.log('✅ Normalized uploaded documents:', newDocuments);
+//         setDocuments(prevDocs => {
+//           const existingIds = new Set(prevDocs.map(d => d.id));
+//           const uniqueNewDocs = newDocuments.filter(d => !existingIds.has(d.id));
+//           return [...prevDocs, ...uniqueNewDocs];
+//         });
+//         const documentInfoArray = newDocuments.map((doc) => ({
+//           id: doc.id,
+//           name: doc.name,
+//         }));
+//         if (documentInfoArray.length > 0) {
+//           startStatusPolling(documentInfoArray);
+//         }
+//       } else {
+//         setError(result.message || "Upload failed");
+//         alert(result.message || "Upload failed");
+//       }
+//     } catch (err) {
+//       console.error("❌ Error uploading documents:", err);
+//       setError("An error occurred during upload.");
+//       alert("An error occurred during upload: " + err.message);
+//     } finally {
+//       setUploading(false);
+//     }
+//   };
+
+//   const handleGetSummary = async () => {
+//     if (!selectedFolder) {
+//       alert("Please select a folder first.");
+//       return;
+//     }
+//     setSummaryLoading(true);
+//     setSummaryError(null);
+//     try {
+//       const data = await documentApi.getFolderSummary(selectedFolder);
+//       if (data.summary) {
+//         alert(`Folder Summary:\n\n${data.summary}`);
+//       } else {
+//         alert("No summary available for this folder.");
+//       }
+//     } catch (err) {
+//       console.error("Error fetching folder summary:", err);
+//       const errorMessage = err.response?.data?.message || err.message || "Failed to fetch folder summary";
+//       setSummaryError(errorMessage);
+//       alert(`Error: ${errorMessage}`);
+//     } finally {
+//       setSummaryLoading(false);
+//     }
+//   };
+
+//   const handleDocumentClick = async (doc) => {
+//     setSelectedDocument(doc);
+//     setShowDocumentModal(true);
+//     if (documentContentCache.current.has(doc.id)) {
+//       console.log('📋 Using cached content for document:', doc.id);
+//       setDocumentContent(documentContentCache.current.get(doc.id));
+//       setLoadingContent(false);
+//       return;
+//     }
+//     setLoadingContent(true);
+//     setDocumentContent("");
+//     try {
+//       const data = await documentApi.getDocumentContent(doc.id);
+//       let displayContent = "";
+//       if (data.full_text_content) {
+//         displayContent = data.full_text_content;
+//       } else if (data.summary) {
+//         displayContent = `=== DOCUMENT SUMMARY ===\n\n${data.summary}`;
+//       } else if (data.text) {
+//         displayContent = data.text;
+//       }
+//       const finalContent = displayContent || "No content available for this document.";
+//       documentContentCache.current.set(doc.id, finalContent);
+//       setDocumentContent(finalContent);
+//     } catch (err) {
+//       console.error("Error fetching document content:", err);
+//       const errorContent = `Error loading document content: ${err.message}`;
+//       documentContentCache.current.set(doc.id, errorContent);
+//       setDocumentContent(errorContent);
+//     } finally {
+//       setLoadingContent(false);
+//     }
+//   };
+
+//   const closeDocumentModal = () => {
+//     setShowDocumentModal(false);
+//     setSelectedDocument(null);
+//   };
+
+//   const isUploadDisabled = uploading || processingDocuments.size > 0;
+
+//   if (!selectedFolder) {
+//     return (
+//       <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">
+//         Select a folder to view its contents.
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <div className="flex-1 flex flex-col text-gray-800 h-full overflow-hidden">
+//       <div className="flex justify-between items-center mb-3 flex-shrink-0">
+//         <h2 className="text-lg font-semibold">Folder: {selectedFolder}</h2>
+//         <div className="flex space-x-2">
+//           <label
+//             htmlFor="document-upload"
+//             className={`cursor-pointer ${
+//               isUploadDisabled
+//                 ? "bg-gray-400 cursor-not-allowed"
+//                 : "bg-[#21C1B6] hover:bg-[#1AA49B]"
+//             } text-white px-3 py-1.5 rounded-md text-sm transition-colors duration-200 flex items-center justify-center`}
+//             title={
+//               isUploadDisabled
+//                 ? "Please wait for processing to complete"
+//                 : "Upload documents"
+//             }
+//           >
+//             <span className="text-xl font-bold">
+//               {uploading || processingDocuments.size > 0 ? "..." : "+"}
+//             </span>
+//             <input
+//               id="document-upload"
+//               type="file"
+//               multiple
+//               disabled={isUploadDisabled}
+//               className="hidden"
+//               onChange={(e) => {
+//                 handleUploadDocuments(Array.from(e.target.files));
+//                 e.target.value = "";
+//               }}
+//             />
+//           </label>
+//           <button
+//             onClick={handleGetSummary}
+//             disabled={summaryLoading}
+//             className="bg-[#21C1B6] hover:bg-[#1AA49B] text-white px-3 py-1.5 rounded-md text-sm transition-colors duration-200 disabled:opacity-50"
+//           >
+//             {summaryLoading ? 'Summary...' : 'Summary'}
+//           </button>
+//         </div>
+//       </div>
+//       {(error || contextError) && (
+//         <div className="text-red-500 mb-3 p-2 bg-red-50 rounded border border-red-200 text-sm flex-shrink-0">
+//           <strong>Error:</strong> {error || contextError}
+//         </div>
+//       )}
+//       {summaryError && (
+//         <div className="text-red-500 mb-3 text-sm flex-shrink-0">Summary Error: {summaryError}</div>
+//       )}
+//       {uploading && (
+//         <div className="text-blue-500 mb-3 p-2 bg-blue-50 rounded border border-blue-200 text-sm flex-shrink-0">
+//           <strong>Uploading documents...</strong>
+//         </div>
+//       )}
+//       {processingDocuments.size > 0 && (
+//         <div className="mb-3 p-3 bg-amber-50 rounded border border-amber-200 flex-shrink-0">
+//           <div className="flex items-center mb-2">
+//             <svg
+//               className="animate-spin h-4 w-4 mr-2 text-amber-600"
+//               xmlns="http://www.w3.org/2000/svg"
+//               fill="none"
+//               viewBox="0 0 24 24"
+//             >
+//               <circle
+//                 className="opacity-25"
+//                 cx="12"
+//                 cy="12"
+//                 r="10"
+//                 stroke="currentColor"
+//                 strokeWidth="4"
+//               ></circle>
+//               <path
+//                 className="opacity-75"
+//                 fill="currentColor"
+//                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+//               ></path>
+//             </svg>
+//             <strong className="text-amber-700 text-sm">
+//               Processing {processingDocuments.size} document
+//               {processingDocuments.size > 1 ? "s" : ""}
+//             </strong>
+//           </div>
+//           <div className="space-y-2">
+//             {Array.from(processingDocuments.entries()).map(([id, info]) => (
+//               <div key={id} className="bg-white p-2 rounded border border-amber-100">
+//                 <div className="flex items-center justify-between mb-1">
+//                   <span className="text-xs font-medium text-gray-700 truncate flex-1">
+//                     {info.name}
+//                   </span>
+//                   <span
+//                     className={`text-xs px-2 py-0.5 rounded ml-2 ${
+//                       info.status === "completed"
+//                         ? "bg-green-100 text-green-700"
+//                         : info.status === "failed"
+//                         ? "bg-red-100 text-red-700"
+//                         : info.status === "processing"
+//                         ? "bg-blue-100 text-blue-700"
+//                         : "bg-gray-100 text-gray-700"
+//                     }`}
+//                   >
+//                     {info.status}
+//                   </span>
+//                 </div>
+//                 <div className="w-full bg-gray-200 rounded-full h-1.5 mb-1">
+//                   <div
+//                     className={`h-1.5 rounded-full transition-all duration-300 ${
+//                       info.status === "completed"
+//                         ? "bg-green-500"
+//                         : info.status === "failed"
+//                         ? "bg-red-500"
+//                         : "bg-blue-500"
+//                     }`}
+//                     style={{ width: `${info.progress}%` }}
+//                   ></div>
+//                 </div>
+//                 <p className="text-xs text-gray-600">{info.message}</p>
+//               </div>
+//             ))}
+//           </div>
+//         </div>
+//       )}
+//       <div className="flex-1 overflow-y-auto space-y-2 min-h-0">
+//         {(loading || contextLoading) ? (
+//           <div className="flex items-center justify-center p-8">
+//             <div className="text-gray-500 text-sm">Loading documents...</div>
+//           </div>
+//         ) : documents.length === 0 ? (
+//           <p className="text-gray-400 text-center p-8 text-sm">
+//             No documents in this folder. Upload some to get started!
+//           </p>
+//         ) : (
+//           documents.map((doc) => (
+//             <DocumentCard
+//               key={doc.id}
+//               document={doc}
+//               individualStatus={processingDocuments.get(doc.id)}
+//               onDocumentClick={() => handleDocumentClick(doc)}
+//             />
+//           ))
+//         )}
+//       </div>
+//       {showDocumentModal && (
+//         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+//           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+//             <div className="flex justify-between items-center p-4 border-b flex-shrink-0">
+//               <h3 className="text-lg font-semibold text-gray-800">
+//                 {selectedDocument?.name || selectedDocument?.originalname || "Document Content"}
+//               </h3>
+//               <button
+//                 onClick={closeDocumentModal}
+//                 className="text-gray-500 hover:text-gray-700 text-2xl font-bold leading-none"
+//               >
+//                 &times;
+//               </button>
+//             </div>
+//             <div className="flex-1 overflow-y-auto p-4 bg-gray-50 min-h-0">
+//               {loadingContent ? (
+//                 <div className="flex items-center justify-center py-8">
+//                   <div className="animate-spin h-8 w-8 border-4 border-gray-300 border-t-[#21C1B6] rounded-full"></div>
+//                 </div>
+//               ) : (
+//                 <div className="prose max-w-none">
+//                   <pre className="whitespace-pre-wrap text-sm text-gray-700 bg-white p-4 rounded border border-[#21C1B6] font-sans">
+//                     {documentContent}
+//                   </pre>
+//                 </div>
+//               )}
+//             </div>
+//             <div className="flex justify-end p-4 border-t bg-white flex-shrink-0">
+//               <button
+//                 onClick={closeDocumentModal}
+//                 className="bg-[#21C1B6] hover:bg-[#1AA49B] text-white px-4 py-2 rounded-md text-sm transition-colors duration-200"
+//               >
+//                 Close
+//               </button>
+//             </div>
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default FolderContent;
+
+
+
 import React, { useState, useEffect, useContext, useCallback, useRef } from "react";
 import documentApi from "../../services/documentApi";
 import { FileManagerContext } from "../../context/FileManagerContext";
 import DocumentCard from "./DocumentCard";
 
 const FolderContent = ({ onDocumentClick }) => {
-  const {
-    selectedFolder,
-    documents,
-    setDocuments,
-    setChatSessions,
-    setSelectedChatSessionId,
-    loading: contextLoading,
-    error: contextError,
-    setError: setContextError,
-  } = useContext(FileManagerContext);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [processingStatus, setProcessingStatus] = useState(null);
-  const [summaryLoading, setSummaryLoading] = useState(false);
-  const [summaryError, setSummaryError] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const [processingDocuments, setProcessingDocuments] = useState(new Map());
-  const [selectedDocument, setSelectedDocument] = useState(null);
-  const [showDocumentModal, setShowDocumentModal] = useState(false);
-  const [documentContent, setDocumentContent] = useState("");
-  const [loadingContent, setLoadingContent] = useState(false);
-  // Cache for document contents to avoid refetching
-  const documentContentCache = useRef(new Map());
-  // Track if folder data has been fetched
-  const fetchedFolders = useRef(new Set());
-  const statusIntervalRef = useRef(null);
-  const pollingActiveRef = useRef(false);
+ const {
+ selectedFolder,
+ documents,
+ setDocuments,
+ setChatSessions,
+ setSelectedChatSessionId,
+ loading: contextLoading,
+ error: contextError,
+ setError: setContextError,
+ } = useContext(FileManagerContext);
+ const [loading, setLoading] = useState(false);
+ const [error, setError] = useState(null);
+ const [processingStatus, setProcessingStatus] = useState(null);
+ const [uploading, setUploading] = useState(false);
+ const [processingDocuments, setProcessingDocuments] = useState(new Map());
+ const [selectedDocument, setSelectedDocument] = useState(null);
+ const [showDocumentModal, setShowDocumentModal] = useState(false);
+ const [documentContent, setDocumentContent] = useState("");
+ const [loadingContent, setLoadingContent] = useState(false);
+ 
+ // Cache for document contents to avoid refetching
+ const documentContentCache = useRef(new Map());
+ // Track if folder data has been fetched
+ const fetchedFolders = useRef(new Set());
+ const statusIntervalRef = useRef(null);
+ const pollingActiveRef = useRef(false);
 
-  const getAuthToken = () => {
-    return localStorage.getItem("token") || localStorage.getItem("authToken");
-  };
+ const getAuthToken = () => {
+ return localStorage.getItem("token") || localStorage.getItem("authToken");
+ };
 
-  const getAuthHeaders = () => {
-    const token = getAuthToken();
-    return {
-      ...(token && { Authorization: `Bearer ${token}` }),
-    };
-  };
+ const getAuthHeaders = () => {
+ const token = getAuthToken();
+ return {
+ ...(token && { Authorization: `Bearer ${token}` }),
+ };
+ };
 
-  const fetchFolderContent = useCallback(async (forceRefresh = false) => {
-    if (!selectedFolder) {
-      setDocuments([]);
-      fetchedFolders.current.clear();
-      return;
-    }
-    if (!forceRefresh && fetchedFolders.current.has(selectedFolder) && documents.length > 0) {
-      console.log('📋 Using cached data for folder:', selectedFolder, 'Documents:', documents.length);
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await documentApi.getDocumentsInFolder(selectedFolder);
-      console.log('📁 Raw API response for folder:', selectedFolder, data);
-      let filesList = [];
-      if (Array.isArray(data)) {
-        filesList = data;
-      } else if (data.files && Array.isArray(data.files)) {
-        filesList = data.files;
-      } else if (data.documents && Array.isArray(data.documents)) {
-        filesList = data.documents;
-      } else if (data.data && Array.isArray(data.data)) {
-        filesList = data.data;
-      }
-      console.log('📋 Files list extracted:', filesList.length, 'files');
-      const normalizedFiles = filesList.map(file => {
-        const normalized = {
-          id: file.id || file._id,
-          name: file.name || file.originalname || file.filename || file.original_name || "Unnamed Document",
-          originalname: file.originalname || file.name || file.filename || file.original_name,
-          size: file.size || file.fileSize || 0,
-          created_at: file.created_at || file.createdAt || file.uploadedAt || new Date().toISOString(),
-          status: file.status || file.processing_status || "unknown",
-          mimetype: file.mimetype || file.mimeType || file.type,
-          path: file.path || file.filePath
-        };
-        console.log('📄 Normalized file:', normalized);
-        return normalized;
-      });
-      console.log('✅ Total normalized files:', normalizedFiles.length);
-      if (normalizedFiles.length === 0) {
-        console.warn('⚠️ No files found in folder:', selectedFolder);
-      }
-      setDocuments(normalizedFiles);
-      if (normalizedFiles.length >= 0) {
-        fetchedFolders.current.add(selectedFolder);
-      }
-    } catch (err) {
-      setError("Failed to fetch folder content.");
-      console.error('❌ Error fetching folder content:', err);
-      console.error('❌ Error details:', err.response?.data || err.message);
-      setDocuments([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedFolder, setDocuments, documents.length]);
+ const fetchFolderContent = useCallback(async (forceRefresh = false) => {
+ if (!selectedFolder) {
+ setDocuments([]);
+ fetchedFolders.current.clear();
+ return;
+ }
+ if (!forceRefresh && fetchedFolders.current.has(selectedFolder) && documents.length > 0) {
+ console.log('📋 Using cached data for folder:', selectedFolder, 'Documents:', documents.length);
+ return;
+ }
+ setLoading(true);
+ setError(null);
+ try {
+ const data = await documentApi.getDocumentsInFolder(selectedFolder);
+ console.log('📁 Raw API response for folder:', selectedFolder, data);
+ let filesList = [];
+ if (Array.isArray(data)) {
+ filesList = data;
+ } else if (data.files && Array.isArray(data.files)) {
+ filesList = data.files;
+ } else if (data.documents && Array.isArray(data.documents)) {
+ filesList = data.documents;
+ } else if (data.data && Array.isArray(data.data)) {
+ filesList = data.data;
+ }
+ console.log('📋 Files list extracted:', filesList.length, 'files');
+ const normalizedFiles = filesList.map(file => {
+ const normalized = {
+ id: file.id || file._id,
+ name: file.name || file.originalname || file.filename || file.original_name || "Unnamed Document",
+ originalname: file.originalname || file.name || file.filename || file.original_name,
+ size: file.size || file.fileSize || 0,
+ created_at: file.created_at || file.createdAt || file.uploadedAt || new Date().toISOString(),
+ status: file.status || file.processing_status || "unknown",
+ mimetype: file.mimetype || file.mimeType || file.type,
+ path: file.path || file.filePath
+ };
+ console.log('📄 Normalized file:', normalized);
+ return normalized;
+ });
+ console.log('✅ Total normalized files:', normalizedFiles.length);
+ if (normalizedFiles.length === 0) {
+ console.warn('⚠️ No files found in folder:', selectedFolder);
+ }
+ setDocuments(normalizedFiles);
+ if (normalizedFiles.length >= 0) {
+ fetchedFolders.current.add(selectedFolder);
+ }
+ } catch (err) {
+ setError("Failed to fetch folder content.");
+ console.error('❌ Error fetching folder content:', err);
+ console.error('❌ Error details:', err.response?.data || err.message);
+ setDocuments([]);
+ } finally {
+ setLoading(false);
+ }
+ }, [selectedFolder, setDocuments, documents.length]);
 
-  const fetchFolderProcessingStatus = useCallback(async () => {
-    if (!selectedFolder) return;
-    try {
-      const statusData = await documentApi.getFolderProcessingStatus(selectedFolder);
-      setProcessingStatus(statusData);
-      if (statusData.processingStatus?.processing > 0 || statusData.processingStatus?.queued > 0) {
-        setTimeout(fetchFolderProcessingStatus, 5000);
-      }
-    } catch (err) {
-      console.error('Error fetching folder processing status:', err);
-    }
-  }, [selectedFolder]);
+ const fetchFolderProcessingStatus = useCallback(async () => {
+ if (!selectedFolder) return;
+ try {
+ const statusData = await documentApi.getFolderProcessingStatus(selectedFolder);
+ setProcessingStatus(statusData);
+ if (statusData.processingStatus?.processing > 0 || statusData.processingStatus?.queued > 0) {
+ setTimeout(fetchFolderProcessingStatus, 5000);
+ }
+ } catch (err) {
+ console.error('Error fetching folder processing status:', err);
+ }
+ }, [selectedFolder]);
 
-  useEffect(() => {
-    console.log('🔄 Effect triggered - Selected Folder:', selectedFolder, 'Current Documents:', documents.length);
-    fetchFolderContent();
-    fetchFolderProcessingStatus();
-    if (setChatSessions) setChatSessions([]);
-    if (setSelectedChatSessionId) setSelectedChatSessionId(null);
-  }, [selectedFolder]);
+ useEffect(() => {
+ console.log('🔄 Effect triggered - Selected Folder:', selectedFolder, 'Current Documents:', documents.length);
+ fetchFolderContent();
+ fetchFolderProcessingStatus();
+ if (setChatSessions) setChatSessions([]);
+ if (setSelectedChatSessionId) setSelectedChatSessionId(null);
+ }, [selectedFolder]);
 
-  useEffect(() => {
-    return () => {
-      if (statusIntervalRef.current) {
-        clearInterval(statusIntervalRef.current);
-        statusIntervalRef.current = null;
-      }
-      pollingActiveRef.current = false;
-    };
-  }, []);
+ useEffect(() => {
+ return () => {
+ if (statusIntervalRef.current) {
+ clearInterval(statusIntervalRef.current);
+ statusIntervalRef.current = null;
+ }
+ pollingActiveRef.current = false;
+ };
+ }, []);
 
-  const checkProcessingStatus = async (documentId) => {
-    try {
-      const response = await fetch(
-        `https://gateway-service-110685455967.asia-south1.run.app/docs/status/${documentId}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            ...getAuthHeaders(),
-          },
-        }
-      );
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error("Unauthorized - Please login again");
-        }
-        throw new Error("Failed to fetch status");
-      }
-      const statusData = await response.json();
-      return statusData;
-    } catch (err) {
-      console.error("Status check error:", err);
-      return null;
-    }
-  };
+ const checkProcessingStatus = async (documentId) => {
+ try {
+ const response = await fetch(
+ `http://localhost:5000/docs/status/${documentId}`,
+ {
+ method: "GET",
+ headers: {
+ "Content-Type": "application/json",
+ ...getAuthHeaders(),
+ },
+ }
+ );
+ if (!response.ok) {
+ if (response.status === 401) {
+ throw new Error("Unauthorized - Please login again");
+ }
+ throw new Error("Failed to fetch status");
+ }
+ const statusData = await response.json();
+ return statusData;
+ } catch (err) {
+ console.error("Status check error:", err);
+ return null;
+ }
+ };
 
-  const startStatusPolling = (documentInfoArray) => {
-    if (statusIntervalRef.current) {
-      clearInterval(statusIntervalRef.current);
-      statusIntervalRef.current = null;
-    }
-    pollingActiveRef.current = true;
-    const trackingMap = new Map();
-    documentInfoArray.forEach(({ id, name }) => {
-      trackingMap.set(id, {
-        name: name,
-        status: "pending",
-        progress: 0,
-        message: "Initializing...",
-      });
-    });
-    setProcessingDocuments(trackingMap);
-    const pollStatus = async () => {
-      if (!pollingActiveRef.current) {
-        return;
-      }
-      const currentDocIds = Array.from(trackingMap.keys());
-      if (currentDocIds.length === 0) {
-        if (statusIntervalRef.current) {
-          clearInterval(statusIntervalRef.current);
-          statusIntervalRef.current = null;
-        }
-        pollingActiveRef.current = false;
-        return;
-      }
-      const statusPromises = currentDocIds.map((id) => checkProcessingStatus(id));
-      const statuses = await Promise.all(statusPromises);
-      const updatedMap = new Map();
-      let allCompleted = true;
-      statuses.forEach((statusData, index) => {
-        const docId = currentDocIds[index];
-        const docInfo = trackingMap.get(docId);
-        if (statusData) {
-          const status = (statusData.status || "unknown").toLowerCase();
-          const progress = statusData.processing_progress || statusData.progress || 0;
-          const message = statusData.message || "";
-          if (status === "completed" || status === "processed" || status === "ready" || status === "success") {
-            console.log(`✓ Document ${docInfo.name} is ${status}`);
-          } else if (status === "processing" || status === "pending" || status === "queued") {
-            allCompleted = false;
-            updatedMap.set(docId, {
-              name: docInfo.name,
-              status: status,
-              progress: progress,
-              message: message || "Processing...",
-            });
-          } else if (status === "failed" || status === "error") {
-            allCompleted = false;
-            updatedMap.set(docId, {
-              name: docInfo.name,
-              status: "failed",
-              progress: 0,
-              message: statusData.error || message || "Processing failed",
-            });
-          } else {
-            allCompleted = false;
-            updatedMap.set(docId, {
-              name: docInfo.name,
-              status: status,
-              progress: progress,
-              message: message || "Processing...",
-            });
-          }
-        } else {
-          allCompleted = false;
-          updatedMap.set(docId, {
-            name: docInfo.name,
-            status: "unknown",
-            progress: 0,
-            message: "Unable to fetch status",
-          });
-        }
-      });
-      setProcessingDocuments(updatedMap);
-      if (allCompleted || updatedMap.size === 0) {
-        console.log("✓ All documents processed. Refreshing folder content.");
-        if (statusIntervalRef.current) {
-          clearInterval(statusIntervalRef.current);
-          statusIntervalRef.current = null;
-        }
-        pollingActiveRef.current = false;
-        await fetchFolderContent(true);
-      }
-    };
-    pollStatus();
-    statusIntervalRef.current = setInterval(pollStatus, 3000);
-  };
+ const startStatusPolling = (documentInfoArray) => {
+ if (statusIntervalRef.current) {
+ clearInterval(statusIntervalRef.current);
+ statusIntervalRef.current = null;
+ }
+ pollingActiveRef.current = true;
+ const trackingMap = new Map();
+ documentInfoArray.forEach(({ id, name }) => {
+ trackingMap.set(id, {
+ name: name,
+ status: "pending",
+ progress: 0,
+ message: "Initializing...",
+ });
+ });
+ setProcessingDocuments(trackingMap);
+ const pollStatus = async () => {
+ if (!pollingActiveRef.current) {
+ return;
+ }
+ const currentDocIds = Array.from(trackingMap.keys());
+ if (currentDocIds.length === 0) {
+ if (statusIntervalRef.current) {
+ clearInterval(statusIntervalRef.current);
+ statusIntervalRef.current = null;
+ }
+ pollingActiveRef.current = false;
+ return;
+ }
+ const statusPromises = currentDocIds.map((id) => checkProcessingStatus(id));
+ const statuses = await Promise.all(statusPromises);
+ const updatedMap = new Map();
+ let allCompleted = true;
+ statuses.forEach((statusData, index) => {
+ const docId = currentDocIds[index];
+ const docInfo = trackingMap.get(docId);
+ if (statusData) {
+ const status = (statusData.status || "unknown").toLowerCase();
+ const progress = statusData.processing_progress || statusData.progress || 0;
+ const message = statusData.message || "";
+ if (status === "completed" || status === "processed" || status === "ready" || status === "success") {
+ console.log(`✓ Document ${docInfo.name} is ${status}`);
+ } else if (status === "processing" || status === "pending" || status === "queued") {
+ allCompleted = false;
+ updatedMap.set(docId, {
+ name: docInfo.name,
+ status: status,
+ progress: progress,
+ message: message || "Processing...",
+ });
+ } else if (status === "failed" || status === "error") {
+ allCompleted = false;
+ updatedMap.set(docId, {
+ name: docInfo.name,
+ status: "failed",
+ progress: 0,
+ message: statusData.error || message || "Processing failed",
+ });
+ } else {
+ allCompleted = false;
+ updatedMap.set(docId, {
+ name: docInfo.name,
+ status: status,
+ progress: progress,
+ message: message || "Processing...",
+ });
+ }
+ } else {
+ allCompleted = false;
+ updatedMap.set(docId, {
+ name: docInfo.name,
+ status: "unknown",
+ progress: 0,
+ message: "Unable to fetch status",
+ });
+ }
+ });
+ setProcessingDocuments(updatedMap);
+ if (allCompleted || updatedMap.size === 0) {
+ console.log("✓ All documents processed. Refreshing folder content.");
+ if (statusIntervalRef.current) {
+ clearInterval(statusIntervalRef.current);
+ statusIntervalRef.current = null;
+ }
+ pollingActiveRef.current = false;
+ await fetchFolderContent(true);
+ }
+ };
+ pollStatus();
+ statusIntervalRef.current = setInterval(pollStatus, 3000);
+ };
 
-  const handleUploadDocuments = async (files) => {
-    if (!files || files.length === 0) {
-      alert("Please select at least one file to upload.");
-      return;
-    }
-    if (!selectedFolder) {
-      alert("Please select a folder first.");
-      return;
-    }
-    setUploading(true);
-    setError(null);
-    try {
-      console.log('📤 Uploading files:', files.map(f => f.name));
-      const result = await documentApi.uploadDocuments(selectedFolder, files);
-      console.log('📥 Upload result:', result);
-      if (result.success) {
-        const uploadedDocs = result.documents || result.files || [];
-        const newDocuments = uploadedDocs.map(doc => {
-          const fileName = doc.originalname || doc.name || doc.filename || doc.original_name || "Unnamed Document";
-          console.log(`📄 Processing uploaded file: ${fileName}`, doc);
-          return {
-            id: doc.id || doc._id,
-            name: fileName,
-            originalname: fileName,
-            size: doc.size || doc.fileSize || 0,
-            created_at: doc.created_at || doc.createdAt || new Date().toISOString(),
-            status: doc.status || "pending",
-            mimetype: doc.mimetype || doc.mimeType,
-            path: doc.path || doc.filePath
-          };
-        });
-        console.log('✅ Normalized uploaded documents:', newDocuments);
-        setDocuments(prevDocs => {
-          const existingIds = new Set(prevDocs.map(d => d.id));
-          const uniqueNewDocs = newDocuments.filter(d => !existingIds.has(d.id));
-          return [...prevDocs, ...uniqueNewDocs];
-        });
-        const documentInfoArray = newDocuments.map((doc) => ({
-          id: doc.id,
-          name: doc.name,
-        }));
-        if (documentInfoArray.length > 0) {
-          startStatusPolling(documentInfoArray);
-        }
-      } else {
-        setError(result.message || "Upload failed");
-        alert(result.message || "Upload failed");
-      }
-    } catch (err) {
-      console.error("❌ Error uploading documents:", err);
-      setError("An error occurred during upload.");
-      alert("An error occurred during upload: " + err.message);
-    } finally {
-      setUploading(false);
-    }
-  };
+ const handleUploadDocuments = async (files) => {
+ if (!files || files.length === 0) {
+ alert("Please select at least one file to upload.");
+ return;
+ }
+ if (!selectedFolder) {
+ alert("Please select a folder first.");
+ return;
+ }
+ setUploading(true);
+ setError(null);
+ try {
+ console.log('📤 Uploading files:', files.map(f => f.name));
+ const result = await documentApi.uploadDocuments(selectedFolder, files);
+ console.log('📥 Upload result:', result);
+ if (result.success) {
+ const uploadedDocs = result.documents || result.files || [];
+ const newDocuments = uploadedDocs.map(doc => {
+ const fileName = doc.originalname || doc.name || doc.filename || doc.original_name || "Unnamed Document";
+ console.log(`📄 Processing uploaded file: ${fileName}`, doc);
+ return {
+ id: doc.id || doc._id,
+ name: fileName,
+ originalname: fileName,
+ size: doc.size || doc.fileSize || 0,
+ created_at: doc.created_at || doc.createdAt || new Date().toISOString(),
+ status: doc.status || "pending",
+ mimetype: doc.mimetype || doc.mimeType,
+ path: doc.path || doc.filePath
+ };
+ });
+ console.log('✅ Normalized uploaded documents:', newDocuments);
+ setDocuments(prevDocs => {
+ const existingIds = new Set(prevDocs.map(d => d.id));
+ const uniqueNewDocs = newDocuments.filter(d => !existingIds.has(d.id));
+ return [...prevDocs, ...uniqueNewDocs];
+ });
+ const documentInfoArray = newDocuments.map((doc) => ({
+ id: doc.id,
+ name: doc.name,
+ }));
+ if (documentInfoArray.length > 0) {
+ startStatusPolling(documentInfoArray);
+ }
+ } else {
+ setError(result.message || "Upload failed");
+ alert(result.message || "Upload failed");
+ }
+ } catch (err) {
+ console.error("❌ Error uploading documents:", err);
+ setError("An error occurred during upload.");
+ alert("An error occurred during upload: " + err.message);
+ } finally {
+ setUploading(false);
+ }
+ };
 
-  const handleGetSummary = async () => {
-    if (!selectedFolder) {
-      alert("Please select a folder first.");
-      return;
-    }
-    setSummaryLoading(true);
-    setSummaryError(null);
-    try {
-      const data = await documentApi.getFolderSummary(selectedFolder);
-      if (data.summary) {
-        alert(`Folder Summary:\n\n${data.summary}`);
-      } else {
-        alert("No summary available for this folder.");
-      }
-    } catch (err) {
-      console.error("Error fetching folder summary:", err);
-      const errorMessage = err.response?.data?.message || err.message || "Failed to fetch folder summary";
-      setSummaryError(errorMessage);
-      alert(`Error: ${errorMessage}`);
-    } finally {
-      setSummaryLoading(false);
-    }
-  };
+ const handleDocumentClick = async (doc) => {
+ setSelectedDocument(doc);
+ setShowDocumentModal(true);
+ if (documentContentCache.current.has(doc.id)) {
+ console.log('📋 Using cached content for document:', doc.id);
+ setDocumentContent(documentContentCache.current.get(doc.id));
+ setLoadingContent(false);
+ return;
+ }
+ setLoadingContent(true);
+ setDocumentContent("");
+ try {
+ const data = await documentApi.getDocumentContent(doc.id);
+ let displayContent = "";
+ if (data.full_text_content) {
+ displayContent = data.full_text_content;
+ } else if (data.summary) {
+ displayContent = `=== DOCUMENT SUMMARY ===\n\n${data.summary}`;
+ } else if (data.text) {
+ displayContent = data.text;
+ }
+ const finalContent = displayContent || "No content available for this document.";
+ documentContentCache.current.set(doc.id, finalContent);
+ setDocumentContent(finalContent);
+ } catch (err) {
+ console.error("Error fetching document content:", err);
+ const errorContent = `Error loading document content: ${err.message}`;
+ documentContentCache.current.set(doc.id, errorContent);
+ setDocumentContent(errorContent);
+ } finally {
+ setLoadingContent(false);
+ }
+ };
 
-  const handleDocumentClick = async (doc) => {
-    setSelectedDocument(doc);
-    setShowDocumentModal(true);
-    if (documentContentCache.current.has(doc.id)) {
-      console.log('📋 Using cached content for document:', doc.id);
-      setDocumentContent(documentContentCache.current.get(doc.id));
-      setLoadingContent(false);
-      return;
-    }
-    setLoadingContent(true);
-    setDocumentContent("");
-    try {
-      const data = await documentApi.getDocumentContent(doc.id);
-      let displayContent = "";
-      if (data.full_text_content) {
-        displayContent = data.full_text_content;
-      } else if (data.summary) {
-        displayContent = `=== DOCUMENT SUMMARY ===\n\n${data.summary}`;
-      } else if (data.text) {
-        displayContent = data.text;
-      }
-      const finalContent = displayContent || "No content available for this document.";
-      documentContentCache.current.set(doc.id, finalContent);
-      setDocumentContent(finalContent);
-    } catch (err) {
-      console.error("Error fetching document content:", err);
-      const errorContent = `Error loading document content: ${err.message}`;
-      documentContentCache.current.set(doc.id, errorContent);
-      setDocumentContent(errorContent);
-    } finally {
-      setLoadingContent(false);
-    }
-  };
+ const closeDocumentModal = () => {
+ setShowDocumentModal(false);
+ setSelectedDocument(null);
+ };
 
-  const closeDocumentModal = () => {
-    setShowDocumentModal(false);
-    setSelectedDocument(null);
-  };
+ const isUploadDisabled = uploading || processingDocuments.size > 0;
 
-  const isUploadDisabled = uploading || processingDocuments.size > 0;
+ if (!selectedFolder) {
+ return (
+ <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">
+ Select a folder to view its contents.
+ </div>
+ );
+ }
 
-  if (!selectedFolder) {
-    return (
-      <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">
-        Select a folder to view its contents.
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex-1 flex flex-col text-gray-800 h-full overflow-hidden">
-      <div className="flex justify-between items-center mb-3 flex-shrink-0">
-        <h2 className="text-lg font-semibold">Folder: {selectedFolder}</h2>
-        <div className="flex space-x-2">
-          <label
-            htmlFor="document-upload"
-            className={`cursor-pointer ${
-              isUploadDisabled
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-[#21C1B6] hover:bg-[#1AA49B]"
-            } text-white px-3 py-1.5 rounded-md text-sm transition-colors duration-200 flex items-center justify-center`}
-            title={
-              isUploadDisabled
-                ? "Please wait for processing to complete"
-                : "Upload documents"
-            }
-          >
-            <span className="text-xl font-bold">
-              {uploading || processingDocuments.size > 0 ? "..." : "+"}
-            </span>
-            <input
-              id="document-upload"
-              type="file"
-              multiple
-              disabled={isUploadDisabled}
-              className="hidden"
-              onChange={(e) => {
-                handleUploadDocuments(Array.from(e.target.files));
-                e.target.value = "";
-              }}
-            />
-          </label>
-          <button
-            onClick={handleGetSummary}
-            disabled={summaryLoading}
-            className="bg-[#21C1B6] hover:bg-[#1AA49B] text-white px-3 py-1.5 rounded-md text-sm transition-colors duration-200 disabled:opacity-50"
-          >
-            {summaryLoading ? 'Summary...' : 'Summary'}
-          </button>
-        </div>
-      </div>
-      {(error || contextError) && (
-        <div className="text-red-500 mb-3 p-2 bg-red-50 rounded border border-red-200 text-sm flex-shrink-0">
-          <strong>Error:</strong> {error || contextError}
-        </div>
-      )}
-      {summaryError && (
-        <div className="text-red-500 mb-3 text-sm flex-shrink-0">Summary Error: {summaryError}</div>
-      )}
-      {uploading && (
-        <div className="text-blue-500 mb-3 p-2 bg-blue-50 rounded border border-blue-200 text-sm flex-shrink-0">
-          <strong>Uploading documents...</strong>
-        </div>
-      )}
-      {processingDocuments.size > 0 && (
-        <div className="mb-3 p-3 bg-amber-50 rounded border border-amber-200 flex-shrink-0">
-          <div className="flex items-center mb-2">
-            <svg
-              className="animate-spin h-4 w-4 mr-2 text-amber-600"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              ></circle>
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              ></path>
-            </svg>
-            <strong className="text-amber-700 text-sm">
-              Processing {processingDocuments.size} document
-              {processingDocuments.size > 1 ? "s" : ""}
-            </strong>
-          </div>
-          <div className="space-y-2">
-            {Array.from(processingDocuments.entries()).map(([id, info]) => (
-              <div key={id} className="bg-white p-2 rounded border border-amber-100">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-medium text-gray-700 truncate flex-1">
-                    {info.name}
-                  </span>
-                  <span
-                    className={`text-xs px-2 py-0.5 rounded ml-2 ${
-                      info.status === "completed"
-                        ? "bg-green-100 text-green-700"
-                        : info.status === "failed"
-                        ? "bg-red-100 text-red-700"
-                        : info.status === "processing"
-                        ? "bg-blue-100 text-blue-700"
-                        : "bg-gray-100 text-gray-700"
-                    }`}
-                  >
-                    {info.status}
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-1.5 mb-1">
-                  <div
-                    className={`h-1.5 rounded-full transition-all duration-300 ${
-                      info.status === "completed"
-                        ? "bg-green-500"
-                        : info.status === "failed"
-                        ? "bg-red-500"
-                        : "bg-blue-500"
-                    }`}
-                    style={{ width: `${info.progress}%` }}
-                  ></div>
-                </div>
-                <p className="text-xs text-gray-600">{info.message}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-      <div className="flex-1 overflow-y-auto space-y-2 min-h-0">
-        {(loading || contextLoading) ? (
-          <div className="flex items-center justify-center p-8">
-            <div className="text-gray-500 text-sm">Loading documents...</div>
-          </div>
-        ) : documents.length === 0 ? (
-          <p className="text-gray-400 text-center p-8 text-sm">
-            No documents in this folder. Upload some to get started!
-          </p>
-        ) : (
-          documents.map((doc) => (
-            <DocumentCard
-              key={doc.id}
-              document={doc}
-              individualStatus={processingDocuments.get(doc.id)}
-              onDocumentClick={() => handleDocumentClick(doc)}
-            />
-          ))
-        )}
-      </div>
-      {showDocumentModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
-            <div className="flex justify-between items-center p-4 border-b flex-shrink-0">
-              <h3 className="text-lg font-semibold text-gray-800">
-                {selectedDocument?.name || selectedDocument?.originalname || "Document Content"}
-              </h3>
-              <button
-                onClick={closeDocumentModal}
-                className="text-gray-500 hover:text-gray-700 text-2xl font-bold leading-none"
-              >
-                &times;
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4 bg-gray-50 min-h-0">
-              {loadingContent ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin h-8 w-8 border-4 border-gray-300 border-t-[#21C1B6] rounded-full"></div>
-                </div>
-              ) : (
-                <div className="prose max-w-none">
-                  <pre className="whitespace-pre-wrap text-sm text-gray-700 bg-white p-4 rounded border border-[#21C1B6] font-sans">
-                    {documentContent}
-                  </pre>
-                </div>
-              )}
-            </div>
-            <div className="flex justify-end p-4 border-t bg-white flex-shrink-0">
-              <button
-                onClick={closeDocumentModal}
-                className="bg-[#21C1B6] hover:bg-[#1AA49B] text-white px-4 py-2 rounded-md text-sm transition-colors duration-200"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+ return (
+ <div className="flex-1 flex flex-col text-gray-800 h-full overflow-hidden">
+ {/* Add global styles for scrollbar */}
+ <style dangerouslySetInnerHTML={{
+ __html: `
+ .custom-scrollbar::-webkit-scrollbar {
+ width: 12px;
+ }
+ 
+ .custom-scrollbar::-webkit-scrollbar-track {
+ background: #f1f5f9;
+ border-radius: 6px;
+ }
+ 
+ .custom-scrollbar::-webkit-scrollbar-thumb {
+ background: #94a3b8;
+ border-radius: 6px;
+ border: 2px solid #f1f5f9;
+ }
+ 
+ .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+ background: #64748b;
+ }
+ 
+ .custom-scrollbar {
+ scrollbar-width: thin;
+ scrollbar-color: #94a3b8 #f1f5f9;
+ }
+ `
+ }} />
+ 
+ <div className="flex justify-between items-center mb-3 flex-shrink-0">
+ <h2 className="text-lg font-semibold">Folder: {selectedFolder}</h2>
+ <div>
+ <label
+ htmlFor="document-upload"
+ className={`cursor-pointer ${
+ isUploadDisabled
+ ? "bg-gray-400 cursor-not-allowed"
+ : "bg-[#21C1B6] hover:bg-[#1AA49B]"
+ } text-white px-3 py-1.5 rounded-md text-sm transition-colors duration-200 flex items-center justify-center`}
+ title={
+ isUploadDisabled
+ ? "Please wait for processing to complete"
+ : "Upload documents"
+ }
+ >
+ <span className="text-xl font-bold">
+ {uploading || processingDocuments.size > 0 ? "..." : "+"}
+ </span>
+ <input
+ id="document-upload"
+ type="file"
+ multiple
+ disabled={isUploadDisabled}
+ className="hidden"
+ onChange={(e) => {
+ handleUploadDocuments(Array.from(e.target.files));
+ e.target.value = "";
+ }}
+ />
+ </label>
+ </div>
+ </div>
+ 
+ {(error || contextError) && (
+ <div className="text-red-500 mb-3 p-2 bg-red-50 rounded border border-red-200 text-sm flex-shrink-0">
+ <strong>Error:</strong> {error || contextError}
+ </div>
+ )}
+ 
+ {uploading && (
+ <div className="text-blue-500 mb-3 p-2 bg-blue-50 rounded border border-blue-200 text-sm flex-shrink-0">
+ <strong>Uploading documents...</strong>
+ </div>
+ )}
+ 
+ {processingDocuments.size > 0 && (
+ <div className="mb-3 p-3 bg-amber-50 rounded border border-amber-200 flex-shrink-0">
+ <div className="flex items-center mb-2">
+ <svg
+ className="animate-spin h-4 w-4 mr-2 text-amber-600"
+ xmlns="http://www.w3.org/2000/svg"
+ fill="none"
+ viewBox="0 0 24 24"
+ >
+ <circle
+ className="opacity-25"
+ cx="12"
+ cy="12"
+ r="10"
+ stroke="currentColor"
+ strokeWidth="4"
+ ></circle>
+ <path
+ className="opacity-75"
+ fill="currentColor"
+ d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+ ></path>
+ </svg>
+ <strong className="text-amber-700 text-sm">
+ Processing {processingDocuments.size} document
+ {processingDocuments.size > 1 ? "s" : ""}
+ </strong>
+ </div>
+ <div className="space-y-2">
+ {Array.from(processingDocuments.entries()).map(([id, info]) => (
+ <div key={id} className="bg-white p-2 rounded border border-amber-100">
+ <div className="flex items-center justify-between mb-1">
+ <span className="text-xs font-medium text-gray-700 truncate flex-1">
+ {info.name}
+ </span>
+ <span
+ className={`text-xs px-2 py-0.5 rounded ml-2 ${
+ info.status === "completed"
+ ? "bg-green-100 text-green-700"
+ : info.status === "failed"
+ ? "bg-red-100 text-red-700"
+ : info.status === "processing"
+ ? "bg-blue-100 text-blue-700"
+ : "bg-gray-100 text-gray-700"
+ }`}
+ >
+ {info.status}
+ </span>
+ </div>
+ <div className="w-full bg-gray-200 rounded-full h-1.5 mb-1">
+ <div
+ className={`h-1.5 rounded-full transition-all duration-300 ${
+ info.status === "completed"
+ ? "bg-green-500"
+ : info.status === "failed"
+ ? "bg-red-500"
+ : "bg-blue-500"
+ }`}
+ style={{ width: `${info.progress}%` }}
+ ></div>
+ </div>
+ <p className="text-xs text-gray-600">{info.message}</p>
+ </div>
+ ))}
+ </div>
+ </div>
+ )}
+ 
+ {/* Documents section with custom scrollbar */}
+ <div 
+ className="flex-1 overflow-y-auto space-y-2 min-h-0 custom-scrollbar"
+ style={{
+ maxHeight: 'calc(100vh - 300px)', // Ensure it has a defined height
+ overflowY: 'scroll' // Force scrollbar to always show
+ }}
+ >
+ {(loading || contextLoading) ? (
+ <div className="flex items-center justify-center p-8">
+ <div className="text-gray-500 text-sm">Loading documents...</div>
+ </div>
+ ) : documents.length === 0 ? (
+ <p className="text-gray-400 text-center p-8 text-sm">
+ No documents in this folder. Upload some to get started!
+ </p>
+ ) : (
+ documents.map((doc) => (
+ <DocumentCard
+ key={doc.id}
+ document={doc}
+ individualStatus={processingDocuments.get(doc.id)}
+ onDocumentClick={() => handleDocumentClick(doc)}
+ />
+ ))
+ )}
+ </div>
+ 
+ {showDocumentModal && (
+ <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+ <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+ <div className="flex justify-between items-center p-4 border-b flex-shrink-0">
+ <h3 className="text-lg font-semibold text-gray-800">
+ {selectedDocument?.name || selectedDocument?.originalname || "Document Content"}
+ </h3>
+ <button
+ onClick={closeDocumentModal}
+ className="text-gray-500 hover:text-gray-700 text-2xl font-bold leading-none"
+ >
+ &times;
+ </button>
+ </div>
+ <div className="flex-1 overflow-y-auto p-4 bg-gray-50 min-h-0">
+ {loadingContent ? (
+ <div className="flex items-center justify-center py-8">
+ <div className="animate-spin h-8 w-8 border-4 border-gray-300 border-t-[#21C1B6] rounded-full"></div>
+ </div>
+ ) : (
+ <div className="prose max-w-none">
+ <pre className="whitespace-pre-wrap text-sm text-gray-700 bg-white p-4 rounded border border-[#21C1B6] font-sans">
+ {documentContent}
+ </pre>
+ </div>
+ )}
+ </div>
+ <div className="flex justify-end p-4 border-t bg-white flex-shrink-0">
+ <button
+ onClick={closeDocumentModal}
+ className="bg-[#21C1B6] hover:bg-[#1AA49B] text-white px-4 py-2 rounded-md text-sm transition-colors duration-200"
+ >
+ Close
+ </button>
+ </div>
+ </div>
+ </div>
+ )}
+ </div>
+ );
 };
 
 export default FolderContent;

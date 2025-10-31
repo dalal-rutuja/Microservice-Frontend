@@ -919,7 +919,16 @@ class ApiService {
     return response;
   }
 
+  // async register(userData) {
+  //   return this.request("/auth/api/auth/register", {
+  //     method: "POST",
+  //     body: JSON.stringify(userData),
+  //   });
+  // }
+
+
   async register(userData) {
+    // Updated to match the expected endpoint pattern
     return this.request("/auth/api/auth/register", {
       method: "POST",
       body: JSON.stringify(userData),
