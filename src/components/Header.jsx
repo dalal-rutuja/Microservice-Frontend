@@ -340,121 +340,367 @@
 // export default Header;
 
 
+// import React, { useEffect, useState, useRef } from 'react';
+// import { Bars3Icon, UserCircleIcon } from '@heroicons/react/24/outline';
+// import { useNavigate } from 'react-router-dom';
+// import apiService from '../services/api'; // Import the apiService
+// import NexintelLogo from '../assets/nexintel.jpg';
+
+// const Header = () => {
+//   const [user, setUser] = useState(null);
+//   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+//   const dropdownRef = useRef(null);
+//   const navigate = useNavigate();
+
+//   useEffect(() => {
+//     const loadUser = () => {
+//       try {
+//         const userData = localStorage.getItem('user');
+//         if (userData) {
+//           setUser(JSON.parse(userData));
+//         } else {
+//           setUser(null);
+//         }
+//       } catch (err) {
+//         console.error('Error parsing user from localStorage:', err);
+//         setUser(null);
+//       }
+//     };
+
+//     loadUser();
+
+//     window.addEventListener('userUpdated', loadUser);
+//     return () => window.removeEventListener('userUpdated', loadUser);
+//   }, []);
+
+//   useEffect(() => {
+//     const handleClickOutside = (event) => {
+//       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+//         setIsDropdownOpen(false);
+//       }
+//     };
+
+//     document.addEventListener('mousedown', handleClickOutside);
+//     return () => {
+//       document.removeEventListener('mousedown', handleClickOutside);
+//     };
+//   }, []);
+
+//   const handleLogout = async () => {
+//     try {
+//       await apiService.logout();
+//       navigate('/login'); // Redirect to login page after successful logout
+//     } catch (error) {
+//       console.error('Logout failed:', error);
+//       // Display user-friendly error message
+//       alert(`Logout failed: ${error.message || 'Please try again.'}`);
+//       // Even if API call fails, if it's due to invalid token, we should still clear local storage and redirect
+//       if (error.message.includes('Session expired') || error.message.includes('401') || error.message.includes('403')) {
+//         localStorage.removeItem('token');
+//         localStorage.removeItem('user');
+//         window.dispatchEvent(new Event('userUpdated'));
+//         navigate('/login');
+//       }
+//     } finally {
+//       setIsDropdownOpen(false); // Close dropdown regardless of success or failure
+//     }
+//   };
+
+//   return (
+//     <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-white">
+//       <div className="flex items-center space-x-4">
+//         <img src={NexintelLogo} alt="Nexintel AI Logo" className="h-8 w-auto" />
+//       </div>
+//       <div className="flex items-center space-x-4">
+//         {user ? (
+//           <div className="text-right">
+//             <div className="text-sm font-semibold text-slate-700">
+//               {user.first_name || ''} {user.last_name || ''}
+//             </div>
+//             <div className="text-xs text-slate-500">{user.email}</div>
+//           </div>
+//         ) : (
+//           <div className="text-right">
+//             <div className="text-sm text-slate-400">Not logged in</div>
+//           </div>
+//         )}
+
+//         <div className="relative" ref={dropdownRef}>
+//           <button
+//             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+//             className="focus:outline-none"
+//           >
+//             <UserCircleIcon className="h-10 w-10 text-slate-500" />
+//             {user && (
+//               <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-white" />
+//             )}
+//           </button>
+
+//           {isDropdownOpen && (
+//             <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+//               <button
+//                 onClick={handleLogout}
+//                 className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+//               >
+//                 Logout
+//               </button>
+//             </div>
+//           )}
+//         </div>
+
+//         <button className="md:hidden bg-gray-100 p-2 rounded-lg">
+//           <Bars3Icon className="h-6 w-6 text-gray-600" />
+//         </button>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default Header;
+
+
 import React, { useEffect, useState, useRef } from 'react';
-import { Bars3Icon, UserCircleIcon } from '@heroicons/react/24/outline';
-import { useNavigate } from 'react-router-dom';
-import apiService from '../services/api'; // Import the apiService
-import NexintelLogo from '../assets/nexintel.jpg';
 
-const Header = () => {
-  const [user, setUser] = useState(null);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef(null);
-  const navigate = useNavigate();
+// Mock icons - replace with your actual icon library
+const Bars3Icon = ({ className }) => (
+ <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+ <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+ </svg>
+);
 
-  useEffect(() => {
-    const loadUser = () => {
-      try {
-        const userData = localStorage.getItem('user');
-        if (userData) {
-          setUser(JSON.parse(userData));
-        } else {
-          setUser(null);
-        }
-      } catch (err) {
-        console.error('Error parsing user from localStorage:', err);
-        setUser(null);
-      }
-    };
+const UserCircleIcon = ({ className }) => (
+ <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+ <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+ </svg>
+);
 
-    loadUser();
+// Mock API service - replace with your actual API service
+const mockApiService = {
+ logout: async () => {
+ // Simulate API call
+ return new Promise((resolve) => setTimeout(resolve, 500));
+ }
+};
 
-    window.addEventListener('userUpdated', loadUser);
-    return () => window.removeEventListener('userUpdated', loadUser);
-  }, []);
+// Mock navigate - replace with your actual router navigation
+const mockNavigate = (path, options) => {
+ console.log('Navigate to:', path, options);
+ // In real app, this would be from useNavigate() hook
+};
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
-      }
-    };
+const Header = ({ 
+ apiService = mockApiService, 
+ navigate = mockNavigate,
+ logoSrc = 'https://via.placeholder.com/150x50?text=Nexintel+AI'
+}) => {
+ const [user, setUser] = useState(null);
+ const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+ const [isLoggingOut, setIsLoggingOut] = useState(false);
+ const dropdownRef = useRef(null);
+ const isMountedRef = useRef(true);
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+ useEffect(() => {
+ isMountedRef.current = true;
+ return () => {
+ isMountedRef.current = false;
+ };
+ }, []);
 
-  const handleLogout = async () => {
-    try {
-      await apiService.logout();
-      navigate('/login'); // Redirect to login page after successful logout
-    } catch (error) {
-      console.error('Logout failed:', error);
-      // Display user-friendly error message
-      alert(`Logout failed: ${error.message || 'Please try again.'}`);
-      // Even if API call fails, if it's due to invalid token, we should still clear local storage and redirect
-      if (error.message.includes('Session expired') || error.message.includes('401') || error.message.includes('403')) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        window.dispatchEvent(new Event('userUpdated'));
-        navigate('/login');
-      }
-    } finally {
-      setIsDropdownOpen(false); // Close dropdown regardless of success or failure
-    }
-  };
+ useEffect(() => {
+ const loadUser = () => {
+ try {
+ const userData = localStorage.getItem('user');
+ if (userData && userData !== 'undefined' && userData !== 'null') {
+ const parsedUser = JSON.parse(userData);
+ // Validate that parsed data is an object
+ if (parsedUser && typeof parsedUser === 'object') {
+ if (isMountedRef.current) {
+ setUser(parsedUser);
+ }
+ } else {
+ console.warn('Invalid user data in localStorage');
+ localStorage.removeItem('user');
+ if (isMountedRef.current) {
+ setUser(null);
+ }
+ }
+ } else {
+ if (isMountedRef.current) {
+ setUser(null);
+ }
+ }
+ } catch (err) {
+ console.error('Error parsing user from localStorage:', err);
+ // Clear corrupted data
+ localStorage.removeItem('user');
+ if (isMountedRef.current) {
+ setUser(null);
+ }
+ }
+ };
 
-  return (
-    <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-white">
-      <div className="flex items-center space-x-4">
-        <img src={NexintelLogo} alt="Nexintel AI Logo" className="h-8 w-auto" />
-      </div>
-      <div className="flex items-center space-x-4">
-        {user ? (
-          <div className="text-right">
-            <div className="text-sm font-semibold text-slate-700">
-              {user.first_name || ''} {user.last_name || ''}
-            </div>
-            <div className="text-xs text-slate-500">{user.email}</div>
-          </div>
-        ) : (
-          <div className="text-right">
-            <div className="text-sm text-slate-400">Not logged in</div>
-          </div>
-        )}
+ loadUser();
 
-        <div className="relative" ref={dropdownRef}>
-          <button
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="focus:outline-none"
-          >
-            <UserCircleIcon className="h-10 w-10 text-slate-500" />
-            {user && (
-              <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-white" />
-            )}
-          </button>
+ window.addEventListener('userUpdated', loadUser);
+ return () => {
+ window.removeEventListener('userUpdated', loadUser);
+ };
+ }, []);
 
-          {isDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-              <button
-                onClick={handleLogout}
-                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
-                Logout
-              </button>
-            </div>
-          )}
-        </div>
+ useEffect(() => {
+ const handleClickOutside = (event) => {
+ if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+ setIsDropdownOpen(false);
+ }
+ };
 
-        <button className="md:hidden bg-gray-100 p-2 rounded-lg">
-          <Bars3Icon className="h-6 w-6 text-gray-600" />
-        </button>
-      </div>
-    </div>
-  );
+ if (isDropdownOpen) {
+ document.addEventListener('mousedown', handleClickOutside);
+ }
+
+ return () => {
+ document.removeEventListener('mousedown', handleClickOutside);
+ };
+ }, [isDropdownOpen]);
+
+ const clearUserData = () => {
+ try {
+ localStorage.removeItem('token');
+ localStorage.removeItem('user');
+ window.dispatchEvent(new Event('userUpdated'));
+ } catch (err) {
+ console.error('Error clearing user data:', err);
+ }
+ };
+
+ const handleLogout = async () => {
+ if (isLoggingOut) return; // Prevent multiple simultaneous logout attempts
+
+ setIsLoggingOut(true);
+ setIsDropdownOpen(false);
+
+ try {
+ await apiService.logout();
+ clearUserData();
+ navigate('/login', { replace: true });
+ } catch (error) {
+ console.error('Logout failed:', error);
+ 
+ // Handle specific error cases
+ const errorMessage = error?.message || 'Unknown error occurred';
+ const isAuthError = 
+ errorMessage.includes('Session expired') || 
+ errorMessage.includes('401') || 
+ errorMessage.includes('403') ||
+ errorMessage.includes('unauthorized') ||
+ errorMessage.includes('token');
+
+ if (isAuthError) {
+ // If it's an auth error, clear data and redirect anyway
+ clearUserData();
+ navigate('/login', { replace: true });
+ } else {
+ // For other errors, show message but still try to clear and redirect
+ alert(`Logout failed: ${errorMessage}. Clearing local session.`);
+ clearUserData();
+ navigate('/login', { replace: true });
+ }
+ } finally {
+ if (isMountedRef.current) {
+ setIsLoggingOut(false);
+ }
+ }
+ };
+
+ const getUserDisplayName = () => {
+ if (!user) return '';
+ const firstName = user.first_name?.trim() || '';
+ const lastName = user.last_name?.trim() || '';
+ return `${firstName} ${lastName}`.trim() || 'User';
+ };
+
+ const getUserEmail = () => {
+ return user?.email || 'No email';
+ };
+
+ return (
+ <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-white">
+ <div className="flex items-center space-x-4">
+ <img 
+ src={logoSrc} 
+ alt="Nexintel AI Logo" 
+ className="h-8 w-auto"
+ onError={(e) => {
+ e.target.style.display = 'none';
+ console.error('Failed to load logo image');
+ }}
+ />
+ </div>
+ 
+ <div className="flex items-center space-x-4">
+ {user ? (
+ <div className="text-right">
+ <div className="text-sm font-semibold text-slate-700">
+ {getUserDisplayName()}
+ </div>
+ <div className="text-xs text-slate-500">{getUserEmail()}</div>
+ </div>
+ ) : (
+ <div className="text-right">
+ <div className="text-sm text-slate-400">Not logged in</div>
+ </div>
+ )}
+
+ <div className="relative" ref={dropdownRef}>
+ <button
+ onClick={() => !isLoggingOut && setIsDropdownOpen(!isDropdownOpen)}
+ className="focus:outline-none relative"
+ disabled={isLoggingOut}
+ aria-label="User menu"
+ aria-expanded={isDropdownOpen}
+ >
+ <UserCircleIcon className={`h-10 w-10 ${isLoggingOut ? 'text-slate-300' : 'text-slate-500'}`} />
+ {user && !isLoggingOut && (
+ <span 
+ className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-white"
+ aria-label="Online status"
+ />
+ )}
+ </button>
+
+ {isDropdownOpen && !isLoggingOut && (
+ <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-100">
+ <button
+ onClick={handleLogout}
+ className="block w-full text-left px-4 py-2 text-sm text-gray-700 transition-colors"
+ style={{ backgroundColor: '#21C1B6' }}
+ onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#1AA49B')}
+ onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#21C1B6')}
+ disabled={isLoggingOut}
+ >
+ Logout
+ </button>
+ </div>
+ )}
+
+ {isLoggingOut && (
+ <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-100">
+ <div className="px-4 py-2 text-sm text-gray-500 text-center">
+ Logging out...
+ </div>
+ </div>
+ )}
+ </div>
+
+ <button 
+ className="md:hidden bg-gray-100 p-2 rounded-lg hover:bg-gray-200 transition-colors"
+ aria-label="Open menu"
+ >
+ <Bars3Icon className="h-6 w-6 text-gray-600" />
+ </button>
+ </div>
+ </div>
+ );
 };
 
 export default Header;
-

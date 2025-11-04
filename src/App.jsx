@@ -502,9 +502,13 @@ function App() {
             <Route path="/" element={<PublicLayout hideHeaderAndFooter={true}><LandingPage /></PublicLayout>} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/services" element={<PublicLayout><ServicesPage /></PublicLayout>} />
+            {/* <Route path="/services" element={<PublicLayout><ServicesPage /></PublicLayout>} />
             <Route path="/aboutus" element={<PublicLayout><AboutUsPage /></PublicLayout>} />
-            <Route path="/pricing" element={<PublicLayout><PricingPage /></PublicLayout>} />
+            <Route path="/pricing" element={<PublicLayout><PricingPage /></PublicLayout>} /> */}
+
+                   <Route path="/services" element={<PublicLayout hideContactBar={true} hideFooter={true}><ServicesPage /></PublicLayout>} />
+            <Route path="/aboutus" element={<PublicLayout hideContactBar={true} hideFooter={true}><AboutUsPage /></PublicLayout>} />
+            <Route path="/pricing" element={<PublicLayout hideContactBar={true} hideFooter={true}><PricingPage /></PublicLayout>} />
             <Route path="/about-nexintel" element={<PublicLayout><AboutNexintelPage /></PublicLayout>} />
             
             {/* Protected Routes */}

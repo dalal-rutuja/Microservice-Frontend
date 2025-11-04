@@ -362,7 +362,7 @@ const DocumentUploadPage = () => {
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-8">
           <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-grow">
+            {/* <div className="relative flex-grow">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
@@ -378,6 +378,28 @@ const DocumentUploadPage = () => {
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#21C1B6] focus:border-transparent cursor-pointer transition-all"
+              >
+                <option value="activity">Recent Activity</option>
+                <option value="name">Name</option>
+              </select>
+            </div> */}
+
+            <div className="relative flex-grow">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search projects..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#21C1B6] focus:border-transparent bg-gray-50 transition-all text-black"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-gray-700 font-medium text-sm whitespace-nowrap">Sort by</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#21C1B6] focus:border-transparent cursor-pointer transition-all text-black"
               >
                 <option value="activity">Recent Activity</option>
                 <option value="name">Name</option>

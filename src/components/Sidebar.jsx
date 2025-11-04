@@ -2678,7 +2678,7 @@ const Sidebar = () => {
       {!collapsed && (
         <div className="flex items-baseline">
           <span className="text-xl font-bold text-[#21C1B6]">Juri</span>
-          <span className="text-xl font-bold text-white">NexAI</span>
+          <span className="text-xl font-bold text-white">Nex</span>
         </div>
       )}
     </div>

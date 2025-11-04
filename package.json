@@ -33,6 +33,7 @@
     "@vitejs/plugin-react-swc": "^4.0.1",
     "axios": "^1.11.0",
     "docx-preview": "^0.3.6",
+    "firebase": "^12.5.0",
     "framer-motion": "^12.23.12",
     "html2canvas": "^1.4.1",
     "html2pdf.js": "^0.11.1",

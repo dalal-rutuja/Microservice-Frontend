@@ -1102,7 +1102,7 @@ const ReviewStep = ({ caseData, onBack, onResetToFirstStep }) => {
             <button
               onClick={handleCreateCase}
               disabled={isCreating}
-              className="flex-1 px-4 py-3 bg-[#9CDFE1] text-white rounded-md hover:bg-[#87D8DB] transition-colors flex items-center justify-center text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-3 bg-[#21C1B6] text-white rounded-md hover:bg-[#1AA89E] transition-colors flex items-center justify-center text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isCreating ? (
                 <>

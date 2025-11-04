@@ -771,14 +771,355 @@
 
 
 
-import React, { useState, useEffect, useCallback } from 'react';
+// import React, { useState, useEffect, useCallback } from 'react';
 
-const UserProfileMenu = ({ userData, navigate }) => {
+// const UserProfileMenu = ({ userData, navigate }) => {
+//   const [userPlan, setUserPlan] = useState('Free plan');
+//   const [userEmail, setUserEmail] = useState('');
+//   const [userName, setUserName] = useState('');
+//   const [userInitials, setUserInitials] = useState('U');
+//   const [isLoading, setIsLoading] = useState(true);
+
+//   // Helper function to safely access localStorage
+//   const getFromStorage = useCallback((key) => {
+//     try {
+//       if (typeof window !== 'undefined' && window.localStorage) {
+//         const item = localStorage.getItem(key);
+//         return item ? JSON.parse(item) : null;
+//       }
+//     } catch (error) {
+//       console.error(`Error reading ${key} from localStorage:`, error);
+//     }
+//     return null;
+//   }, []);
+
+//   // Helper function to safely set localStorage
+//   const setToStorage = useCallback((key, value) => {
+//     try {
+//       if (typeof window !== 'undefined' && window.localStorage) {
+//         localStorage.setItem(key, JSON.stringify(value));
+//       }
+//     } catch (error) {
+//       console.error(`Error setting ${key} to localStorage:`, error);
+//     }
+//   }, []);
+
+//   // Helper function to safely remove from localStorage
+//   const removeFromStorage = useCallback((key) => {
+//     try {
+//       if (typeof window !== 'undefined' && window.localStorage) {
+//         localStorage.removeItem(key);
+//       }
+//     } catch (error) {
+//       console.error(`Error removing ${key} from localStorage:`, error);
+//     }
+//   }, []);
+
+//   // Generate initials from name
+//   const generateInitials = useCallback((name, email) => {
+//     if (name && name.trim()) {
+//       const nameParts = name.trim().split(' ').filter(Boolean);
+//       if (nameParts.length >= 2) {
+//         return `${nameParts[0].charAt(0)}${nameParts[nameParts.length - 1].charAt(0)}`.toUpperCase();
+//       } else if (nameParts.length === 1) {
+//         return nameParts[0].charAt(0).toUpperCase();
+//       }
+//     }
+//     if (email) {
+//       const emailPart = email.split('@')[0];
+//       if (emailPart.includes('.')) {
+//         const parts = emailPart.split('.');
+//         return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`.toUpperCase();
+//       } else if (emailPart.includes('_')) {
+//         const parts = emailPart.split('_');
+//         return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`.toUpperCase();
+//       }
+//       return emailPart.charAt(0).toUpperCase();
+//     }
+//     return 'U';
+//   }, []);
+
+//   // Extract display name from email
+//   const getDisplayNameFromEmail = useCallback((email) => {
+//     if (!email) return '';
+//     const emailPart = email.split('@')[0];
+//     return emailPart
+//       .replace(/[._-]/g, ' ')
+//       .replace(/\b\w/g, (l) => l.toUpperCase())
+//       .trim();
+//   }, []);
+
+//   // Main function to update user info
+//   const updateUserInfo = useCallback(() => {
+//     setIsLoading(true);
+    
+//     let userInfo = null;
+//     let planInfo = null;
+
+//     userInfo = userData || getFromStorage('user');
+//     if (userInfo) {
+//       console.log('✅ Found user data in prop or localStorage["user"]:', userInfo);
+//     } else {
+//       const userKeys = ['userData', 'currentUser', 'authUser', 'auth', 'profile'];
+//       for (const key of userKeys) {
+//         const data = getFromStorage(key);
+//         if (data && data.id && data.email) {
+//           userInfo = data;
+//           console.log(`✅ Found user data in localStorage["${key}"]`, userInfo);
+//           break;
+//         }
+//       }
+//     }
+
+//     planInfo = getFromStorage('userInfo');
+//     if (planInfo && planInfo.plan) {
+//       console.log('✅ Found plan data in localStorage["userInfo"]:', planInfo);
+//     } else {
+//       const planKeys = ['plan', 'subscription', 'userPlan', 'planInfo', 'userSubscription'];
+//       for (const key of planKeys) {
+//         const data = getFromStorage(key);
+//         if (data) {
+//           if (typeof data === 'object' && data.plan) {
+//             planInfo = data;
+//             console.log(`✅ Found plan data in localStorage["${key}"]`, planInfo);
+//             break;
+//           } else if (typeof data === 'string') {
+//             planInfo = { plan: data };
+//             console.log(`✅ Found plan as string in localStorage["${key}"]`, data);
+//             break;
+//           }
+//         }
+//       }
+//     }
+
+//     if (userInfo) {
+//       const email = userInfo.email || '';
+//       const name = userInfo.username || getDisplayNameFromEmail(email);
+      
+//       let plan = 'Free plan';
+      
+//       if (planInfo && planInfo.plan) {
+//         plan = planInfo.plan;
+//         console.log('✅ Plan set from localStorage["userInfo"]:', plan);
+//         console.log('📊 Plan details:', { plan: planInfo.plan, lastPayment: planInfo.lastPayment });
+//       } else if (userInfo.plan) {
+//         plan = userInfo.plan;
+//         console.log('✅ Plan set from user.plan:', plan);
+//       } else if (userInfo.role) {
+//         const planMap = {
+//           'admin': 'Admin Plan',
+//           'premium': 'Premium Plan',
+//           'pro': 'Pro Plan',
+//           'plus': 'Plus Plan',
+//           'free': 'Free Plan',
+//           'user': 'Free Plan',
+//         };
+//         plan = planMap[userInfo.role.toLowerCase()] || 'Free Plan';
+//         console.log('⚠️ Plan set from user role mapping (fallback):', plan);
+//       } else {
+//         console.log('❌ No plan data found, using default:', plan);
+//       }
+
+//       const initials = generateInitials(name, email);
+
+//       setUserEmail(email);
+//       setUserName(name || 'User');
+//       setUserPlan(plan);
+//       setUserInitials(initials);
+
+//       console.log('🎉 Final user info update:', {
+//         id: userInfo.id,
+//         email,
+//         username: userInfo.username,
+//         name: name || 'User',
+//         role: userInfo.role,
+//         is_blocked: userInfo.is_blocked,
+//         plan,
+//         initials,
+//         lastPayment: planInfo?.lastPayment,
+//       });
+//     } else {
+//       console.log('❌ No user data found in prop or localStorage');
+//       setUserEmail('');
+//       setUserName('');
+//       setUserPlan('Free plan');
+//       setUserInitials('U');
+//     }
+    
+//     setIsLoading(false);
+//   }, [getFromStorage, generateInitials, getDisplayNameFromEmail, userData]);
+
+//   useEffect(() => {
+//     updateUserInfo();
+
+//     const handleStorageChange = (e) => {
+//       const userDataKeys = ['user', 'userInfo', 'userData', 'currentUser', 'authUser', 'auth', 'profile', 'plan', 'subscription', 'userPlan', 'planInfo'];
+//       if (userDataKeys.includes(e.key)) {
+//         console.log(`Storage change detected for key: ${e.key}`);
+//         updateUserInfo();
+//       }
+//     };
+
+//     const handleCustomUpdate = () => {
+//       console.log('Custom user info update event received');
+//       updateUserInfo();
+//     };
+
+//     window.addEventListener('storage', handleStorageChange);
+//     window.addEventListener('userInfoUpdated', handleCustomUpdate);
+//     window.addEventListener('userDataChanged', handleCustomUpdate);
+
+//     return () => {
+//       window.removeEventListener('storage', handleStorageChange);
+//       window.removeEventListener('userInfoUpdated', handleCustomUpdate);
+//       window.removeEventListener('userDataChanged', handleCustomUpdate);
+//     };
+//   }, [updateUserInfo]);
+
+//   const handleLogout = useCallback(() => {
+//     try {
+//       const keysToRemove = [
+//         'token',
+//         'accessToken',
+//         'refreshToken',
+//         'authToken',
+//         'jwt',
+//         'user',
+//         'userInfo',
+//         'userData',
+//         'currentUser',
+//         'authUser',
+//         'auth',
+//         'profile',
+//         'session',
+//         'plan',
+//         'subscription',
+//         'userPlan',
+//         'planInfo',
+//       ];
+
+//       keysToRemove.forEach((key) => removeFromStorage(key));
+
+//       setUserPlan('Free plan');
+//       setUserEmail('');
+//       setUserName('');
+//       setUserInitials('U');
+//       setIsLoading(false);
+
+//       console.log('User logged out successfully - localStorage cleared');
+
+//       window.dispatchEvent(new CustomEvent('userLoggedOut'));
+
+//       navigate('/login');
+//     } catch (error) {
+//       console.error('Error during logout:', error);
+//       navigate('/login');
+//     }
+//   }, [navigate, removeFromStorage]);
+
+//   if (isLoading) {
+//     return (
+//       <div className="p-4 border-b border-gray-200 bg-white relative z-[9999]">
+//         <div className="flex items-center space-x-3 mb-4">
+//           <div className="flex-shrink-0">
+//             <div className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-gray-200 animate-pulse"></div>
+//           </div>
+//           <div className="flex-1 min-w-0">
+//             <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
+//             <div className="h-3 bg-gray-200 rounded animate-pulse w-2/3"></div>
+//           </div>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <div className="p-4 border-b border-gray-200 bg-white relative z-[9999]">
+//       <div className="flex items-center space-x-3 mb-4">
+//         <div
+//           className="flex-shrink-0 inline-flex items-center justify-center h-10 w-10 rounded-full text-white font-semibold text-sm shadow-lg transition-colors duration-200 transform hover:-translate-y-0.5 hover:shadow-xl"
+//           style={{ backgroundColor: '#21C1B6' }}
+//           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#1AA49B')}
+//           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#21C1B6')}
+//         >
+//           {userInitials}
+//         </div>
+//         <div className="flex-1 min-w-0">
+//           {userName && <div className="text-sm font-semibold text-gray-900 truncate">{userName}</div>}
+//           {userEmail && <div className="text-sm text-gray-600 truncate">{userEmail}</div>}
+//           <div className="flex items-center space-x-2 mt-1">
+//             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+//               {userPlan}
+//             </span>
+//             <span className="text-xs text-gray-500">Personal</span>
+//           </div>
+//         </div>
+//         <div className="flex-shrink-0">
+//           <svg className="h-5 w-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+//             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+//           </svg>
+//         </div>
+//       </div>
+
+//       <nav>
+//         <ul className="space-y-1">
+//           <li>
+//             <button onClick={() => navigate('/settings')} className="flex items-center w-full px-3 py-2.5 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+//               <svg className="h-4 w-4 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+//                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+//               </svg>
+//               Settings
+//             </button>
+//           </li>
+//           <li>
+//             <button onClick={() => navigate('/get-help')} className="flex items-center w-full px-3 py-2.5 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+//               <svg className="h-4 w-4 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+//               </svg>
+//               Get help
+//             </button>
+//           </li>
+//           <li>
+//             <button
+//               onClick={() => navigate('/subscription-plans')}
+//               onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#1AA49B')}
+//               onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#21C1B6')}
+//               className="flex items-center w-full px-3 py-2.5 text-sm font-medium text-white rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+//               style={{ backgroundColor: '#21C1B6' }}
+//             >
+//               Upgrade plan
+//             </button>
+//           </li>
+//           <li>
+//             <button onClick={handleLogout} className="flex items-center w-full px-3 py-2.5 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 transition-colors">
+//               <svg className="h-4 w-4 mr-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+//               </svg>
+//               Log out
+//             </button>
+//           </li>
+//         </ul>
+//       </nav>
+//     </div>
+//   );
+// };
+
+// export default UserProfileMenu;
+
+
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '../context/AuthContext'; // Import useAuth
+
+const UserProfileMenu = ({ userData, navigate, onLogout }) => {
   const [userPlan, setUserPlan] = useState('Free plan');
   const [userEmail, setUserEmail] = useState('');
   const [userName, setUserName] = useState('');
   const [userInitials, setUserInitials] = useState('U');
   const [isLoading, setIsLoading] = useState(true);
+
+  const { logout: authLogout } = useAuth(); // Get logout from AuthContext
 
   // Helper function to safely access localStorage
   const getFromStorage = useCallback((key) => {
@@ -894,7 +1235,7 @@ const UserProfileMenu = ({ userData, navigate }) => {
 
     if (userInfo) {
       const email = userInfo.email || '';
-      const name = userInfo.username || getDisplayNameFromEmail(email);
+      const name = userInfo.displayName || userInfo.username || getDisplayNameFromEmail(email);
       
       let plan = 'Free plan';
       
@@ -931,6 +1272,7 @@ const UserProfileMenu = ({ userData, navigate }) => {
         id: userInfo.id,
         email,
         username: userInfo.username,
+        displayName: userInfo.displayName,
         name: name || 'User',
         role: userInfo.role,
         is_blocked: userInfo.is_blocked,
@@ -976,46 +1318,72 @@ const UserProfileMenu = ({ userData, navigate }) => {
     };
   }, [updateUserInfo]);
 
+  // Updated logout handler that properly integrates with AuthContext
   const handleLogout = useCallback(() => {
     try {
-      const keysToRemove = [
-        'token',
-        'accessToken',
-        'refreshToken',
-        'authToken',
-        'jwt',
-        'user',
-        'userInfo',
-        'userData',
-        'currentUser',
-        'authUser',
-        'auth',
-        'profile',
-        'session',
-        'plan',
-        'subscription',
-        'userPlan',
-        'planInfo',
-      ];
+      console.log('UserProfileMenu: Starting logout process...');
 
-      keysToRemove.forEach((key) => removeFromStorage(key));
-
+      // Reset local state first
       setUserPlan('Free plan');
       setUserEmail('');
       setUserName('');
       setUserInitials('U');
       setIsLoading(false);
 
-      console.log('User logged out successfully - localStorage cleared');
+      // Use the onLogout prop if provided (from Sidebar component)
+      if (onLogout) {
+        console.log('UserProfileMenu: Using onLogout prop from parent');
+        onLogout();
+        return;
+      }
 
-      window.dispatchEvent(new CustomEvent('userLoggedOut'));
+      // Fallback: Use AuthContext logout directly
+      if (authLogout) {
+        console.log('UserProfileMenu: Using AuthContext logout');
+        authLogout();
+        
+        // Dispatch custom event for any other components listening
+        window.dispatchEvent(new CustomEvent('userLoggedOut'));
+        
+        // Navigate to login
+        navigate('/login', { replace: true });
+      } else {
+        // Last resort: Manual cleanup and navigation
+        console.warn('UserProfileMenu: No logout function available, doing manual cleanup');
+        
+        const keysToRemove = [
+          'token',
+          'accessToken',
+          'refreshToken',
+          'authToken',
+          'jwt',
+          'user',
+          'userInfo',
+          'userData',
+          'currentUser',
+          'authUser',
+          'auth',
+          'profile',
+          'session',
+          'plan',
+          'subscription',
+          'userPlan',
+          'planInfo',
+        ];
 
-      navigate('/login');
+        keysToRemove.forEach((key) => removeFromStorage(key));
+        
+        window.dispatchEvent(new CustomEvent('userLoggedOut'));
+        navigate('/login', { replace: true });
+      }
+
+      console.log('UserProfileMenu: Logout process completed');
     } catch (error) {
-      console.error('Error during logout:', error);
-      navigate('/login');
+      console.error('UserProfileMenu: Error during logout:', error);
+      // Still try to navigate to login even if there's an error
+      navigate('/login', { replace: true });
     }
-  }, [navigate, removeFromStorage]);
+  }, [onLogout, authLogout, navigate, removeFromStorage]);
 
   if (isLoading) {
     return (

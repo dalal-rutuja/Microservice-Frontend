@@ -1351,7 +1351,7 @@ const RegisterPage = () => {
               </div>
 
               <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 text-center">
-                Welcome to NexIntel AI
+                Welcome to JuriNex
               </h2>
               <p className="text-gray-500 mb-6 sm:mb-8 text-center text-xs sm:text-sm">
                 Create your account to get started

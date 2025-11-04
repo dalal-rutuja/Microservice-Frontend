@@ -194,6 +194,247 @@
 //   return useContext(AuthContext);
 // };
 
+// import React, { createContext, useContext, useState, useEffect } from 'react';
+// import api from '../services/api'; // Import the API service
+
+// const AuthContext = createContext(null);
+
+// export const AuthProvider = ({ children }) => {
+//   const [user, setUser] = useState(null);
+//   const [token, setToken] = useState(() => {
+//     const storedToken = localStorage.getItem('token');
+//     console.log('AuthContext: Initializing token from localStorage:', storedToken ? 'Present' : 'Not Present');
+//     return storedToken;
+//   });
+//   const [loading, setLoading] = useState(true);
+
+//   useEffect(() => {
+//     const storedToken = localStorage.getItem('token');
+//     console.log('AuthContext: useEffect - storedToken:', storedToken ? 'Present' : 'Not Present');
+//     if (storedToken && storedToken !== token) { // Only update if different to avoid infinite loops
+//       setToken(storedToken);
+//       const storedUser = localStorage.getItem('user');
+//       if (storedUser) {
+//         try {
+//           setUser(JSON.parse(storedUser));
+//         } catch (e) {
+//           console.error('AuthContext: Failed to parse user from localStorage', e);
+//           setUser(null);
+//           localStorage.removeItem('user');
+//         }
+//       } else {
+//         setUser(null);
+//       }
+//     } else if (!storedToken && token) {
+//       // If token was in state but not in localStorage, clear state
+//       setToken(null);
+//       setUser(null);
+//     }
+//     setLoading(false);
+//   }, [token]); // Depend on token to react to external changes
+
+//   const login = async (email, password) => {
+//     try {
+//       const response = await api.login({ email, password });
+//       // Temporarily force OTP field to show for testing
+//       if (true) { // Change this back to `response.requiresOtp` after testing
+//         console.log('AuthContext: OTP required for login (forced for testing).');
+//         return { success: false, requiresOtp: true, email: email, message: 'OTP required. Please check your email.' };
+//       }
+//       if (response.token) {
+//         setToken(response.token);
+//         setUser(response.user);
+//         localStorage.setItem('user', JSON.stringify(response.user));
+//         console.log('AuthContext: Login successful, new token set:', response.token);
+//         return { success: true, user: response.user, token: response.token };
+//       }
+//       return { success: false, message: response.message || 'Login failed: No token received.' };
+//     } catch (error) {
+//       console.error('AuthContext: Login failed:', error);
+//       return { success: false, message: error.message || 'Login failed.' };
+//     }
+//   };
+
+//   const verifyOtp = async (email, otp) => {
+//     try {
+//       const response = await api.verifyOtp(email, otp);
+//       if (response.token) {
+//         setToken(response.token);
+//         setUser(response.user);
+//         localStorage.setItem('user', JSON.stringify(response.user));
+//         console.log('AuthContext: OTP verification successful, new token set:', response.token);
+//         return { success: true, user: response.user, token: response.token };
+//       }
+//       return { success: false, message: response.message || 'OTP verification failed.' };
+//     } catch (error) {
+//       console.error('AuthContext: OTP verification failed:', error);
+//       return { success: false, message: error.message || 'OTP verification failed.' };
+//     }
+//   };
+
+//   const logout = () => {
+//     setUser(null);
+//     setToken(null);
+//     localStorage.removeItem('token');
+//     localStorage.removeItem('user');
+//     console.log('AuthContext: User logged out, token cleared.');
+//   };
+
+//   return (
+//     <AuthContext.Provider value={{ user, token, loading, login, logout, verifyOtp }}>
+//       {children}
+//     </AuthContext.Provider>
+//   );
+// };
+
+// export const useAuth = () => {
+//   return useContext(AuthContext);
+// };
+
+
+
+// import React, { createContext, useContext, useState, useEffect } from 'react';
+// import api from '../services/api'; // Import the API service
+
+// const AuthContext = createContext(null);
+
+// export const AuthProvider = ({ children }) => {
+//   const [user, setUser] = useState(null);
+//   const [token, setToken] = useState(null);
+//   const [loading, setLoading] = useState(true);
+
+//   // Initialize auth state from localStorage on component mount
+//   useEffect(() => {
+//     const initializeAuth = () => {
+//       const storedToken = localStorage.getItem('token');
+//       const storedUser = localStorage.getItem('user');
+
+//       console.log('AuthContext: Initializing from localStorage - Token:', storedToken ? 'Present' : 'Not Present');
+
+//       if (storedToken) {
+//         setToken(storedToken);
+        
+//         if (storedUser) {
+//           try {
+//             const parsedUser = JSON.parse(storedUser);
+//             setUser(parsedUser);
+//             console.log('AuthContext: User restored from localStorage:', parsedUser.email);
+//           } catch (e) {
+//             console.error('AuthContext: Failed to parse user from localStorage', e);
+//             // Clear invalid data
+//             localStorage.removeItem('user');
+//             localStorage.removeItem('token');
+//             setToken(null);
+//             setUser(null);
+//           }
+//         }
+//       }
+      
+//       setLoading(false);
+//     };
+
+//     initializeAuth();
+//   }, []); // Empty dependency array - only run once on mount
+
+//   const login = async (email, password) => {
+//     try {
+//       const response = await api.login({ email, password });
+      
+//       // Check if OTP is required (remove the forced true condition)
+//       if (response.requiresOtp) {
+//         console.log('AuthContext: OTP required for login.');
+//         return { 
+//           success: false, 
+//           requiresOtp: true, 
+//           email: email, 
+//           message: response.message || 'OTP required. Please check your email.' 
+//         };
+//       }
+      
+//       // If login is successful and token is provided
+//       if (response.token) {
+//         setToken(response.token);
+//         setUser(response.user);
+        
+//         // Store in localStorage
+//         localStorage.setItem('token', response.token);
+//         localStorage.setItem('user', JSON.stringify(response.user));
+        
+//         console.log('AuthContext: Login successful, token stored:', response.token);
+//         return { success: true, user: response.user, token: response.token };
+//       }
+      
+//       return { success: false, message: response.message || 'Login failed: No token received.' };
+//     } catch (error) {
+//       console.error('AuthContext: Login failed:', error);
+//       return { success: false, message: error.message || 'Login failed.' };
+//     }
+//   };
+
+//   const verifyOtp = async (email, otp) => {
+//     try {
+//       const response = await api.verifyOtp(email, otp);
+      
+//       if (response.success && response.token) {
+//         setToken(response.token);
+//         setUser(response.user);
+        
+//         // Store in localStorage
+//         localStorage.setItem('token', response.token);
+//         localStorage.setItem('user', JSON.stringify(response.user));
+        
+//         console.log('AuthContext: OTP verification successful, token stored:', response.token);
+//         return { success: true, user: response.user, token: response.token };
+//       }
+      
+//       return { success: false, message: response.message || 'OTP verification failed.' };
+//     } catch (error) {
+//       console.error('AuthContext: OTP verification failed:', error);
+//       return { success: false, message: error.message || 'OTP verification failed.' };
+//     }
+//   };
+
+//   const logout = () => {
+//     setUser(null);
+//     setToken(null);
+    
+//     // Clear localStorage
+//     localStorage.removeItem('token');
+//     localStorage.removeItem('user');
+    
+//     console.log('AuthContext: User logged out, all data cleared.');
+//   };
+
+//   // Check if user is authenticated
+//   const isAuthenticated = !loading && token && user;
+
+//   const value = {
+//     user,
+//     token,
+//     loading,
+//     isAuthenticated,
+//     login,
+//     logout,
+//     verifyOtp
+//   };
+
+//   return (
+//     <AuthContext.Provider value={value}>
+//       {children}
+//     </AuthContext.Provider>
+//   );
+// };
+
+// export const useAuth = () => {
+//   const context = useContext(AuthContext);
+//   if (!context) {
+//     throw new Error('useAuth must be used within an AuthProvider');
+//   }
+//   return context;
+// };
+
+
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '../services/api'; // Import the API service
 
@@ -201,53 +442,70 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(() => {
-    const storedToken = localStorage.getItem('token');
-    console.log('AuthContext: Initializing token from localStorage:', storedToken ? 'Present' : 'Not Present');
-    return storedToken;
-  });
+  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Initialize auth state from localStorage on component mount
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    console.log('AuthContext: useEffect - storedToken:', storedToken ? 'Present' : 'Not Present');
-    if (storedToken && storedToken !== token) { // Only update if different to avoid infinite loops
-      setToken(storedToken);
+    const initializeAuth = () => {
+      const storedToken = localStorage.getItem('token');
       const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        try {
-          setUser(JSON.parse(storedUser));
-        } catch (e) {
-          console.error('AuthContext: Failed to parse user from localStorage', e);
-          setUser(null);
-          localStorage.removeItem('user');
+
+      console.log('AuthContext: Initializing from localStorage - Token:', storedToken ? 'Present' : 'Not Present');
+
+      if (storedToken) {
+        setToken(storedToken);
+        
+        if (storedUser) {
+          try {
+            const parsedUser = JSON.parse(storedUser);
+            setUser(parsedUser);
+            console.log('AuthContext: User restored from localStorage:', parsedUser.email);
+          } catch (e) {
+            console.error('AuthContext: Failed to parse user from localStorage', e);
+            // Clear invalid data
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            setToken(null);
+            setUser(null);
+          }
         }
-      } else {
-        setUser(null);
       }
-    } else if (!storedToken && token) {
-      // If token was in state but not in localStorage, clear state
-      setToken(null);
-      setUser(null);
-    }
-    setLoading(false);
-  }, [token]); // Depend on token to react to external changes
+      
+      setLoading(false);
+    };
+
+    initializeAuth();
+  }, []); // Empty dependency array - only run once on mount
 
   const login = async (email, password) => {
     try {
       const response = await api.login({ email, password });
-      // Temporarily force OTP field to show for testing
-      if (true) { // Change this back to `response.requiresOtp` after testing
-        console.log('AuthContext: OTP required for login (forced for testing).');
-        return { success: false, requiresOtp: true, email: email, message: 'OTP required. Please check your email.' };
+      
+      // Check if OTP is required (remove the forced true condition)
+      if (response.requiresOtp) {
+        console.log('AuthContext: OTP required for login.');
+        return { 
+          success: false, 
+          requiresOtp: true, 
+          email: email, 
+          message: response.message || 'OTP required. Please check your email.' 
+        };
       }
+      
+      // If login is successful and token is provided
       if (response.token) {
         setToken(response.token);
         setUser(response.user);
+        
+        // Store in localStorage
+        localStorage.setItem('token', response.token);
         localStorage.setItem('user', JSON.stringify(response.user));
-        console.log('AuthContext: Login successful, new token set:', response.token);
+        
+        console.log('AuthContext: Login successful, token stored:', response.token);
         return { success: true, user: response.user, token: response.token };
       }
+      
       return { success: false, message: response.message || 'Login failed: No token received.' };
     } catch (error) {
       console.error('AuthContext: Login failed:', error);
@@ -258,13 +516,19 @@ export const AuthProvider = ({ children }) => {
   const verifyOtp = async (email, otp) => {
     try {
       const response = await api.verifyOtp(email, otp);
-      if (response.token) {
+      
+      if (response.success && response.token) {
         setToken(response.token);
         setUser(response.user);
+        
+        // Store in localStorage
+        localStorage.setItem('token', response.token);
         localStorage.setItem('user', JSON.stringify(response.user));
-        console.log('AuthContext: OTP verification successful, new token set:', response.token);
+        
+        console.log('AuthContext: OTP verification successful, token stored:', response.token);
         return { success: true, user: response.user, token: response.token };
       }
+      
       return { success: false, message: response.message || 'OTP verification failed.' };
     } catch (error) {
       console.error('AuthContext: OTP verification failed:', error);
@@ -272,21 +536,56 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // NEW METHOD: Manually set authentication state (for Google Sign-In and other OAuth providers)
+  const setAuthState = (authToken, userData) => {
+    console.log('AuthContext: Manually setting auth state for user:', userData.email);
+    
+    setToken(authToken);
+    setUser(userData);
+    
+    // Store in localStorage
+    localStorage.setItem('token', authToken);
+    localStorage.setItem('user', JSON.stringify(userData));
+    
+    console.log('AuthContext: Auth state manually updated');
+  };
+
   const logout = () => {
     setUser(null);
     setToken(null);
+    
+    // Clear localStorage
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    console.log('AuthContext: User logged out, token cleared.');
+    
+    console.log('AuthContext: User logged out, all data cleared.');
+  };
+
+  // Check if user is authenticated
+  const isAuthenticated = !loading && token && user;
+
+  const value = {
+    user,
+    token,
+    loading,
+    isAuthenticated,
+    login,
+    logout,
+    verifyOtp,
+    setAuthState // Export the new method
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, verifyOtp }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
 };
 
 export const useAuth = () => {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };
