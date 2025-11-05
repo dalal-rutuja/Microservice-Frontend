@@ -99,7 +99,7 @@
 //   const checkProcessingStatus = async (documentId) => {
 //     try {
 //       const response = await fetch(
-//         `https://gateway-service-110685455967.asia-south1.run.app/docs/status/${documentId}`,
+//         `https://gateway-service-dot-nexintel-ai-product.el.r.appspot.com/docs/status/${documentId}`,
 //         {
 //           method: "GET",
 //           headers: {
@@ -265,7 +265,7 @@
 //       });
 
 //       const response = await fetch(
-//         `https://gateway-service-110685455967.asia-south1.run.app/docs/${encodeURIComponent(selectedFolder)}/upload`,
+//         `https://gateway-service-dot-nexintel-ai-product.el.r.appspot.com/docs/${encodeURIComponent(selectedFolder)}/upload`,
 //         {
 //           method: "POST",
 //           headers: {
@@ -676,7 +676,7 @@
 //   const checkProcessingStatus = async (documentId) => {
 //     try {
 //       const response = await fetch(
-//         `https://gateway-service-110685455967.asia-south1.run.app/docs/status/${documentId}`,
+//         `https://gateway-service-dot-nexintel-ai-product.el.r.appspot.com/docs/status/${documentId}`,
 //         {
 //           method: "GET",
 //           headers: {
@@ -850,7 +850,7 @@
 //       });
 
 //       const response = await fetch(
-//         `https://gateway-service-110685455967.asia-south1.run.app/docs/${encodeURIComponent(selectedFolder)}/upload`,
+//         `https://gateway-service-dot-nexintel-ai-product.el.r.appspot.com/docs/${encodeURIComponent(selectedFolder)}/upload`,
 //         {
 //           method: "POST",
 //           headers: {
@@ -1269,7 +1269,7 @@
 //       Array.from(files).forEach((file) => formData.append("files", file));
 
 //       const response = await fetch(
-//         `https://gateway-service-110685455967.asia-south1.run.app/docs/${encodeURIComponent(selectedFolder)}/upload`,
+//         `https://gateway-service-dot-nexintel-ai-product.el.r.appspot.com/docs/${encodeURIComponent(selectedFolder)}/upload`,
 //         { method: "POST", headers: { ...getAuthHeaders() }, body: formData }
 //       );
 
@@ -1559,7 +1559,7 @@
 //   const checkProcessingStatus = async (documentId) => {
 //     try {
 //       const response = await fetch(
-//         `https://gateway-service-110685455967.asia-south1.run.app/docs/status/${documentId}`,
+//         `https://gateway-service-dot-nexintel-ai-product.el.r.appspot.com/docs/status/${documentId}`,
 //         {
 //           method: "GET",
 //           headers: {
@@ -1733,7 +1733,7 @@
 //       });
 
 //       const response = await fetch(
-//         `https://gateway-service-110685455967.asia-south1.run.app/docs/${encodeURIComponent(selectedFolder)}/upload`,
+//         `https://gateway-service-dot-nexintel-ai-product.el.r.appspot.com/docs/${encodeURIComponent(selectedFolder)}/upload`,
 //         {
 //           method: "POST",
 //           headers: {
@@ -2148,7 +2148,7 @@
 //  const checkProcessingStatus = async (documentId) => {
 //  try {
 //  const response = await fetch(
-//  `https://gateway-service-110685455967.asia-south1.run.app/docs/status/${documentId}`,
+//  `https://gateway-service-dot-nexintel-ai-product.el.r.appspot.com/docs/status/${documentId}`,
 //  {
 //  method: "GET",
 //  headers: {
@@ -2721,7 +2721,7 @@
 //   const checkProcessingStatus = async (documentId) => {
 //     try {
 //       const response = await fetch(
-//         `https://gateway-service-110685455967.asia-south1.run.app/docs/status/${documentId}`,
+//         `https://gateway-service-dot-nexintel-ai-product.el.r.appspot.com/docs/status/${documentId}`,
 //         {
 //           method: "GET",
 //           headers: {
@@ -3351,7 +3351,7 @@
 //  const checkProcessingStatus = async (documentId) => {
 //  try {
 //  const response = await fetch(
-//  `https://gateway-service-110685455967.asia-south1.run.app/docs/status/${documentId}`,
+//  `https://gateway-service-dot-nexintel-ai-product.el.r.appspot.com/docs/status/${documentId}`,
 //  {
 //  method: "GET",
 //  headers: {
@@ -3974,7 +3974,7 @@
 //   const checkProcessingStatus = async (documentId) => {
 //     try {
 //       const response = await fetch(
-//         `https://gateway-service-110685455967.asia-south1.run.app/docs/status/${documentId}`,
+//         `https://gateway-service-dot-nexintel-ai-product.el.r.appspot.com/docs/status/${documentId}`,
 //         {
 //           method: "GET",
 //           headers: {
@@ -4543,7 +4543,7 @@
 //  const checkProcessingStatus = async (documentId) => {
 //  try {
 //  const response = await fetch(
-//  `https://gateway-service-110685455967.asia-south1.run.app/docs/status/${documentId}`,
+//  `https://gateway-service-dot-nexintel-ai-product.el.r.appspot.com/docs/status/${documentId}`,
 //  {
 //  method: "GET",
 //  headers: {
@@ -5119,7 +5119,7 @@
 //  const checkProcessingStatus = async (documentId) => {
 //  try {
 //  const response = await fetch(
-//  `https://gateway-service-110685455967.asia-south1.run.app/docs/status/${documentId}`,
+//  `https://gateway-service-dot-nexintel-ai-product.el.r.appspot.com/docs/status/${documentId}`,
 //  {
 //  method: "GET",
 //  headers: {
@@ -5730,7 +5730,7 @@
 //  const checkProcessingStatus = async (documentId) => {
 //  try {
 //  const response = await fetch(
-//  `https://gateway-service-110685455967.asia-south1.run.app/docs/status/${documentId}`,
+//  `https://gateway-service-dot-nexintel-ai-product.el.r.appspot.com/docs/status/${documentId}`,
 //  {
 //  method: "GET",
 //  headers: {
@@ -6236,7 +6236,7 @@
 //  const lastProgressRef = useRef(new Map());
 
 //  const getApiBaseUrl = () => {
-//  return window.REACT_APP_API_URL || "https://gateway-service-110685455967.asia-south1.run.app";
+//  return window.REACT_APP_API_URL || "https://gateway-service-dot-nexintel-ai-product.el.r.appspot.com";
 //  };
 //  const getAuthToken = () =>
 //  localStorage.getItem("token") || localStorage.getItem("authToken");
@@ -6788,7 +6788,7 @@ const FolderContent = ({ onDocumentClick }) => {
  const lastProgressRef = useRef(new Map());
 
  const getApiBaseUrl = () => {
- return window.REACT_APP_API_URL || "https://gateway-service-110685455967.asia-south1.run.app";
+ return window.REACT_APP_API_URL || "https://gateway-service-dot-nexintel-ai-product.el.r.appspot.com";
  };
  const getAuthToken = () =>
  localStorage.getItem("token") || localStorage.getItem("authToken");

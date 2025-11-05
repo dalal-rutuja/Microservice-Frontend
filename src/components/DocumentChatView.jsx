@@ -92,7 +92,7 @@
 //     return null;
 //   };
 
-//   const API_BASE_URL = 'https://gateway-service-110685455967.asia-south1.run.app'; // Assuming this is consistent
+//   const API_BASE_URL = 'https://gateway-service-dot-nexintel-ai-product.el.r.appspot.com'; // Assuming this is consistent
 
 //   const fetchSecrets = async () => {
 //     try {
@@ -583,7 +583,7 @@ const DocumentChatView = () => {
     return null;
   };
 
-  const API_BASE_URL = 'https://gateway-service-110685455967.asia-south1.run.app'; // Assuming this is consistent
+  const API_BASE_URL = 'https://gateway-service-dot-nexintel-ai-product.el.r.appspot.com'; // Assuming this is consistent
 
   const fetchSecrets = async () => {
     try {

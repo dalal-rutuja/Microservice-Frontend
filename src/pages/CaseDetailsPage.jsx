@@ -295,7 +295,7 @@ const CaseDetailsPage = () => {
       }
 
       // Assuming you have an endpoint to get a single case
-      const response = await fetch(`https://gateway-service-110685455967.asia-south1.run.app/docs/cases/${caseId}`, {
+      const response = await fetch(`https://gateway-service-dot-nexintel-ai-product.el.r.appspot.com/docs/cases/${caseId}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

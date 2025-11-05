@@ -685,7 +685,7 @@ const ChatHistoryPage = () => {
 
         {/* Chat Count + Select */}
         <div className="flex items-center justify-between mb-4 text-sm text-gray-600">
-          <span>{filteredChats.length} chats with JuriNexAi</span>
+          <span>{filteredChats.length} chats with JuriNex</span>
           <button className="text-[#21C1B6] hover:text-[#1AA49B] font-medium">Select</button>
         </div>
 

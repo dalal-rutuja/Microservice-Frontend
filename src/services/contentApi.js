@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const ApiService = axios.create({
-  baseURL: "https://gateway-service-110685455967.asia-south1.run.app/api/content",
+  baseURL: "https://gateway-service-dot-nexintel-ai-product.el.r.appspot.com/api/content",
   withCredentials: false,
 });
 
