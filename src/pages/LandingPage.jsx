@@ -3321,8 +3321,6 @@
 // };
 
 // export default LandingPage;
-
-
 import React, { useRef, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FileText, Upload, Cpu, CheckCircle, Sparkles, ArrowRight, Zap, Lock, TrendingUp, Menu, X } from 'lucide-react';
@@ -3454,7 +3452,14 @@ const LandingPage = () => {
  >
  <div className="flex items-center">
  <span className="text-teal-500 text-3xl font-bold" style={{ color: '#21C1B6' }}>Juri</span>
- <span className="text-gray-800 text-3xl font-bold">Nex</span>
+ <span className="text-gray-800 text-3xl font-bold relative">
+ Nex
+ <span className="absolute text-xs font-normal" style={{ 
+ top: '0', 
+ right: '-0.6em',
+ color: '#6B7280'
+ }}>™</span>
+ </span>
  </div>
  </motion.div>
 
@@ -3649,7 +3654,7 @@ const LandingPage = () => {
  className="text-lg sm:text-xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed"
  variants={itemVariants}
  >
- Work Faster, Practice Smarter<br/> with<br/>{' '}
+ Work Faster, Practice Smarter<br/> with<br/> the{' '}
  <span className="font-semibold inline-flex items-center" style={{ color: '#21C1B6' }}>
  Power of AI
  </span>
@@ -3664,7 +3669,7 @@ const LandingPage = () => {
  whileTap={{ scale: 0.98 }}
  >
  <button 
- 
+ onClick={handleRegister}
  className="group relative text-white font-semibold py-3 px-8 rounded-lg text-base shadow-lg inline-flex items-center overflow-hidden transition-all duration-300"
  style={{ backgroundColor: '#21C1B6' }}
  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1AA49B'}
@@ -3987,7 +3992,7 @@ const LandingPage = () => {
  animate={isBenefitsInView ? { opacity: 1, y: 0 } : {}}
  >
  <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-3">
- Why Choose JuriNex?
+ Why Choose JuriNex<span className="text-xs font-normal text-gray-500 align-top">™</span>?
  </h2>
  <p className="text-base text-gray-600 max-w-2xl mx-auto">
  Powerful features designed for legal professionals
@@ -4044,7 +4049,7 @@ const LandingPage = () => {
  Ready to Transform Your Legal Workflow?
  </h2>
  <p className="text-lg text-white/95 mb-8 max-w-2xl mx-auto">
- Join thousands of legal professionals who trust JuriNex
+ Join thousands of legal professionals who trust JuriNex<span className="text-xs align-top">™</span>
  </p>
  <motion.button
  whileHover={{ scale: 1.05 }}
@@ -4067,7 +4072,13 @@ const LandingPage = () => {
  <div className="flex items-center mb-4">
  <div className="flex items-center">
  <span className="text-teal-500 text-2xl font-bold" style={{ color: '#21C1B6' }}>Juri</span>
- <span className="text-white text-2xl font-bold">Nex</span>
+ <span className="text-white text-2xl font-bold relative">
+ Nex
+ <span className="absolute text-xs font-normal text-gray-400" style={{ 
+ top: '0', 
+ right: '-0.5em'
+ }}>™</span>
+ </span>
  </div>
  </div>
  <p className="text-gray-400 text-sm leading-relaxed">
@@ -4103,7 +4114,7 @@ const LandingPage = () => {
  </div>
 
  <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
- <p>&copy; 2025 JuriNex. All rights reserved.</p>
+ <p>&copy; 2025 JuriNex<span className="text-xs align-top"></span>. All rights reserved.</p>
  </div>
  </div>
  </footer>
