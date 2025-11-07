@@ -175,7 +175,7 @@ const CategoryStep = ({ caseData, setCaseData }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const API_BASE_URL = 'https://document-service-dot-nexintel-ai-product.el.r.appspot.com/api/content';
+  const API_BASE_URL = 'https://document-service-110685455967.asia-south1.run.app/api/content';
 
   // Fetch case types on mount
   useEffect(() => {

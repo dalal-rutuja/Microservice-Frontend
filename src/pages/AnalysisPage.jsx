@@ -16988,7 +16988,7 @@ const AnalysisPage = () => {
   const simulatedProgressIntervalsRef = useRef({});
 
   // API Configuration
-  const API_BASE_URL = 'https://gateway-service-dot-nexintel-ai-product.el.r.appspot.com';
+  const API_BASE_URL = 'https://gateway-service-110685455967.asia-south1.run.app';
 
   const getAuthToken = () => {
     const tokenKeys = [
@@ -18283,7 +18283,7 @@ const AnalysisPage = () => {
   // Function to get proper placeholder text based on current state
   const getInputPlaceholder = () => {
     if (isSecretPromptSelected) {
-      return `You selected ${activeDropdown}...`;
+      return `Analysis : ${activeDropdown}...`;
     }
     if (!fileId) {
       return 'Upload a document to get started';

@@ -73,7 +73,7 @@ export const AnalysisPageProvider = ({
   const animationFrameRef = useRef(null);
 
   // API CONFIG
-  const API_BASE_URL = 'https://gateway-service-dot-nexintel-ai-product.el.r.appspot.com';
+  const API_BASE_URL = 'https://gateway-service-110685455967.asia-south1.run.app';
   
   // ✅ FUNCTION 1: getAuthToken
   const getAuthToken = () => {
