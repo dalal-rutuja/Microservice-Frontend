@@ -3321,11 +3321,15 @@
 // };
 
 // export default LandingPage;
+
+
+
 import React, { useRef, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FileText, Upload, Cpu, CheckCircle, Sparkles, ArrowRight, Zap, Lock, TrendingUp, Menu, X } from 'lucide-react';
 import JuriNexGavelLogo from '../assets/JuriNex_gavel_logo.png';
 import { motion, useScroll, useTransform, useInView } from 'framer-motion';
+import Footer from '../components/Footer';
 
 const LandingPage = () => {
  const navigate = useNavigate();
@@ -4065,7 +4069,7 @@ const LandingPage = () => {
  </section>
 
  {/* Footer */}
- <footer className="bg-gray-900 text-gray-300 py-12">
+ {/* <footer className="bg-gray-900 text-gray-300 py-12">
  <div className="container mx-auto px-4 sm:px-6 lg:px-8">
  <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
  <div>
@@ -4117,7 +4121,10 @@ const LandingPage = () => {
  <p>&copy; 2025 JuriNex<span className="text-xs align-top"></span>. All rights reserved.</p>
  </div>
  </div>
- </footer>
+ </footer> */}
+
+
+ <Footer/>
  </div>
  </div>
  );
