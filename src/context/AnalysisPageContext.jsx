@@ -73,7 +73,7 @@ export const AnalysisPageProvider = ({
   const animationFrameRef = useRef(null);
 
   // API CONFIG
-  const API_BASE_URL = 'https://gateway-service-110685455967.asia-south1.run.app';
+  const API_BASE_URL = 'http://localhost:5000';
   
   // ✅ FUNCTION 1: getAuthToken
   const getAuthToken = () => {
@@ -186,8 +186,21 @@ export const AnalysisPageProvider = ({
 
       const response = await fetch(`${API_BASE_URL}/files/batch-upload`, { method: 'POST', headers, body: formData });
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Upload failed with status ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || errorData.message || `Upload failed with status ${response.status}`;
+        
+        // Check for subscription-related errors
+        const isSubscriptionError = response.status === 500 || 
+          errorMessage.toLowerCase().includes('subscription') ||
+          errorMessage.toLowerCase().includes('insufficient') ||
+          errorMessage.toLowerCase().includes('no plan') ||
+          errorMessage.toLowerCase().includes('plan required');
+        
+        const error = new Error(errorMessage);
+        if (isSubscriptionError) {
+          error.isSubscriptionError = true;
+        }
+        throw error;
       }
 
       const data = await response.json();
@@ -245,10 +258,19 @@ export const AnalysisPageProvider = ({
       }
     } catch (error) {
       console.error('Batch upload error:', error);
-      setError(`Batch upload failed: ${error.message}`);
-      setBatchUploads(prev => prev.map(upload => ({
-        ...upload, status: 'failed', error: error.message
-      })));
+      
+      // Check if this is a subscription error
+      if (error.isSubscriptionError) {
+        setError('Subscription required: You need an active subscription plan to upload and process documents. Please visit the Subscription Plans page to continue.');
+        setBatchUploads(prev => prev.map(upload => ({
+          ...upload, status: 'failed', error: 'Subscription required'
+        })));
+      } else {
+        setError(`Batch upload failed: ${error.message}`);
+        setBatchUploads(prev => prev.map(upload => ({
+          ...upload, status: 'failed', error: error.message
+        })));
+      }
     } finally {
       setIsUploading(false);
     }

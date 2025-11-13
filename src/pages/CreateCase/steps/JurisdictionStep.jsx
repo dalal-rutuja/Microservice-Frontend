@@ -206,7 +206,7 @@
 //   const [loading, setLoading] = useState(false);
 //   const [error, setError] = useState(null);
 
-//   const API_BASE_URL = 'https://document-service-110685455967.asia-south1.run.app/api/content';
+//   const API_BASE_URL = 'http://localhost:5002/api/content';
 
 //   // Fetch courts on mount
 //   useEffect(() => {
@@ -503,7 +503,7 @@ const JurisdictionStep = ({ caseData, setCaseData }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const API_BASE_URL = 'https://document-service-110685455967.asia-south1.run.app/api/content';
+  const API_BASE_URL = 'http://localhost:5002/api/content';
 
   // Fetch courts on mount
   useEffect(() => {
@@ -512,10 +512,11 @@ const JurisdictionStep = ({ caseData, setCaseData }) => {
 
   // Fetch court details when court is selected
   useEffect(() => {
-    if (caseData.courtName) {
-      fetchCourtDetails(caseData.courtName);
+    const courtId = caseData.courtId || caseData.courtName;
+    if (courtId) {
+      fetchCourtDetails(courtId);
     }
-  }, [caseData.courtName]);
+  }, [caseData.courtId, caseData.courtName]);
 
   const fetchCourts = async () => {
     try {
@@ -657,21 +658,7 @@ const JurisdictionStep = ({ caseData, setCaseData }) => {
 
         {/* Jurisdiction and State */}
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Jurisdiction
-            </label>
-            <input
-              type="text"
-              value={caseData.jurisdiction || ''}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 bg-gray-100 outline-none"
-              placeholder="Auto-filled"
-              disabled
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Auto-filled based on selected court
-            </p>
-          </div>
+
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -685,6 +672,22 @@ const JurisdictionStep = ({ caseData, setCaseData }) => {
               disabled
             />
             <p className="text-xs text-gray-500 mt-1">Auto-filled</p>
+          </div>
+
+            <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Jurisdiction
+            </label>
+            <input
+              type="text"
+              value={caseData.jurisdiction || ''}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 bg-gray-100 outline-none"
+              placeholder="Auto-filled"
+              disabled
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Auto-filled based on selected court
+            </p>
           </div>
         </div>
 

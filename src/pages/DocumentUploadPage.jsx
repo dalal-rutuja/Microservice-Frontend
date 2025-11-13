@@ -274,34 +274,159 @@
 
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, FolderOpen, Calendar } from 'lucide-react';
+import { Search, Plus, FolderOpen, Calendar, FileEdit, Trash2 } from 'lucide-react';
 import { FileManagerContext } from '../context/FileManagerContext';
 import CreateFolderModal from '../components/FolderBrowser/CreateFolderModal';
 import CaseCreationFlow from './CreateCase/CaseCreationFlow';
+
+// Helper to decode JWT and get user ID
+const getUserIdFromToken = () => {
+  try {
+    const token = localStorage.getItem('token') || 
+                  localStorage.getItem('authToken') || 
+                  localStorage.getItem('access_token') || 
+                  localStorage.getItem('jwt');
+    if (!token) return null;
+    
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    
+    const payload = parts[1];
+    const padded = payload + '='.repeat((4 - payload.length % 4) % 4);
+    const decoded = atob(padded);
+    const parsed = JSON.parse(decoded);
+    
+    const userId = parsed.id || parsed.userId || parsed.user_id || parsed.sub;
+    const userIdInt = parseInt(userId, 10);
+    return isNaN(userIdInt) || userIdInt <= 0 ? null : userIdInt;
+  } catch (error) {
+    console.error('Error extracting user ID:', error);
+    return null;
+  }
+};
 
 const DocumentUploadPage = () => {
   const { folders, loadFoldersAndFiles, createFolder, loading, error } = useContext(FileManagerContext);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('activity');
+  const [filterBy, setFilterBy] = useState('all'); // 'all', 'drafts', 'projects'
   const [showCaseFlow, setShowCaseFlow] = useState(false);
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [caseData, setCaseData] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [draftData, setDraftData] = useState(null); // Store draft data
+  const [loadingDraft, setLoadingDraft] = useState(false);
+  const [openDraftDirectly, setOpenDraftDirectly] = useState(false); // Track if draft was clicked from folder
   const foldersPerPage = 6; // Number of folders per page
   const navigate = useNavigate();
 
   useEffect(() => {
     loadFoldersAndFiles();
+    loadDraft(); // Load draft on page load
   }, [loadFoldersAndFiles]);
 
+  // Function to load draft from API
+  const loadDraft = async () => {
+    const userId = getUserIdFromToken();
+    if (!userId) return;
+
+    setLoadingDraft(true);
+    try {
+      const token = localStorage.getItem('token') || 
+                    localStorage.getItem('authToken') || 
+                    localStorage.getItem('access_token') || 
+                    localStorage.getItem('jwt');
+      
+      const response = await fetch(`http://localhost:5002/api/content/case-draft/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.status === 404) {
+        setDraftData(null);
+        return;
+      }
+
+      if (response.ok) {
+        const result = await response.json();
+        const parsedDraft = {
+          ...result,
+          draft_data: typeof result.draft_data === 'string' 
+            ? JSON.parse(result.draft_data) 
+            : result.draft_data
+        };
+        setDraftData(parsedDraft);
+      }
+    } catch (error) {
+      console.error('Error loading draft:', error);
+    } finally {
+      setLoadingDraft(false);
+    }
+  };
+
   const handleStartCaseFlow = () => {
+    setOpenDraftDirectly(false); // New case, no draft
     setShowCaseFlow(true);
+  };
+
+  const handleDraftClick = () => {
+    // Open case creation flow with draft data loaded directly (skip popup)
+    setOpenDraftDirectly(true);
+    setShowCaseFlow(true);
+  };
+
+  const handleDeleteDraft = async (e) => {
+    e.stopPropagation(); // Prevent opening the draft when clicking delete
+    
+    const confirmDelete = window.confirm('Are you sure you want to delete this draft? This action cannot be undone.');
+    if (!confirmDelete) return;
+
+    try {
+      const token = localStorage.getItem('token') || 
+                    localStorage.getItem('authToken') || 
+                    localStorage.getItem('access_token') || 
+                    localStorage.getItem('jwt_token');
+      if (!token) {
+        console.error('No auth token found');
+        return;
+      }
+
+      const userId = getUserIdFromToken();
+      if (!userId) {
+        console.error('Could not extract user ID from token');
+        return;
+      }
+
+      const response = await fetch(`http://localhost:5002/api/content/case-draft/${userId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        console.log('✅ Draft deleted successfully');
+        // Reload the draft data to update the UI
+        loadDraft();
+      } else {
+        console.error('Failed to delete draft:', response.statusText);
+        alert('Failed to delete draft. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error deleting draft:', error);
+      alert('An error occurred while deleting the draft.');
+    }
   };
 
   const handleCaseFlowComplete = (data) => {
     setCaseData(data);
     setShowCaseFlow(false);
     setIsCreatingFolder(true);
+    // Reload drafts after case creation (draft should be deleted)
+    loadDraft();
   };
 
   const handleCreateFolder = async (folderName) => {
@@ -319,12 +444,17 @@ const DocumentUploadPage = () => {
   });
 
   const filtered = sorted.filter((f) => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  
+  // Apply filter for drafts/projects
+  const shouldShowDraft = filterBy === 'all' || filterBy === 'drafts';
+  const shouldShowProjects = filterBy === 'all' || filterBy === 'projects';
+  const projectsToShow = shouldShowProjects ? filtered : [];
 
   // Pagination logic
-  const totalPages = Math.ceil(filtered.length / foldersPerPage);
+  const totalPages = Math.ceil(projectsToShow.length / foldersPerPage);
   const indexOfLastFolder = currentPage * foldersPerPage;
   const indexOfFirstFolder = indexOfLastFolder - foldersPerPage;
-  const currentFolders = filtered.slice(indexOfFirstFolder, indexOfLastFolder);
+  const currentFolders = projectsToShow.slice(indexOfFirstFolder, indexOfLastFolder);
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -335,7 +465,12 @@ const DocumentUploadPage = () => {
     return (
       <CaseCreationFlow
         onComplete={handleCaseFlowComplete}
-        onCancel={() => setShowCaseFlow(false)}
+        onCancel={() => {
+          setShowCaseFlow(false);
+          setOpenDraftDirectly(false); // Reset flag
+          loadDraft(); // Reload draft when canceling (in case it was auto-saved)
+        }}
+        skipDraftPrompt={openDraftDirectly} // Pass flag to skip popup
       />
     );
   }
@@ -395,6 +530,21 @@ const DocumentUploadPage = () => {
               />
             </div>
             <div className="flex items-center gap-2">
+              <span className="text-gray-700 font-medium text-sm whitespace-nowrap">Filter by</span>
+              <select
+                value={filterBy}
+                onChange={(e) => {
+                  setFilterBy(e.target.value);
+                  setCurrentPage(1); // Reset to first page when filter changes
+                }}
+                className="px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#21C1B6] focus:border-transparent cursor-pointer transition-all text-black"
+              >
+                <option value="all">All</option>
+                <option value="drafts">Drafts</option>
+                <option value="projects">Projects</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
               <span className="text-gray-700 font-medium text-sm whitespace-nowrap">Sort by</span>
               <select
                 value={sortBy}
@@ -423,12 +573,14 @@ const DocumentUploadPage = () => {
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Projects</h3>
             <p className="text-red-600">{error}</p>
           </div>
-        ) : filtered.length === 0 ? (
+        ) : (!shouldShowDraft || !draftData || !draftData.draft_data) && projectsToShow.length === 0 ? (
           <div className="text-center py-12">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-3">
               <FolderOpen className="w-8 h-8 text-gray-400" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No projects found</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              {filterBy === 'drafts' ? 'No drafts found' : filterBy === 'projects' ? 'No projects found' : 'No items found'}
+            </h3>
             <p className="text-gray-600 mb-4">
               {searchQuery ? 'Try adjusting your search terms' : 'Get started by creating your first case'}
             </p>
@@ -448,6 +600,58 @@ const DocumentUploadPage = () => {
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Draft Folder - Show if draft exists and filter allows */}
+              {shouldShowDraft && draftData && draftData.draft_data && (
+                <div
+                  key="draft-folder"
+                  className="group bg-gradient-to-br from-teal-50 to-cyan-50 border-2 border-[#21C1B6] rounded-lg p-4 shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer transform hover:-translate-y-1 relative"
+                  onClick={handleDraftClick}
+                >
+                  <div className="absolute top-2 right-2 flex items-center gap-2">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#21C1B6] text-white">
+                      Draft
+                    </span>
+                    <button
+                      onClick={handleDeleteDraft}
+                      className="p-1.5 rounded-md bg-red-100 text-red-600 hover:bg-red-200 hover:text-red-700 transition-all duration-200 opacity-0 group-hover:opacity-100"
+                      title="Delete draft"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="flex items-start justify-between mb-3">
+                    <div
+                      className="flex items-center justify-center w-10 h-10 rounded-md transition-all duration-200"
+                      style={{ backgroundColor: '#E6F9F7' }}
+                    >
+                      <FileEdit
+                        className="w-5 h-5 transition-all duration-200"
+                        style={{ color: '#21C1B6' }}
+                      />
+                    </div>
+                  </div>
+
+                  <h3 className="text-base font-semibold text-gray-900 mb-2 group-hover:text-[#21C1B6] transition-colors line-clamp-2">
+                    {draftData.draft_data.caseTitle || 'Untitled Case Draft'}
+                  </h3>
+
+                  <div className="flex items-center gap-1 text-xs text-gray-600">
+                    <Calendar className="w-3 h-3" />
+                    <span>
+                      Updated{' '}
+                      {draftData.updated_at
+                        ? new Date(draftData.updated_at).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })
+                        : '—'}
+                    </span>
+                  </div>
+                </div>
+              )}
+              
+              {/* Regular Folders */}
               {currentFolders.map((folder) => (
                 <div
                   key={folder.id}

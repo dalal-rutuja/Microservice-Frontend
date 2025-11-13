@@ -1489,6 +1489,59 @@ const UserProfileMenu = ({ userData, navigate, onLogout }) => {
 
   const { logout: authLogout } = useAuth(); // Get logout from AuthContext
 
+  // Fetch plan from API
+  const fetchPlanFromAPI = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.log('⚠️ No token found, skipping plan fetch');
+        return null;
+      }
+
+      console.log('🔄 Fetching plan from API...');
+      const response = await fetch('http://localhost:5000/user-resources/plan-details', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        console.error('❌ Failed to fetch plan from API:', response.status);
+        return null;
+      }
+
+      const data = await response.json();
+      console.log('✅ Fetched plan data from API:', data);
+
+      const activePlan = data.activePlan || data.userSubscription || data.subscription;
+      if (activePlan && activePlan.plan_name) {
+        const planName = activePlan.plan_name || activePlan.planName || activePlan.name;
+        console.log('✅ Plan name from API:', planName);
+        
+        // Update localStorage with the fetched plan
+        try {
+          const existingUserInfo = localStorage.getItem('userInfo');
+          const userInfoData = existingUserInfo ? JSON.parse(existingUserInfo) : {};
+          userInfoData.plan = planName;
+          userInfoData.lastFetched = new Date().toISOString();
+          localStorage.setItem('userInfo', JSON.stringify(userInfoData));
+          console.log('✅ Updated localStorage with plan from API:', planName);
+        } catch (storageError) {
+          console.error('⚠️ Failed to update localStorage:', storageError);
+        }
+
+        return planName;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('❌ Error fetching plan from API:', error);
+      return null;
+    }
+  }, []);
+
   // Helper function to safely access localStorage
   const getFromStorage = useCallback((key) => {
     try {
@@ -1663,8 +1716,13 @@ const UserProfileMenu = ({ userData, navigate, onLogout }) => {
   }, []);
 
   // Main function to update user info
-  const updateUserInfo = useCallback(() => {
+  const updateUserInfo = useCallback(async () => {
     setIsLoading(true);
+    
+    console.log('🔍 UserProfileMenu: Starting updateUserInfo...');
+    console.log('📦 Current localStorage keys:', Object.keys(localStorage));
+    console.log('📦 localStorage["userInfo"]:', localStorage.getItem('userInfo'));
+    console.log('📦 localStorage["user"]:', localStorage.getItem('user'));
     
     let userInfo = null;
     let planInfo = null;
@@ -1685,9 +1743,13 @@ const UserProfileMenu = ({ userData, navigate, onLogout }) => {
     }
 
     planInfo = getFromStorage('userInfo');
+    console.log('🔍 Retrieved planInfo from localStorage["userInfo"]:', planInfo);
+    
     if (planInfo && planInfo.plan) {
       console.log('✅ Found plan data in localStorage["userInfo"]:', planInfo);
+      console.log('📊 Plan value:', planInfo.plan);
     } else {
+      console.log('⚠️ No plan in localStorage["userInfo"], checking other keys...');
       const planKeys = ['plan', 'subscription', 'userPlan', 'planInfo', 'userSubscription'];
       for (const key of planKeys) {
         const data = getFromStorage(key);
@@ -1702,6 +1764,16 @@ const UserProfileMenu = ({ userData, navigate, onLogout }) => {
             break;
           }
         }
+      }
+    }
+
+    // If no plan found in localStorage, fetch from API
+    if (!planInfo || !planInfo.plan) {
+      console.log('🌐 No plan in localStorage, fetching from API...');
+      const apiPlan = await fetchPlanFromAPI();
+      if (apiPlan) {
+        planInfo = { plan: apiPlan };
+        console.log('✅ Got plan from API:', apiPlan);
       }
     }
 
@@ -1761,7 +1833,7 @@ const UserProfileMenu = ({ userData, navigate, onLogout }) => {
     }
     
     setIsLoading(false);
-  }, [getFromStorage, generateInitials, getDisplayNameFromEmail, userData]);
+  }, [getFromStorage, generateInitials, getDisplayNameFromEmail, userData, fetchPlanFromAPI]);
 
   useEffect(() => {
     updateUserInfo();

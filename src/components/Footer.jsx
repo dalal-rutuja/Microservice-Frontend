@@ -88,7 +88,7 @@ const Footer = () => {
             >
               <div className="flex items-center">
                 <span className="text-teal-500 text-2xl font-bold" style={{ color: '#21C1B6' }}>Juri</span>
-                <span className="text-white text-2xl font-bold">NexAI</span>
+                <span className="text-white text-2xl font-bold">Nex</span>
               </div>
             </Link>
             <p className="text-gray-400 text-sm leading-relaxed text-center sm:text-left">

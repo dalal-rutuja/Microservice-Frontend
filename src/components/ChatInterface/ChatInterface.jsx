@@ -373,7 +373,7 @@
 //   const dropdownRef = useRef(null);
 
 //   // API Configuration
-//   const API_BASE_URL = "https://gateway-service-110685455967.asia-south1.run.app";
+//   const API_BASE_URL = "http://localhost:5000";
 
 //   const getAuthToken = () => {
 //     const tokenKeys = [
@@ -1024,7 +1024,7 @@
 //   const dropdownRef = useRef(null);
 
 //   // API Configuration
-//   const API_BASE_URL = "https://gateway-service-110685455967.asia-south1.run.app";
+//   const API_BASE_URL = "http://localhost:5000";
 
 //   const getAuthToken = () => {
 //     const tokenKeys = [
@@ -1812,7 +1812,7 @@
 //   const dropdownRef = useRef(null);
 
 //   // API Configuration
-//   const API_BASE_URL = "https://gateway-service-110685455967.asia-south1.run.app";
+//   const API_BASE_URL = "http://localhost:5000";
 
 //   const getAuthToken = () => {
 //     const tokenKeys = [
@@ -2573,7 +2573,7 @@
 //   const dropdownRef = useRef(null);
 
 //   // API Configuration
-//   const API_BASE_URL = "https://gateway-service-110685455967.asia-south1.run.app";
+//   const API_BASE_URL = "http://localhost:5000";
 
 //   const getAuthToken = () => {
 //     const tokenKeys = [
@@ -3537,7 +3537,7 @@
 //   const dropdownRef = useRef(null);
 
 //   // API Configuration
-//   const API_BASE_URL = "https://gateway-service-110685455967.asia-south1.run.app";
+//   const API_BASE_URL = "http://localhost:5000";
 
 //   const getAuthToken = () => {
 //     const tokenKeys = [
@@ -4288,7 +4288,7 @@
 //  const dropdownRef = useRef(null);
 
 //  // API Configuration
-//  const API_BASE_URL = "https://gateway-service-110685455967.asia-south1.run.app";
+//  const API_BASE_URL = "http://localhost:5000";
 
 //  const getAuthToken = () => {
 //  const tokenKeys = [
@@ -5044,7 +5044,7 @@
 //  const animationIntervalRef = useRef(null);
 
 //  // API Configuration
-//  const API_BASE_URL = "https://gateway-service-110685455967.asia-south1.run.app";
+//  const API_BASE_URL = "http://localhost:5000";
 
 //  const getAuthToken = () => {
 //  const tokenKeys = [
@@ -5861,7 +5861,7 @@
 //   const animationIntervalRef = useRef(null);
 
 //   // API Configuration
-//   const API_BASE_URL = "https://gateway-service-110685455967.asia-south1.run.app";
+//   const API_BASE_URL = "http://localhost:5000";
 //   const getAuthToken = () => {
 //     const tokenKeys = [
 //       "authToken",
@@ -6602,7 +6602,7 @@
 //   const animationFrameRef = useRef(null);
 
 //   // API Configuration
-//   const API_BASE_URL = "https://gateway-service-110685455967.asia-south1.run.app";
+//   const API_BASE_URL = "http://localhost:5000";
 //   const getAuthToken = () => {
 //     const tokenKeys = [
 //       "authToken",
@@ -7353,7 +7353,7 @@
 //   const markdownOutputRef = useRef(null);
 
 //   // API Configuration
-//   const API_BASE_URL = "https://gateway-service-110685455967.asia-south1.run.app";
+//   const API_BASE_URL = "http://localhost:5000";
 //   const getAuthToken = () => {
 //     const tokenKeys = [
 //       "authToken",
@@ -8329,7 +8329,7 @@
 //   const markdownOutputRef = useRef(null);
 
 //   // API Configuration
-//   const API_BASE_URL = "https://gateway-service-110685455967.asia-south1.run.app";
+//   const API_BASE_URL = "http://localhost:5000";
 //   const getAuthToken = () => {
 //     const tokenKeys = [
 //       "authToken",
@@ -9306,7 +9306,7 @@ const ChatInterface = () => {
   const markdownOutputRef = useRef(null);
 
   // API Configuration
-  const API_BASE_URL = "https://gateway-service-110685455967.asia-south1.run.app";
+  const API_BASE_URL = "http://localhost:5000";
   const getAuthToken = () => {
     const tokenKeys = [
       "authToken",

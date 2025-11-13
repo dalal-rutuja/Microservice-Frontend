@@ -1264,7 +1264,7 @@ import html2pdf from 'html2pdf.js';
 const api = {
  getUserPlanDetails: async () => {
  const token = localStorage.getItem('token');
- const response = await fetch('https://gateway-service-110685455967.asia-south1.run.app/user-resources/plan-details', {
+ const response = await fetch('http://localhost:5000/user-resources/plan-details', {
  headers: {
  'Authorization': `Bearer ${token}`,
  'Content-Type': 'application/json'
@@ -1276,7 +1276,7 @@ const api = {
  },
  fetchPaymentHistory: async () => {
  const token = localStorage.getItem('token');
- const response = await fetch('https://gateway-service-110685455967.asia-south1.run.app/payments/history', {
+ const response = await fetch('http://localhost:5000/payments/history', {
  headers: {
  'Authorization': `Bearer ${token}`,
  'Content-Type': 'application/json'
@@ -1288,7 +1288,7 @@ const api = {
  },
  getUserTokenUsage: async (userId) => {
  const token = localStorage.getItem('token');
- const response = await fetch(`https://gateway-service-110685455967.asia-south1.run.app/files/user-usage-and-plan/${userId}`, {
+ const response = await fetch(`http://localhost:5000/files/user-usage-and-plan/${userId}`, {
  headers: {
  'Authorization': `Bearer ${token}`,
  'Content-Type': 'application/json'
@@ -1336,6 +1336,24 @@ const BillingAndUsagePage = () => {
  ...activePlan
  };
  setUserSubscription(normalizedSubscription);
+ 
+ // Update localStorage['userInfo'] with the plan information so UserProfileMenu displays it correctly
+ try {
+ const existingUserInfo = localStorage.getItem('userInfo');
+ const userInfoData = existingUserInfo ? JSON.parse(existingUserInfo) : {};
+ 
+ // Update the plan field
+ userInfoData.plan = normalizedSubscription.plan_name || 'Free plan';
+ 
+ // Store the updated userInfo back to localStorage
+ localStorage.setItem('userInfo', JSON.stringify(userInfoData));
+ console.log('✅ Updated localStorage["userInfo"] with plan:', userInfoData.plan);
+ 
+ // Dispatch event to notify UserProfileMenu to update
+ window.dispatchEvent(new CustomEvent('userInfoUpdated'));
+ } catch (storageError) {
+ console.error('Error updating localStorage with plan info:', storageError);
+ }
  }
 
  const payment = data.latestPayment || data.lastPayment;
@@ -1352,6 +1370,21 @@ const BillingAndUsagePage = () => {
  plan_name: payment.plan_name || payment.description,
  ...payment
  });
+ 
+ // Also update localStorage with payment info
+ try {
+ const existingUserInfo = localStorage.getItem('userInfo');
+ const userInfoData = existingUserInfo ? JSON.parse(existingUserInfo) : {};
+ userInfoData.lastPayment = {
+ id: payment.razorpay_payment_id || payment.id,
+ amount: payment.amount,
+ status: payment.status,
+ date: payment.payment_date
+ };
+ localStorage.setItem('userInfo', JSON.stringify(userInfoData));
+ } catch (storageError) {
+ console.error('Error updating localStorage with payment info:', storageError);
+ }
  }
  } catch (err) {
  setError(`Failed to fetch plan data: ${err.message}`);
