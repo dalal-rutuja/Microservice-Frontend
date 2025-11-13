@@ -2,7 +2,7 @@
 
 // // src/services/api.js
 // const API_BASE_URL =
-//   import.meta.env.VITE_APP_API_URL || "http://localhost:5000";
+//   import.meta.env.VITE_APP_API_URL || "https://gateway-service-110685455967.asia-south1.run.app";
 
 // class ApiService {
 //   constructor() {
@@ -121,7 +121,7 @@
 //   }
 
 //   async verifyOtp(email, otp) {
-//     const response = await this.request("http://localhost:5000/auth/api/auth/verify-otp", {
+//     const response = await this.request("https://gateway-service-110685455967.asia-south1.run.app/auth/api/auth/verify-otp", {
 //       method: "POST",
 //       body: JSON.stringify({ email, otp }),
 //     });
@@ -180,7 +180,7 @@
 //   }
 
 //   async getDraftingTemplates() {
-//     return this.request("http://localhost:5000/drafting");
+//     return this.request("https://gateway-service-110685455967.asia-south1.run.app/drafting");
 //   }
 
 //   // ========================
@@ -413,7 +413,7 @@
 
 // // src/services/api.js
 // const API_BASE_URL =
-//   import.meta.env.VITE_APP_API_URL || "http://localhost:5000";
+//   import.meta.env.VITE_APP_API_URL || "https://gateway-service-110685455967.asia-south1.run.app";
 
 // class ApiService {
 //   constructor() {
@@ -543,7 +543,7 @@
 //   }
 
 //   async verifyOtp(email, otp) {
-//     const response = await this.request("http://localhost:5000/auth/api/auth/verify-otp", {
+//     const response = await this.request("https://gateway-service-110685455967.asia-south1.run.app/auth/api/auth/verify-otp", {
 //       method: "POST",
 //       body: JSON.stringify({ email, otp }),
 //     });
@@ -603,7 +603,7 @@
 //   }
 
 //   async getDraftingTemplates() {
-//     return this.request("http://localhost:5000/drafting");
+//     return this.request("https://gateway-service-110685455967.asia-south1.run.app/drafting");
 //   }
 
 //   // ========================
@@ -838,7 +838,7 @@
 
 // // src/services/api.js
 // const API_BASE_URL =
-//   import.meta.env.VITE_APP_API_URL || "http://localhost:5000";
+//   import.meta.env.VITE_APP_API_URL || "https://gateway-service-110685455967.asia-south1.run.app";
 
 // class ApiService {
 //   constructor() {
@@ -966,7 +966,7 @@
 //   }
 
 //   async verifyOtp(email, otp) {
-//     const response = await this.request("http://localhost:5000/auth/api/auth/verify-otp", {
+//     const response = await this.request("https://gateway-service-110685455967.asia-south1.run.app/auth/api/auth/verify-otp", {
 //       method: "POST",
 //       body: JSON.stringify({ email, otp }),
 //     });
@@ -1025,7 +1025,7 @@
 //   }
 
 //   async getDraftingTemplates() {
-//     return this.request("http://localhost:5000/drafting");
+//     return this.request("https://gateway-service-110685455967.asia-south1.run.app/drafting");
 //   }
 
 //   // ========================
@@ -1259,7 +1259,7 @@
 
 // src/services/api.js
 const API_BASE_URL =
-  import.meta.env.VITE_APP_API_URL || "http://localhost:5000";
+  import.meta.env.VITE_APP_API_URL || "https://gateway-service-110685455967.asia-south1.run.app";
 
 class ApiService {
   constructor() {
@@ -1387,7 +1387,7 @@ class ApiService {
   }
 
   async verifyOtp(email, otp) {
-    const response = await this.request("http://localhost:5000/auth/api/auth/verify-otp", {
+    const response = await this.request("https://gateway-service-110685455967.asia-south1.run.app/auth/api/auth/verify-otp", {
       method: "POST",
       body: JSON.stringify({ email, otp }),
     });
@@ -1446,7 +1446,7 @@ class ApiService {
   }
 
   async getDraftingTemplates() {
-    return this.request("http://localhost:5000/drafting");
+    return this.request("https://gateway-service-110685455967.asia-south1.run.app/drafting");
   }
 
   // ========================

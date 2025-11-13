@@ -284,7 +284,7 @@
 //   const simulatedProgressIntervalsRef = useRef({});
 
 //   // API Configuration
-//   const API_BASE_URL = 'http://localhost:5000';
+//   const API_BASE_URL = 'https://gateway-service-110685455967.asia-south1.run.app';
 
 //   const getAuthToken = () => {
 //     const tokenKeys = [
@@ -2450,7 +2450,7 @@
 //   const batchPollingIntervalsRef = useRef({});
 
 //   // API Configuration
-//   const API_BASE_URL = 'http://localhost:5000';
+//   const API_BASE_URL = 'https://gateway-service-110685455967.asia-south1.run.app';
 
 //   const getAuthToken = () => {
 //     const tokenKeys = [
@@ -4060,7 +4060,7 @@
 //   const simulatedProgressIntervalsRef = useRef({});
 
 //   // API Configuration
-//   const API_BASE_URL = 'http://localhost:5000';
+//   const API_BASE_URL = 'https://gateway-service-110685455967.asia-south1.run.app';
 
 //   const getAuthToken = () => {
 //     const tokenKeys = [
@@ -6451,7 +6451,7 @@ const AnalysisPage = () => {
   const simulatedProgressIntervalsRef = useRef({});
 
   // API Configuration
-  const API_BASE_URL = 'http://localhost:5000';
+  const API_BASE_URL = 'https://gateway-service-110685455967.asia-south1.run.app';
 
   const getAuthToken = () => {
     const tokenKeys = [

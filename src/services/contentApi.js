@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const ApiService = axios.create({
-  baseURL: "http://localhost:5000/api/content",
+  baseURL: "https://gateway-service-110685455967.asia-south1.run.app/api/content",
   withCredentials: false,
 });
 
