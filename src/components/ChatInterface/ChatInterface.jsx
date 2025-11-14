@@ -2,6 +2,30 @@
 
 
 
+import React, { useState, useEffect, useContext, useRef, useMemo } from "react";
+import { FileManagerContext } from "../../context/FileManagerContext";
+import documentApi from "../../services/documentApi";
+import {
+  Plus,
+  Search,
+  BookOpen,
+  ChevronDown,
+  MoreVertical,
+  MessageSquare,
+  Loader2,
+  Send,
+  Copy,
+  Check,
+  Square,
+} from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { SidebarContext } from "../../context/SidebarContext";
+import DownloadPdf from "../DownloadPdf/DownloadPdf";
+import "../../styles/ChatInterface.css";
+
+// Previous commented code below
+
 // import React, { useState, useEffect, useContext, useRef } from "react";
 // import { FileManagerContext } from "../../context/FileManagerContext";
 // import documentApi from "../../services/documentApi";
@@ -9252,28 +9276,6 @@
 
 
 
-import React, { useState, useEffect, useContext, useRef } from "react";
-import { FileManagerContext } from "../../context/FileManagerContext";
-import documentApi from "../../services/documentApi";
-import {
-  Plus,
-  Search,
-  BookOpen,
-  ChevronDown,
-  MoreVertical,
-  MessageSquare,
-  Loader2,
-  Send,
-  Copy,
-  Check,
-  Square,
-} from "lucide-react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import { SidebarContext } from "../../context/SidebarContext";
-import DownloadPdf from "../DownloadPdf/DownloadPdf";
-import "../../styles/ChatInterface.css";
-
 const ChatInterface = () => {
   const {
     selectedFolder,
@@ -9300,10 +9302,29 @@ const ChatInterface = () => {
   const [isSecretPromptSelected, setIsSecretPromptSelected] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [needsHorizontalScroll, setNeedsHorizontalScroll] = useState(false);
+  const [scrollbarWidth, setScrollbarWidth] = useState(0);
+  const [isSmallScreen, setIsSmallScreen] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.innerWidth < 1024;
+  });
+
+  const responseHasTable = useMemo(() => {
+    if (!animatedResponseContent) return false;
+    const htmlTablePattern = /<table/i.test(animatedResponseContent);
+    const markdownTablePattern = /(^|\n)\s*\|.+\|\s*($|\n)/.test(animatedResponseContent);
+    return htmlTablePattern || markdownTablePattern;
+  }, [animatedResponseContent]);
+
+  const shouldShowHorizontalScrollbar = useMemo(() => {
+    return isSmallScreen && responseHasTable && needsHorizontalScroll;
+  }, [isSmallScreen, responseHasTable, needsHorizontalScroll]);
   const responseRef = useRef(null);
   const dropdownRef = useRef(null);
   const animationFrameRef = useRef(null);
   const markdownOutputRef = useRef(null);
+  const horizontalScrollRef = useRef(null);
+  const stickyScrollbarRef = useRef(null);
 
   // API Configuration
   const API_BASE_URL = "https://gateway-service-110685455967.asia-south1.run.app";
@@ -9337,6 +9358,71 @@ const ChatInterface = () => {
       alert("Failed to copy to clipboard");
     }
   };
+
+  useEffect(() => {
+    const horizontalElement = horizontalScrollRef.current;
+    const contentElement = markdownOutputRef?.current;
+
+    if (!horizontalElement || !contentElement) return undefined;
+
+    const updateScrollbarState = () => {
+      const scrollWidth = contentElement.scrollWidth;
+      const clientWidth = horizontalElement.clientWidth;
+      const needsScroll = scrollWidth > clientWidth + 1;
+
+      setNeedsHorizontalScroll(needsScroll);
+      if (needsScroll) {
+        setScrollbarWidth(scrollWidth);
+      }
+    };
+
+    updateScrollbarState();
+
+    const resizeObserver = new ResizeObserver(updateScrollbarState);
+    resizeObserver.observe(contentElement);
+    resizeObserver.observe(horizontalElement);
+    window.addEventListener("resize", updateScrollbarState);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", updateScrollbarState);
+    };
+  }, [selectedMessageId, animatedResponseContent, hasResponse]);
+
+  useEffect(() => {
+    if (!needsHorizontalScroll) return undefined;
+
+    const horizontalElement = horizontalScrollRef.current;
+    const stickyElement = stickyScrollbarRef.current;
+
+    if (!horizontalElement || !stickyElement) return undefined;
+
+    const syncSticky = () => {
+      stickyElement.scrollLeft = horizontalElement.scrollLeft;
+    };
+
+    const syncContent = () => {
+      horizontalElement.scrollLeft = stickyElement.scrollLeft;
+    };
+
+    stickyElement.scrollLeft = horizontalElement.scrollLeft;
+    horizontalElement.addEventListener("scroll", syncSticky);
+    stickyElement.addEventListener("scroll", syncContent);
+
+    return () => {
+      horizontalElement.removeEventListener("scroll", syncSticky);
+      stickyElement.removeEventListener("scroll", syncContent);
+    };
+  }, [needsHorizontalScroll, selectedMessageId]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsSmallScreen(window.innerWidth < 1024);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Fetch secrets list
   const fetchSecrets = async () => {
@@ -9793,9 +9879,11 @@ const ChatInterface = () => {
     : "p-2.5 bg-[#21C1B6] hover:bg-[#1AA49B] disabled:bg-gray-300 disabled:cursor-not-allowed rounded-full transition-colors";
 
   return (
-    <div className="flex h-screen bg-white overflow-hidden">
+    <div className="flex h-full min-h-0 w-full bg-[#F8FAFD] px-4 sm:px-6 py-4 gap-4 overflow-hidden">
       {/* Left Panel - Chat History */}
-      <div className={`${hasResponse ? "w-[40%]" : "w-full"} border-r border-gray-200 flex flex-col bg-white h-full transition-all duration-300 overflow-hidden`}>
+      <div
+        className={`${hasResponse ? "flex-[0.4]" : "flex-1"} flex flex-col bg-white h-full transition-all duration-300 overflow-hidden rounded-2xl border border-gray-200 shadow-sm min-w-0`}
+      >
         {/* Header */}
         <div className="p-4 border-b border-black border-opacity-20 flex-shrink-0">
           <div className="flex items-center justify-between mb-4">
@@ -9923,7 +10011,39 @@ const ChatInterface = () => {
       </div>
       {/* Right Panel - AI Response */}
       {hasResponse && (
-        <div className="w-[60%] flex flex-col h-full overflow-hidden">
+        <div className="flex-[0.6] flex flex-col h-full overflow-hidden bg-white rounded-2xl border border-gray-200 shadow-sm min-w-0">
+          {selectedMessageId && animatedResponseContent && (
+            <div className="flex-shrink-0 px-6 pt-6 pb-4 border-b border-gray-200 bg-white">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-gray-900">JuriNex Response</h2>
+                <div className="flex items-center gap-2">
+                  <div className="text-sm text-gray-500 mr-2">
+                    {currentChatHistory.find((msg) => msg.id === selectedMessageId)?.timestamp && (
+                      <span>{formatDate(currentChatHistory.find((msg) => msg.id === selectedMessageId).timestamp)}</span>
+                    )}
+                  </div>
+                  <DownloadPdf markdownOutputRef={markdownOutputRef} />
+                  <button
+                    onClick={handleCopyResponse}
+                    className="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+                    title="Copy to clipboard"
+                  >
+                    {copySuccess ? (
+                      <Check className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+              <div className="mt-3 p-3 bg-blue-50 rounded-lg border-l-4 border-[#21C1B6]">
+                <p className="text-sm font-medium text-blue-900 mb-1">Question:</p>
+                <p className="text-sm text-blue-800">
+                  {currentChatHistory.find((msg) => msg.id === selectedMessageId)?.question || "No question available"}
+                </p>
+              </div>
+            </div>
+          )}
           <div className="flex-1 overflow-y-auto scrollbar-custom" ref={responseRef}>
             {loadingChat && !animatedResponseContent ? (
               <div className="flex items-center justify-center h-full">
@@ -9934,38 +10054,13 @@ const ChatInterface = () => {
               </div>
             ) : selectedMessageId && animatedResponseContent ? (
               <div className="px-6 py-6">
-                <div className="mb-6 pb-4 border-b border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold text-gray-900">AI Response</h2>
-                    <div className="flex items-center gap-2">
-                      <div className="text-sm text-gray-500 mr-2">
-                        {currentChatHistory.find((msg) => msg.id === selectedMessageId)?.timestamp && (
-                          <span>{formatDate(currentChatHistory.find((msg) => msg.id === selectedMessageId).timestamp)}</span>
-                        )}
-                      </div>
-                      <DownloadPdf markdownOutputRef={markdownOutputRef} />
-                      <button
-                        onClick={handleCopyResponse}
-                        className="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
-                        title="Copy to clipboard"
-                      >
-                        {copySuccess ? (
-                          <Check className="h-4 w-4 text-green-600" />
-                        ) : (
-                          <Copy className="h-4 w-4" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                  <div className="mt-3 p-3 bg-blue-50 rounded-lg border-l-4 border-[#21C1B6]">
-                    <p className="text-sm font-medium text-blue-900 mb-1">Question:</p>
-                    <p className="text-sm text-blue-800">
-                      {currentChatHistory.find((msg) => msg.id === selectedMessageId)?.question || "No question available"}
-                    </p>
-                  </div>
-                </div>
-                <div className="prose prose-gray max-w-none analysis-page-ai-response response-content" ref={markdownOutputRef}>
-                  <ReactMarkdown
+                <div className="horizontal-scroll-container" ref={horizontalScrollRef}>
+                  <div
+                    className="prose prose-gray max-w-none analysis-page-ai-response response-content"
+                    ref={markdownOutputRef}
+                    style={{ minWidth: "fit-content" }}
+                  >
+                    <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     components={{
                       h1: ({ ...props }) => <h1 {...props} />,
@@ -9987,10 +10082,11 @@ const ChatInterface = () => {
                       th: ({ ...props }) => <th {...props} />,
                       td: ({ ...props }) => <td {...props} />,
                     }}
-                  >
-                    {animatedResponseContent}
-                  </ReactMarkdown>
-                  {isAnimatingResponse && <span className="inline-block w-2 h-5 bg-gray-400 animate-pulse ml-1"></span>}
+                    >
+                      {animatedResponseContent}
+                    </ReactMarkdown>
+                    {isAnimatingResponse && <span className="inline-block w-2 h-5 bg-gray-400 animate-pulse ml-1"></span>}
+                  </div>
                 </div>
               </div>
             ) : (
@@ -9999,15 +10095,31 @@ const ChatInterface = () => {
                   <MessageSquare className="h-16 w-16 mx-auto mb-6 text-gray-300" />
                   <h3 className="text-2xl font-semibold mb-4 text-gray-900">Select a Question</h3>
                   <p className="text-gray-600 text-lg leading-relaxed">
-                    Click on any question from the left panel to view the AI response here.
+                    Click on any question from the left panel to view the JuriNex response here.
                   </p>
                 </div>
               </div>
             )}
           </div>
+          {shouldShowHorizontalScrollbar && (
+            <div className="px-6 pb-4 pt-2 bg-white border-t border-gray-100">
+              <div
+                ref={stickyScrollbarRef}
+                className="overflow-x-auto overflow-y-hidden bg-gray-100 border border-gray-200 rounded-lg shadow-sm"
+                style={{
+                  height: "16px",
+                  scrollbarWidth: "thin",
+                  scrollbarColor: "#9CA3AF #E5E7EB",
+                  WebkitOverflowScrolling: "touch",
+                }}
+              >
+                <div style={{ width: `${scrollbarWidth}px`, height: "1px" }} />
+              </div>
+            </div>
+          )}
         </div>
       )}
-      <style jsx>{`
+      <style>{`
         /* Import Google Fonts */
         @import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=Inter:wght@100..900&display=swap');
 
@@ -10025,6 +10137,16 @@ const ChatInterface = () => {
         }
         .scrollbar-custom::-webkit-scrollbar-thumb:hover {
           background: #718096;
+        }
+
+        .horizontal-scroll-container {
+          overflow-x: auto;
+          overflow-y: hidden;
+          scrollbar-width: none;
+        }
+
+        .horizontal-scroll-container::-webkit-scrollbar {
+          display: none;
         }
 
         /* AI Response Text Styling */

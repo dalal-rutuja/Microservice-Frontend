@@ -1499,7 +1499,7 @@ const UserProfileMenu = ({ userData, navigate, onLogout }) => {
       }
 
       console.log('🔄 Fetching plan from API...');
-      const response = await fetch('http://localhost:5000/user-resources/plan-details', {
+      const response = await fetch('https://gateway-service-110685455967.asia-south1.run.app/user-resources/plan-details', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

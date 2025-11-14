@@ -1,5 +1,5 @@
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Bot, MessageSquare, Copy, Download, ArrowRight } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -24,6 +24,10 @@ const ChatResponsePanel = ({
 }) => {
  const responseRef = useRef(null);
  const markdownOutputRef = useRef(null);
+ const contentRef = useRef(null);
+ const stickyScrollbarRef = useRef(null);
+ const horizontalScrollRef = useRef(null);
+ const [scrollbarWidth, setScrollbarWidth] = useState(0);
 
  // Auto-scroll to bottom during animation
  useEffect(() => {
@@ -31,6 +35,84 @@ const ChatResponsePanel = ({
  responseRef.current.scrollTop = responseRef.current.scrollHeight;
  }
  }, [animatedResponseContent, isAnimatingResponse]);
+
+ // Hide horizontal scrollbar on responseRef
+ useEffect(() => {
+ const responseElement = responseRef.current;
+ if (!responseElement) return;
+
+ // Set inline style to hide horizontal scrollbar
+ responseElement.style.scrollbarWidth = 'thin';
+ 
+ // For webkit browsers, we'll rely on CSS but also set overflow-x to auto
+ // The CSS will handle hiding the horizontal scrollbar visual
+ }, []);
+
+ // Sync sticky scrollbar with content
+ useEffect(() => {
+ const horizontalElement = horizontalScrollRef.current;
+ const markdownElement = markdownOutputRef.current;
+ const stickyScrollbar = stickyScrollbarRef.current;
+ 
+ if (!horizontalElement || !markdownElement || !stickyScrollbar) return;
+
+ const updateScrollbar = () => {
+ // Check the markdown content width (which contains the tables)
+ const scrollWidth = markdownElement.scrollWidth;
+ const clientWidth = horizontalElement.clientWidth;
+ 
+ if (scrollWidth > clientWidth) {
+ setScrollbarWidth(scrollWidth);
+ stickyScrollbar.scrollLeft = horizontalElement.scrollLeft;
+ } else {
+ setScrollbarWidth(0);
+ }
+ };
+
+ // Update scrollbar on content changes with a small delay to ensure DOM is ready
+ const updateScrollbarDelayed = () => {
+ setTimeout(() => {
+ updateScrollbar();
+ }, 100);
+ };
+
+ updateScrollbarDelayed();
+
+ // Sync scrollbar with response scroll (horizontal only)
+ const handleHorizontalScroll = () => {
+ if (stickyScrollbar) {
+ stickyScrollbar.scrollLeft = horizontalElement.scrollLeft;
+ }
+ };
+
+ // Sync response with scrollbar scroll
+ const handleScrollbarScroll = () => {
+ horizontalElement.scrollLeft = stickyScrollbar.scrollLeft;
+ };
+
+ horizontalElement.addEventListener('scroll', handleHorizontalScroll);
+ stickyScrollbar.addEventListener('scroll', handleScrollbarScroll);
+
+ // Use ResizeObserver to detect content size changes
+ const resizeObserver = new ResizeObserver(() => {
+ updateScrollbar();
+ });
+ resizeObserver.observe(markdownElement);
+ resizeObserver.observe(horizontalElement);
+
+ // Also update on window resize
+ const handleWindowResize = () => {
+ updateScrollbar();
+ };
+ window.addEventListener('resize', handleWindowResize);
+
+ return () => {
+ horizontalElement.removeEventListener('scroll', handleHorizontalScroll);
+ stickyScrollbar.removeEventListener('scroll', handleScrollbarScroll);
+ window.removeEventListener('resize', handleWindowResize);
+ resizeObserver.disconnect();
+ };
+ }, [selectedMessageId, currentResponse, animatedResponseContent, scrollbarWidth]);
 
  const handleCopyResponse = async () => {
  try {
@@ -423,7 +505,7 @@ const ChatResponsePanel = ({
  <pre className="bg-gray-900 text-gray-100 p-4 rounded my-4 overflow-x-auto" {...props} />
  ),
  table: ({node, ...props}) => (
- <div className="overflow-x-auto my-6 rounded-lg border border-gray-300">
+ <div className="my-6 rounded-lg border border-gray-300">
  <table className="min-w-full divide-y divide-gray-300" {...props} />
  </div>
  ),
@@ -453,11 +535,28 @@ const ChatResponsePanel = ({
  const isGenerating = isAnimatingResponse || isLoading || isGeneratingInsights;
 
  return (
- <div className="w-3/5 flex flex-col h-full bg-gray-50">
- <div className="flex-1 overflow-y-auto" ref={responseRef}>
+<div className="w-3/5 flex flex-col h-full bg-gray-50 relative">
+ <style>{`
+   .response-scroll-container {
+    overflow-y: auto;
+    overflow-x: hidden;
+     scrollbar-width: thin;
+   }
+  .horizontal-scroll-container {
+    overflow-x: auto;
+    overflow-y: visible;
+  }
+  .horizontal-scroll-container::-webkit-scrollbar {
+    height: 0px;
+   }
+ `}</style>
+ <div 
+  className="flex-1 response-scroll-container" 
+  ref={responseRef}
+ >
  {selectedMessageId && (currentResponse || animatedResponseContent) ? (
- <div className="px-6 py-6">
- <div className="max-w-none">
+ <div className="px-6 py-6" ref={contentRef}>
+ <div className="max-w-none" style={{ minWidth: 'fit-content' }}>
  {/* Header Section */}
  <div className="mb-6 pb-4 border-b border-gray-200 bg-white rounded-lg p-4 shadow-sm">
  <div className="flex items-center justify-between mb-3">
@@ -522,8 +621,12 @@ const ChatResponsePanel = ({
  </div>
 
  {/* Response Content with Enhanced Markdown Rendering */}
- <div className="bg-white rounded-lg shadow-sm p-6">
- <div className="prose prose-gray prose-lg max-w-none" ref={markdownOutputRef}>
+<div className="bg-white rounded-lg shadow-sm p-6">
+<div
+ className="horizontal-scroll-container"
+ ref={horizontalScrollRef}
+>
+<div className="prose prose-gray prose-lg max-w-none" ref={markdownOutputRef} style={{ minWidth: 'fit-content' }}>
  <ReactMarkdown
  remarkPlugins={[remarkGfm]}
  rehypePlugins={[rehypeRaw, rehypeSanitize]}
@@ -539,6 +642,7 @@ const ChatResponsePanel = ({
  </span>
  )}
  </div>
+</div>
  </div>
  </div>
  </div>
@@ -556,6 +660,22 @@ const ChatResponsePanel = ({
  </div>
  )}
  </div>
+ 
+ {/* Sticky Horizontal Scrollbar - Outside scrollable container to stay fixed */}
+ {scrollbarWidth > 0 && (
+ <div 
+ ref={stickyScrollbarRef}
+ className="overflow-x-auto overflow-y-hidden bg-gray-100 border-t border-gray-300 z-10 flex-shrink-0"
+ style={{ 
+ height: '17px',
+ scrollbarWidth: 'thin',
+ scrollbarColor: '#9CA3AF #E5E7EB',
+ WebkitOverflowScrolling: 'touch'
+ }}
+ >
+ <div style={{ width: `${scrollbarWidth}px`, height: '1px' }}></div>
+ </div>
+ )}
  </div>
  );
 };
