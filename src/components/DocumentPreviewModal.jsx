@@ -1,374 +1,318 @@
-// import React, { useState, useEffect } from 'react';
-// import { createPortal } from 'react-dom';
-// import { X } from 'lucide-react';
-// import { documentApi } from '../services/documentApi';
-
-// const DocumentPreviewModal = ({ document, onClose }) => {
-//   const [fileUrl, setFileUrl] = useState(null);
-//   const [fileType, setFileType] = useState(null);
-//   const [loading, setLoading] = useState(false);
-//   const [error, setError] = useState(null);
-
-//   useEffect(() => {
-//     console.log("DocumentPreviewModal - useEffect triggered. Document:", document);
-//     if (!document) {
-//       console.log("DocumentPreviewModal - No document provided, returning.");
-//       return;
-//     }
-
-//     const fetchDocument = async () => {
-//       setLoading(true);
-//       setError(null);
-//       setFileUrl(null);
-//       setFileType(null);
-//       console.log("DocumentPreviewModal - Fetching content for document:", document.id);
-
-//       try {
-//         const response = await documentApi.getDocumentContent(document.id);
-//         console.log("DocumentPreviewModal - API response:", response);
-
-//         if (response.content) {
-//           const blob = new Blob([response.content], { type: 'text/plain' });
-//           setFileUrl(URL.createObjectURL(blob));
-//           setFileType('text');
-//           console.log("DocumentPreviewModal - Set fileType to text, fileUrl:", URL.createObjectURL(blob));
-//         } else if (response.url) {
-//           setFileUrl(response.url);
-//           const ext = response.url.split('.').pop().toLowerCase();
-//           if (['png', 'jpg', 'jpeg', 'gif'].includes(ext)) setFileType('image');
-//           else if (ext === 'pdf') setFileType('pdf');
-//           else setFileType('other');
-//           console.log("DocumentPreviewModal - Set fileType to", fileType, "fileUrl:", response.url);
-//         } else {
-//           setError("No preview available for this document type.");
-//           console.log("DocumentPreviewModal - No content or URL in API response.");
-//         }
-//       } catch (err) {
-//         console.error("DocumentPreviewModal - Error fetching document content:", err);
-//         setError("Failed to load document content.");
-//       } finally {
-//         setLoading(false);
-//         console.log("DocumentPreviewModal - Loading finished.");
-//       }
-//     };
-
-//     fetchDocument();
-//   }, [document]);
-
-//   if (!document) return null;
-
-//   return createPortal(
-//     <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
-//       <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-5/6 flex flex-col">
-//         <div className="flex justify-between items-center p-4 border-b border-gray-200">
-//           <h2 className="text-xl font-semibold text-gray-800">{document.name}</h2>
-//           <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-//             <X className="w-6 h-6" />
-//           </button>
-//         </div>
-//         <div className="flex-1 p-4 overflow-auto bg-gray-50">
-//           {loading && <div className="text-center text-gray-600">Loading document preview...</div>}
-//           {error && <div className="text-center text-red-500">{error}</div>}
-//           {fileUrl && (
-//             fileType === 'image' ? (
-//               <img src={fileUrl} alt="Document Preview" className="max-w-full h-auto mx-auto" />
-//             ) : fileType === 'pdf' ? (
-//               <iframe src={fileUrl} title={document.name} className="w-full h-full border-none" />
-//             ) : fileType === 'text' ? (
-//               <pre className="whitespace-pre-wrap font-mono text-sm text-gray-800">{documentContent}</pre>
-//             ) : (
-//               <div className="text-center text-gray-600">
-//                 Preview not available for this file type. You can try downloading it: <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Download</a>
-//               </div>
-//             )
-//           )}
-//           {!fileUrl && !loading && !error && (
-//             <div className="text-center text-gray-600">No preview available for this document type.</div>
-//           )}
-//         </div>
-//       </div>
-//     </div>,
-//     document.body
-//   );
-// };
-
-// export default DocumentPreviewModal;
-// import React, { useState, useEffect } from "react";
-// import { X } from "lucide-react";
-// import { documentApi } from "../services/documentApi";
-
-// const DocumentPreview = ({ file, onClose }) => {
-//   const [fileUrl, setFileUrl] = useState(null);
-//   const [fileType, setFileType] = useState(null);
-//   const [textContent, setTextContent] = useState(null);
-//   const [loading, setLoading] = useState(false);
-//   const [error, setError] = useState(null);
-
-//   useEffect(() => {
-//     if (!file) return;
-
-//     const fetchFile = async () => {
-//       setLoading(true);
-//       setError(null);
-//       setFileUrl(null);
-//       setFileType(null);
-//       setTextContent(null);
-
-//       try {
-//         const response = await documentApi.getDocumentContent(file.id);
-
-//         if (response.summary || response.chunks) {
-//           const text =
-//             response.summary ||
-//             response.chunks?.map((c) => c.text).join("\n\n") ||
-//             "No text extracted.";
-//           setTextContent(text);
-//           setFileType("text");
-//         } else if (response.url) {
-//           setFileUrl(response.url);
-//           const ext = response.url.split(".").pop().toLowerCase();
-//           if (["png", "jpg", "jpeg", "gif"].includes(ext)) setFileType("image");
-//           else if (ext === "pdf") setFileType("pdf");
-//           else setFileType("other");
-//         } else {
-//           setError("No preview available for this document type.");
-//         }
-//       } catch (err) {
-//         console.error("Error fetching document content:", err);
-//         setError("Failed to load document content.");
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
-//     fetchFile();
-//   }, [file]);
-
-//   if (!file) return null;
-
-//   return (
-//     <div className="bg-white rounded-lg shadow-sm border border-gray-200 flex flex-col h-full">
-//       {/* Header */}
-//       <div className="flex justify-between items-center p-3 border-b border-gray-200">
-//         <h2 className="text-lg font-semibold text-gray-800">{file.name}</h2>
-//         <button
-//           onClick={onClose}
-//           className="text-gray-500 hover:text-gray-700"
-//         >
-//           <X className="w-5 h-5" />
-//         </button>
-//       </div>
-
-//       {/* Content */}
-//       <div className="flex-1 p-4 overflow-auto bg-gray-50">
-//         {loading && (
-//           <div className="text-center text-gray-600">
-//             Loading document preview...
-//           </div>
-//         )}
-//         {error && <div className="text-center text-red-500">{error}</div>}
-
-//         {fileType === "image" && fileUrl && (
-//           <img
-//             src={fileUrl}
-//             alt="Document Preview"
-//             className="max-w-full h-auto mx-auto"
-//           />
-//         )}
-//         {fileType === "pdf" && fileUrl && (
-//           <iframe
-//             src={fileUrl}
-//             title={file.name}
-//             className="w-full h-[70vh] border-none"
-//           />
-//         )}
-//         {fileType === "text" && textContent && (
-//           <pre className="whitespace-pre-wrap font-mono text-sm text-gray-800">
-//             {textContent}
-//           </pre>
-//         )}
-//         {fileType === "other" && fileUrl && (
-//           <div className="text-center text-gray-600">
-//             Preview not available.{" "}
-//             <a
-//               href={fileUrl}
-//               target="_blank"
-//               rel="noopener noreferrer"
-//               className="text-blue-500 hover:underline"
-//             >
-//               Download
-//             </a>
-//           </div>
-//         )}
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default DocumentPreview;
-
-
-
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import documentApi from "../services/documentApi";
 
-const DocumentPreview = ({ file, onClose }) => {
+const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "gif", "webp", "svg"];
+
+const detectFileType = (url = "", mime = "") => {
+  const normalizedMime = mime?.toLowerCase() || "";
+  if (normalizedMime.includes("pdf")) return "pdf";
+  if (normalizedMime.startsWith("text/")) return "text";
+  if (normalizedMime.includes("json")) return "text";
+  if (normalizedMime.includes("html")) return "other";
+
+  const extension = url.split(".").pop()?.toLowerCase();
+  if (extension) {
+    if (IMAGE_EXTENSIONS.includes(extension)) return "image";
+    if (extension === "pdf") return "pdf";
+    if (["txt", "md", "json", "csv", "log"].includes(extension)) return "text";
+  }
+
+  return "other";
+};
+
+const extractTextContent = (payload) => {
+  if (!payload) return null;
+
+  if (Array.isArray(payload.chunks) && payload.chunks.length) {
+    const chunkText = payload.chunks
+      .map((chunk) => chunk.content || chunk.text || "")
+      .map((text) => text.trim())
+      .filter(Boolean)
+      .join("\n\n---\n\n");
+    if (chunkText) return chunkText;
+  }
+
+  const textFields = [
+    payload.full_text_content,
+    payload.summary ? `=== DOCUMENT SUMMARY ===\n\n${payload.summary}` : null,
+    payload.text,
+    payload.content,
+  ];
+
+  return (
+    textFields.find(
+      (value) => typeof value === "string" && value.trim().length > 0
+    ) || null
+  );
+};
+
+const DocumentPreviewModal = ({ document: file, onClose }) => {
   const [fileUrl, setFileUrl] = useState(null);
   const [fileType, setFileType] = useState(null);
   const [textContent, setTextContent] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [sidebarOffset, setSidebarOffset] = useState(0);
+  const generatedUrlRef = useRef(null);
 
   useEffect(() => {
-    if (!file) return;
+    if (!file?.id) return;
 
-    const fetchFile = async () => {
+    let isMounted = true;
+
+    const revokeGeneratedUrl = () => {
+      if (generatedUrlRef.current) {
+        URL.revokeObjectURL(generatedUrlRef.current);
+        generatedUrlRef.current = null;
+      }
+    };
+
+    const loadPreview = async () => {
       setLoading(true);
       setError(null);
       setFileUrl(null);
       setFileType(null);
       setTextContent(null);
+      revokeGeneratedUrl();
 
       try {
-        const response = await documentApi.getDocumentContent(file.id);
-
-        // Check if we have text content (chunks, summary, or direct content)
-        if (response.chunks && Array.isArray(response.chunks) && response.chunks.length > 0) {
-          const text = response.chunks
-            .map((chunk) => chunk.content || chunk.text || "")
-            .filter(text => text.trim())
-            .join("\n\n---\n\n");
-          setTextContent(text || "No content extracted from chunks.");
-          setFileType("text");
-        } else if (response.content) {
-          setTextContent(response.content);
-          setFileType("text");
-        } else if (response.summary) {
-          setTextContent(`=== DOCUMENT SUMMARY ===\n\n${response.summary}`);
-          setFileType("text");
-        } else if (response.text) {
-          setTextContent(response.text);
-          setFileType("text");
-        } 
-        // Check for URL/file download
-        else if (response.url) {
-          setFileUrl(response.url);
-          const ext = response.url.split(".").pop().toLowerCase();
-          if (["png", "jpg", "jpeg", "gif", "webp", "svg"].includes(ext)) {
-            setFileType("image");
-          } else if (ext === "pdf") {
-            setFileType("pdf");
-          } else {
-            setFileType("other");
-          }
-        } 
-        // No content available
-        else {
-          setError("No preview available for this document type.");
+        const directUrl = file.previewUrl || file.viewUrl;
+        if (directUrl) {
+          if (!isMounted) return;
+          setFileUrl(directUrl);
+          setFileType(detectFileType(directUrl, file.mimetype));
+          return;
         }
+
+        const response = await documentApi.getDocumentContent(file.id);
+        if (!isMounted) return;
+
+        const text = extractTextContent(response);
+        if (text) {
+          setTextContent(text);
+          setFileType("text");
+          return;
+        }
+
+        const remoteUrl =
+          response?.previewUrl || response?.viewUrl || response?.url;
+        if (remoteUrl) {
+          setFileUrl(remoteUrl);
+          setFileType(detectFileType(remoteUrl, response?.mimeType || file.mimetype));
+          return;
+        }
+
+        if (
+          response?.content &&
+          typeof response.content !== "string" &&
+          (response.mimeType || file.mimetype)
+        ) {
+          const blob = new Blob([response.content], {
+            type: response.mimeType || file.mimetype || "application/octet-stream",
+          });
+          const objectUrl = URL.createObjectURL(blob);
+          generatedUrlRef.current = objectUrl;
+          setFileUrl(objectUrl);
+          setFileType(detectFileType("", response.mimeType || file.mimetype));
+          return;
+        }
+
+        throw new Error("No preview available for this document type.");
       } catch (err) {
-        console.error("Error fetching document content:", err);
-        setError(`Failed to load document content: ${err.message}`);
+        if (!isMounted) return;
+        console.error("Error loading document preview:", err);
+        setError(err.message || "Failed to load document content.");
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
-    fetchFile();
+    loadPreview();
+
+    return () => {
+      isMounted = false;
+      revokeGeneratedUrl();
+    };
   }, [file]);
 
   if (!file) return null;
 
-  return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 flex flex-col h-full">
-      {/* Header */}
-      <div className="flex justify-between items-center p-3 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-800 truncate pr-4">
-          {file.name}
-        </h2>
-        <button
-          onClick={onClose}
-          className="text-gray-500 hover:text-gray-700 flex-shrink-0"
-          title="Close preview"
-        >
-          <X className="w-5 h-5" />
-        </button>
+  const modalRoot =
+    typeof window !== "undefined" && window.document?.body
+      ? window.document.body
+      : null;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return () => undefined;
+
+    const updateSidebarOffset = () => {
+      const sidebarEl = document.querySelector("[data-sidebar-root]");
+      if (!sidebarEl) {
+        setSidebarOffset(0);
+        return;
+      }
+
+      const rect = sidebarEl.getBoundingClientRect();
+      const style = window.getComputedStyle(sidebarEl);
+      const hidden =
+        style.display === "none" ||
+        style.visibility === "hidden" ||
+        rect.width === 0;
+
+      setSidebarOffset(hidden ? 0 : rect.width);
+    };
+
+    updateSidebarOffset();
+    window.addEventListener("resize", updateSidebarOffset);
+
+    let resizeObserver;
+    const sidebarEl = document.querySelector("[data-sidebar-root]");
+    if (sidebarEl && typeof ResizeObserver !== "undefined") {
+      resizeObserver = new ResizeObserver(() => updateSidebarOffset());
+      resizeObserver.observe(sidebarEl);
+    }
+
+    return () => {
+      window.removeEventListener("resize", updateSidebarOffset);
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+    };
+  }, []);
+
+  const handleBackdropClick = (event) => {
+    if (event.target === event.currentTarget) {
+      onClose?.();
+    }
+  };
+
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <div className="flex flex-col items-center justify-center py-16 text-gray-600">
+          <div className="animate-spin h-10 w-10 border-4 border-gray-200 border-t-[#21C1B6] rounded-full mb-4"></div>
+          <p>Loading document preview...</p>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="text-center p-6">
+          <p className="text-red-500 mb-3">{error}</p>
+          {(file.viewUrl || file.previewUrl) && (
+            <a
+              href={file.viewUrl || file.previewUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#21C1B6] hover:underline"
+            >
+              Open in new tab
+            </a>
+          )}
+        </div>
+      );
+    }
+
+    if (fileType === "text" && textContent) {
+      return (
+        <div className="bg-white p-4 rounded border border-gray-200 shadow-inner">
+          <pre className="whitespace-pre-wrap font-mono text-sm text-gray-800 leading-relaxed">
+            {textContent}
+          </pre>
+        </div>
+      );
+    }
+
+    if (fileType === "image" && fileUrl) {
+      return (
+        <div className="flex items-center justify-center">
+          <img
+            src={fileUrl}
+            alt={file.name}
+            className="max-h-[75vh] max-w-full rounded-lg shadow"
+            onError={() => setError("Failed to load image")}
+          />
+        </div>
+      );
+    }
+
+    if (fileType === "pdf" && fileUrl) {
+      return (
+        <iframe
+          src={fileUrl}
+          title={file.name}
+          className="w-full h-[75vh] border border-gray-200 rounded"
+          onError={() => setError("Failed to load PDF")}
+        />
+      );
+    }
+
+    if (fileUrl) {
+      return (
+        <div className="text-center p-8 text-gray-600">
+          <p className="mb-4">Preview not available for this file type.</p>
+          <a
+            href={fileUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center bg-[#21C1B6] hover:bg-[#1AA49B] text-white px-5 py-2 rounded-md transition-colors"
+          >
+            Open in new tab
+          </a>
+        </div>
+      );
+    }
+
+    return (
+      <div className="text-center text-gray-500 py-10">
+        No preview available for this document.
       </div>
+    );
+  };
 
-      {/* Content */}
-      <div className="flex-1 p-4 overflow-auto bg-gray-50">
-        {loading && (
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin h-8 w-8 border-4 border-gray-300 border-t-gray-600 rounded-full"></div>
-            <span className="ml-3 text-gray-600">Loading document preview...</span>
+  const modal = (
+    <div
+      className="fixed inset-y-0 right-0 bg-black/70 z-[1000] flex items-center justify-center p-4"
+      style={{ left: sidebarOffset }}
+      onClick={handleBackdropClick}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <div>
+            <p className="text-xs uppercase tracking-wide text-gray-400">
+              Document preview
+            </p>
+            <h2 className="text-xl font-semibold text-gray-900 truncate max-w-[70vw]">
+              {file.name || "Untitled document"}
+            </h2>
           </div>
-        )}
-        
-        {error && (
-          <div className="text-center p-4">
-            <div className="text-red-500 mb-2">{error}</div>
-            {fileUrl && (
-              <a
-                href={fileUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-500 hover:underline"
-              >
-                Download file instead
-              </a>
-            )}
-          </div>
-        )}
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#21C1B6] rounded-full p-1"
+            aria-label="Close preview"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
 
-        {!loading && !error && (
-          <>
-            {fileType === "image" && fileUrl && (
-              <div className="flex items-center justify-center">
-                <img
-                  src={fileUrl}
-                  alt={file.name}
-                  className="max-w-full h-auto rounded shadow-md"
-                  onError={() => setError("Failed to load image")}
-                />
-              </div>
-            )}
-            
-            {fileType === "pdf" && fileUrl && (
-              <iframe
-                src={fileUrl}
-                title={file.name}
-                className="w-full h-[70vh] border border-gray-300 rounded"
-                onError={() => setError("Failed to load PDF")}
-              />
-            )}
-            
-            {fileType === "text" && textContent && (
-              <div className="bg-white p-4 rounded border border-gray-200">
-                <pre className="whitespace-pre-wrap font-sans text-sm text-gray-800 leading-relaxed">
-                  {textContent}
-                </pre>
-              </div>
-            )}
-            
-            {fileType === "other" && fileUrl && (
-              <div className="text-center p-8 text-gray-600">
-                <p className="mb-4">Preview not available for this file type.</p>
-                <a
-                  href={fileUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-block bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-md transition-colors"
-                >
-                  Download File
-                </a>
-              </div>
-            )}
-          </>
-        )}
+        <div className="flex-1 bg-gray-50 p-6 overflow-auto">{renderContent()}</div>
       </div>
     </div>
   );
+
+  if (modalRoot) {
+    return createPortal(modal, modalRoot);
+  }
+
+  return modal;
 };
 
-export default DocumentPreview;
+export default DocumentPreviewModal;
+

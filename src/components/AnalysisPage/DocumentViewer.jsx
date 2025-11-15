@@ -308,7 +308,9 @@ const DocumentViewer = ({
                   rehypePlugins={[rehypeRaw, rehypeSanitize]}
                   components={markdownComponents}
                 >
-                  {animatedResponseContent || currentResponse || ''}
+                  {isAnimatingResponse
+                    ? animatedResponseContent
+                    : animatedResponseContent || currentResponse || ''}
                 </ReactMarkdown>
                 {/* Typing Indicator */}
                 {isAnimatingResponse && (

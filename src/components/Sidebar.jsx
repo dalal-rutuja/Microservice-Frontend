@@ -3266,11 +3266,6 @@ const Sidebar = () => {
                         }`}
                       />
                       <span className={`${isSidebarCollapsed && !isMobileView ? 'hidden' : 'inline'} transition-all duration-200`}>{item.name}</span>
-                      {!currentFileId && (!isSidebarCollapsed || isMobileView) && (
-                        <div className="ml-auto">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-gray-900 text-gray-500">No file</span>
-                        </div>
-                      )}
                     </Link>
                   ) : (
                     <Link
@@ -3372,6 +3367,7 @@ const Sidebar = () => {
         className={`hidden lg:flex bg-[#0d1117] border-r border-gray-900 flex-col transition-all duration-300 ease-in-out shadow-2xl ${
           isSidebarCollapsed ? 'w-20' : 'w-72'
         } relative h-screen`}
+        data-sidebar-root
       >
         <SidebarContent toggleProfileMenu={toggleProfileMenu} isProfileMenuOpen={isProfileMenuOpen} />
       </div>

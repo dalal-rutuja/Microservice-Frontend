@@ -1127,9 +1127,9 @@ const FolderContent = ({ onDocumentClick }) => {
  const [uploading, setUploading] = useState(false);
  const [processingDocuments, setProcessingDocuments] = useState(new Map());
 
- const fetchedFolders = useRef(new Set());
  const pollingIntervalsRef = useRef(new Map());
  const lastProgressRef = useRef(new Map());
+ const requestIdRef = useRef(0);
 
  const getApiBaseUrl = () => {
  return window.REACT_APP_API_URL || "https://gateway-service-110685455967.asia-south1.run.app";
@@ -1143,17 +1143,9 @@ const FolderContent = ({ onDocumentClick }) => {
 
  const fetchFolderContent = useCallback(
  async (forceRefresh = false) => {
+ const requestId = ++requestIdRef.current;
  if (!selectedFolder) {
  setDocuments([]);
- fetchedFolders.current.clear();
- return;
- }
-
- if (
- !forceRefresh &&
- fetchedFolders.current.has(selectedFolder) &&
- documents.length > 0
- ) {
  return;
  }
 
@@ -1199,21 +1191,27 @@ const FolderContent = ({ onDocumentClick }) => {
  previewUrl: file.previewUrl || file.preview_url,
  }));
 
+ if (requestIdRef.current === requestId) {
  setDocuments(normalizedFiles);
- fetchedFolders.current.add(selectedFolder);
+ }
  } catch (err) {
  console.error("❌ Error fetching folder content:", err);
+ if (requestIdRef.current === requestId) {
  setError("Failed to fetch folder content.");
  setDocuments([]);
+ }
  } finally {
+ if (requestIdRef.current === requestId) {
  setLoading(false);
+ }
  }
  },
  [selectedFolder, setDocuments, documents.length]
  );
 
  useEffect(() => {
- fetchFolderContent();
+ setDocuments([]);
+ fetchFolderContent(true);
  if (setChatSessions) setChatSessions([]);
  if (setSelectedChatSessionId) setSelectedChatSessionId(null);
  }, [selectedFolder]);
@@ -1449,7 +1447,7 @@ const FolderContent = ({ onDocumentClick }) => {
  }
  };
 
- const handleDocumentClick = async (doc) => {
+ const handleDocumentClick = (doc) => {
  const processing = ["processing", "queued", "pending", "batch_processing", "batch_queued"].includes(
  doc.status?.toLowerCase()
  );
@@ -1458,41 +1456,8 @@ const FolderContent = ({ onDocumentClick }) => {
  return;
  }
 
- // Check if document has viewUrl (from folder listing)
- if (doc.viewUrl) {
- // Open document directly using pre-generated URL
- window.open(doc.viewUrl, '_blank');
- return;
- }
-
- // If no viewUrl, fetch it from the backend
- try {
- const API_BASE_URL = getApiBaseUrl();
- const headers = getAuthHeaders();
- 
- const response = await fetch(`${API_BASE_URL}/files/document/${doc.id}/view`, {
- method: "GET",
- headers: {
- "Content-Type": "application/json",
- ...headers,
- },
- });
-
- if (!response.ok) {
- throw new Error(`Failed to get view URL: ${response.status}`);
- }
-
- const data = await response.json();
- 
- if (data.viewUrl) {
- // Open the document in a new tab
- window.open(data.viewUrl, '_blank');
- } else {
- throw new Error("No view URL returned from server");
- }
- } catch (err) {
- console.error("❌ Error opening document:", err);
- setError(`Failed to open document: ${err.message}`);
+ if (typeof onDocumentClick === "function") {
+ onDocumentClick(doc);
  }
  };
 

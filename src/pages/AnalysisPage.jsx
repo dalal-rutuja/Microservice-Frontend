@@ -8744,6 +8744,7 @@ import {
   Check,
   Circle,
   CreditCard,
+  Square,
 } from 'lucide-react';
 
 const PROGRESS_STAGES = {
@@ -9747,41 +9748,71 @@ const AnalysisPage = () => {
   };
 
   const LARGE_RESPONSE_THRESHOLD = 5000;
+  const CHATGPT_BASE_DELAY = 2; // baseline ms between characters
+  const CHATGPT_SPACE_DELAY = 0;
+  const CHATGPT_PUNCTUATION_BONUS = 20;
+  const CHATGPT_NEWLINE_BONUS = 40;
+  const CHATGPT_RANDOM_VARIANCE = 0.015; // up to 1.5% variance per char for natural feel
 
-  // Animation with requestAnimationFrame
-  const animateResponse = (text) => {
-    console.log('[animateResponse] Starting animation for text length:', text.length);
+  const getChatGptDelay = (char) => {
+    if (char === ' ') return CHATGPT_SPACE_DELAY;
+    if (char === '\n') return CHATGPT_BASE_DELAY + CHATGPT_NEWLINE_BONUS;
+    if (/[.,;:!?]/.test(char)) return CHATGPT_BASE_DELAY + CHATGPT_PUNCTUATION_BONUS;
+    return CHATGPT_BASE_DELAY;
+  };
+
+  // Animation that reveals the response in a ChatGPT-like fashion
+  const animateResponse = (text = '') => {
+    console.log('[animateResponse] Starting ChatGPT-style animation. Length:', text.length);
+
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
     }
+
     setAnimatedResponseContent('');
     setIsAnimatingResponse(true);
     setShowSplitView(true);
-    let currentIndex = 0;
-    const chunkSize = 50;
-    const delayMs = 5;
-    const animate = () => {
-      if (currentIndex < text.length) {
-        const nextChunk = text.slice(currentIndex, currentIndex + chunkSize);
-        setAnimatedResponseContent((prev) => prev + nextChunk);
-        currentIndex += chunkSize;
+    if (!text) {
+      setIsAnimatingResponse(false);
+      return;
+    }
+
+    let charIndex = 0;
+    let accumulatedContent = '';
+    let lastTimestamp = 0;
+
+    const step = (timestamp) => {
+      if (charIndex >= text.length) {
+        setIsAnimatingResponse(false);
+        animationFrameRef.current = null;
+        return;
+      }
+
+      const currentChar = text[charIndex];
+      const baseDelay = getChatGptDelay(currentChar);
+      const delay = baseDelay * (1 + Math.random() * CHATGPT_RANDOM_VARIANCE);
+
+      if (charIndex === 0 || timestamp - lastTimestamp >= delay) {
+        accumulatedContent += currentChar;
+        setAnimatedResponseContent(accumulatedContent);
+        charIndex += 1;
+        lastTimestamp = timestamp;
+
         if (responseRef.current) {
           responseRef.current.scrollTop = responseRef.current.scrollHeight;
         }
-        setTimeout(() => {
-          animationFrameRef.current = requestAnimationFrame(animate);
-        }, delayMs);
-      } else {
-        setIsAnimatingResponse(false);
-        animationFrameRef.current = null;
       }
+
+      animationFrameRef.current = requestAnimationFrame(step);
     };
-    animationFrameRef.current = requestAnimationFrame(animate);
+
+    animationFrameRef.current = requestAnimationFrame(step);
   };
 
   // Show response immediately
-  const showResponseImmediately = (text) => {
-    console.log('[showResponseImmediately] Displaying text immediately for text length:', text.length);
+  const showResponseImmediately = (text = '') => {
+    console.log('[showResponseImmediately] Displaying text immediately. Length:', text.length);
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
       animationFrameRef.current = null;
@@ -9789,11 +9820,52 @@ const AnalysisPage = () => {
     setAnimatedResponseContent(text);
     setIsAnimatingResponse(false);
     setShowSplitView(true);
-    setTimeout(() => {
+    requestAnimationFrame(() => {
       if (responseRef.current) {
         responseRef.current.scrollTop = responseRef.current.scrollHeight;
       }
-    }, 0);
+    });
+  };
+
+  const stopResponseAnimation = () => {
+    if (!isAnimatingResponse) return;
+    const fullText = currentResponse || animatedResponseContent || '';
+    showResponseImmediately(fullText);
+  };
+
+  const baseSendDisabled =
+    isLoading ||
+    isGeneratingInsights ||
+    (!chatInput.trim() && !isSecretPromptSelected);
+
+  const sendButtonType = isAnimatingResponse ? 'button' : 'submit';
+  const isSendButtonDisabled = isAnimatingResponse ? false : baseSendDisabled;
+  const sendButtonTitle = isAnimatingResponse ? 'Stop rendering' : 'Send Message';
+
+  const handleSendButtonClick = (event) => {
+    if (isAnimatingResponse) {
+      event.preventDefault();
+      stopResponseAnimation();
+    }
+  };
+
+  const getSendButtonClassName = (size = 'default') => {
+    const paddingClass = size === 'small' ? 'p-1.5' : 'p-1.5 sm:p-2';
+    const colorClass = isAnimatingResponse
+      ? 'bg-gray-500 hover:bg-gray-600'
+      : 'bg-[#21C1B6] hover:bg-[#1AA49B] disabled:bg-gray-300';
+    return `${paddingClass} text-white rounded-lg transition-colors flex-shrink-0 disabled:cursor-not-allowed ${colorClass}`;
+  };
+
+  const renderSendButtonIcon = (size = 'default') => {
+    const baseClass = size === 'small' ? 'h-3 w-3' : 'h-4 w-4 sm:h-5 sm:w-5';
+    if (isAnimatingResponse) {
+      return <Square className={baseClass} />;
+    }
+    if (isLoading || isGeneratingInsights) {
+      return <Loader2 className={`${baseClass} animate-spin`} />;
+    }
+    return <Send className={baseClass} />;
   };
 
   // Chat with document
@@ -9948,33 +10020,32 @@ const AnalysisPage = () => {
 
   const handleSend = async (e) => {
     e.preventDefault();
-    if (!fileId) {
-      setError('Please upload a document first.');
-      return;
-    }
-    // Enhanced validation: Check if document is fully processed
+
+    const hasFile = Boolean(fileId);
     const currentStatus = processingStatus?.status;
     const currentProgress = progressPercentage || 0;
-   
-    // Check if document processing failed
-    if (currentStatus === 'error') {
-      setError('Document processing failed. Please upload a new document.');
-      return;
-    }
-   
-    // Check if document is still processing (only block if actively processing)
-    // Allow if: no status (loaded from history), status is 'processed', OR progress is 100%
-    const isActivelyProcessing = currentStatus &&
-      (currentStatus === 'processing' || currentStatus === 'batch_processing' ||
-       currentStatus === 'queued' || currentStatus === 'pending');
-   
-    const isProcessingComplete = !currentStatus || currentStatus === 'processed' || currentProgress >= 100;
-   
-    if (isActivelyProcessing && !isProcessingComplete) {
-      setError('Document is still being processed. Please wait until processing is complete.');
-      return;
-    }
+    const isActivelyProcessing =
+      currentStatus &&
+      (currentStatus === 'processing' ||
+        currentStatus === 'batch_processing' ||
+        currentStatus === 'queued' ||
+        currentStatus === 'pending');
+    const isProcessingComplete =
+      !currentStatus || currentStatus === 'processed' || currentProgress >= 100;
+
     if (isSecretPromptSelected) {
+      if (!hasFile) {
+        setError('Please upload a document before running an analysis prompt.');
+        return;
+      }
+      if (currentStatus === 'error') {
+        setError('Document processing failed. Please upload a new document.');
+        return;
+      }
+      if (isActivelyProcessing && !isProcessingComplete) {
+        setError('Document is still being processed. Please wait until processing is complete.');
+        return;
+      }
       if (!selectedSecretId) {
         setError('Please select an analysis type.');
         return;
@@ -10058,9 +10129,21 @@ const AnalysisPage = () => {
         setError('Please enter a question.');
         return;
       }
+
+      if (hasFile) {
+        if (currentStatus === 'error') {
+          setError('Document processing failed. Please upload a new document.');
+          return;
+        }
+        if (isActivelyProcessing && !isProcessingComplete) {
+          setError('Document is still being processed. Please wait until processing is complete.');
+          return;
+        }
+      }
+
       try {
         console.log('[handleSend] Using custom query. LLM:', selectedLlmName || 'default (backend)');
-        await chatWithDocument(fileId, chatInput, sessionId, selectedLlmName);
+        await chatWithDocument(fileId || null, chatInput, sessionId, selectedLlmName);
       } catch (error) {
         console.error('[handleSend] Chat error:', error);
       }
@@ -10920,36 +11003,16 @@ const AnalysisPage = () => {
                   onChange={handleChatInputChange}
                   placeholder={getInputPlaceholder()}
                   className="flex-1 bg-transparent border-none outline-none text-gray-900 placeholder-gray-500 text-sm sm:text-[15px] font-medium py-2 min-w-0 w-full sm:w-auto analysis-page-user-input"
-                  disabled={
-                    isLoading ||
-                    isGeneratingInsights ||
-                    !fileId ||
-                    (processingStatus?.status &&
-                     processingStatus.status !== 'processed' &&
-                     progressPercentage < 100)
-                  }
+                  disabled={isLoading || isGeneratingInsights}
                 />
                 <button
-                  type="submit"
-                  disabled={
-                    isLoading ||
-                    isGeneratingInsights ||
-                    (!chatInput.trim() && !isSecretPromptSelected) ||
-                    !fileId ||
-                    (processingStatus?.status &&
-                     processingStatus.status !== 'processed' &&
-                     progressPercentage < 100)
-                  }
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#1AA49B')}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#21C1B6')}
-                  className="p-1.5 sm:p-2 bg-black hover:bg-gray-800 disabled:bg-gray-300 text-white rounded-lg transition-colors flex-shrink-0"
-                  title="Send Message"
+                  type={sendButtonType}
+                  disabled={isSendButtonDisabled}
+                  onClick={handleSendButtonClick}
+                  className={getSendButtonClassName()}
+                  title={sendButtonTitle}
                 >
-                  {isLoading || isGeneratingInsights ? (
-                    <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
-                  ) : (
-                    <Send className="h-4 w-4 sm:h-5 sm:w-5" />
-                  )}
+                  {renderSendButtonIcon()}
                 </button>
               </div>
               {isSecretPromptSelected && (
@@ -11153,42 +11216,22 @@ const AnalysisPage = () => {
                       </div>
                     )}
                   </div>
-                  <input
-                    type="text"
-                    value={chatInput}
-                    onChange={handleChatInputChange}
-                    placeholder={getInputPlaceholder()}
-                    className="flex-1 bg-transparent border-none outline-none text-gray-900 placeholder-gray-500 text-xs font-medium py-1 min-w-0 analysis-page-user-input"
-                    disabled={
-                      isLoading ||
-                      isGeneratingInsights ||
-                      !fileId ||
-                      (processingStatus?.status &&
-                       processingStatus.status !== 'processed' &&
-                       progressPercentage < 100)
-                    }
-                  />
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={handleChatInputChange}
+                  placeholder={getInputPlaceholder()}
+                  className="flex-1 bg-transparent border-none outline-none text-gray-900 placeholder-gray-500 text-xs font-medium py-1 min-w-0 analysis-page-user-input"
+                  disabled={isLoading || isGeneratingInsights}
+                />
                   <button
-                    type="submit"
-                    disabled={
-                      isLoading ||
-                      isGeneratingInsights ||
-                      (!chatInput.trim() && !isSecretPromptSelected) ||
-                      !fileId ||
-                      (processingStatus?.status &&
-                       processingStatus.status !== 'processed' &&
-                       progressPercentage < 100)
-                    }
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#1AA49B')}
-                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#21C1B6')}
-                    className="p-1.5 bg-black hover:bg-gray-800 disabled:bg-gray-300 text-white rounded-lg transition-colors flex-shrink-0"
-                    title="Send Message"
+                    type={sendButtonType}
+                    disabled={isSendButtonDisabled}
+                    onClick={handleSendButtonClick}
+                    className={getSendButtonClassName('small')}
+                    title={sendButtonTitle}
                   >
-                    {isLoading || isGeneratingInsights ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <Send className="h-3 w-3" />
-                    )}
+                    {renderSendButtonIcon('small')}
                   </button>
                 </div>
                 {isSecretPromptSelected && (

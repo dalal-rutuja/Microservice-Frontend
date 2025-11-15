@@ -34,10 +34,6 @@ export const FileManagerProvider = ({ children }) => {
     try {
       const data = await documentApi.getFoldersAndFiles();
       setFolders(data.folders || []);
-      if (selectedFolder) {
-        const currentFolder = data.folders.find(f => f.name === selectedFolder);
-        setDocuments(currentFolder ? currentFolder.children || [] : []);
-      }
     } catch (err) {
       console.error('Error loading folders and files:', err);
       setError(`Error loading folders and files: ${err.message}`);

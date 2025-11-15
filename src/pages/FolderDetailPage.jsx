@@ -859,6 +859,10 @@ const FolderDetailPage = () => {
     if (folderName) {
       setSelectedFolder(folderName);
     }
+
+    return () => {
+      setSelectedFolder(null);
+    };
   }, [folderName, setSelectedFolder]);
 
   useEffect(() => {
